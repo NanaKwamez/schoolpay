@@ -43,7 +43,7 @@ const APPROVAL_BADGE: Record<ApprovalStatus, { variant: 'green' | 'orange' | 're
 
 export default function AdminExpensesPage() {
   const supabase = createSupabaseBrowserClient()
-  const { profile, isProprietress, role } = useAuth()
+  const { profile, isProprietress } = useAuth()
 
   const [expenses, setExpenses] = useState<ExpenseRow[]>([])
   const [funds, setFunds] = useState<Fund[]>([])

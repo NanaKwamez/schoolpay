@@ -38,7 +38,7 @@ export default function TeacherSummaryPage() {
   const { profile } = useAuth()
   const classId = profile?.class_id ?? null
 
-  const { stats, feedingLog, loading: feedingLoading } = useFeeding()
+  const { stats, feedingLog } = useFeeding()
   const { getStudentBalance, getRecentPayments } = usePayments()
 
   const [recentPayments, setRecentPayments] = useState<LocalPayment[]>([])

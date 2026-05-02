@@ -12,7 +12,16 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Script files use CommonJS requires
+    "scripts/**",
   ]),
+  // Project-level rule overrides
+  {
+    rules: {
+      // Data-fetching via useCallback inside useEffect is a valid pattern
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

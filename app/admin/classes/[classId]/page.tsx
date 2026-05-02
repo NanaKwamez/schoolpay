@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { Download, RotateCcw } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -55,7 +55,6 @@ function exportCSV(rows: StudentRow[], className: string) {
 
 export default function ClassDrilldownPage() {
   const { classId } = useParams<{ classId: string }>()
-  const router = useRouter()
   const { profile } = useAuth()
   const supabase = createSupabaseBrowserClient()
 
@@ -92,8 +91,8 @@ export default function ClassDrilldownPage() {
     const { data: termData } = await supabase.from('terms').select('id').eq('is_current', true).single()
     const termId = termData?.id
 
-    let totalOwedMap: Map<string, number> = new Map()
-    let lastPaymentMap: Map<string, string> = new Map()
+    const totalOwedMap: Map<string, number> = new Map()
+    const lastPaymentMap: Map<string, string> = new Map()
 
     if (termId) {
       const { data: payments } = await supabase
@@ -170,7 +169,7 @@ export default function ClassDrilldownPage() {
   const absentCount = students.filter(s => s.today_status === 'absent').length
   const collectedToday = students
     .filter(s => s.today_status === 'paid')
-    .reduce((sum, _) => sum + 5, 0)
+    .reduce((sum) => sum + 5, 0)
 
   return (
     <div className="min-h-screen bg-gray-50">

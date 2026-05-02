@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { MessageCircle, X, AlertTriangle, DollarSign, TrendingDown, Clock } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
@@ -10,7 +10,6 @@ import { FundSummaryCard } from './FundSummaryCard'
 import { AiInsightsGrid } from './AiInsightBanner'
 import { GeminiChat } from './GeminiChat'
 import { SyncIndicator } from '@/components/ui/SyncIndicator'
-import { Badge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useSync } from '@/hooks/useSync'
 import { useOnline } from '@/hooks/useOnline'
@@ -56,7 +55,7 @@ export function DashboardClient() {
   const [chatOpen, setChatOpen] = useState(false)
   const [updatedClasses, setUpdatedClasses] = useState<Set<string>>(new Set())
   const [currentTime, setCurrentTime] = useState(new Date())
-  const supabase = useRef(createSupabaseBrowserClient()).current
+  const supabase = useMemo(() => createSupabaseBrowserClient(), [])
 
   // Live clock
   useEffect(() => {

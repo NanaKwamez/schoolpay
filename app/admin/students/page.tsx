@@ -1,6 +1,7 @@
 'use client'
 
 export const dynamic = 'force-dynamic'
+
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Plus, Search, Users } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
@@ -8,6 +9,7 @@ import { TopBar } from '@/components/ui/TopBar'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
+import { isValidGhanaPhone, fieldBorder } from '@/lib/validation'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { cn } from '@/lib/utils'
 
@@ -89,8 +91,16 @@ export default function AdminStudentsPage() {
     return result
   }, [students, classFilter, search])
 
+  const [addErrors, setAddErrors] = useState<{ name?: string; class?: string; phone?: string }>({})
+
   const handleAdd = async () => {
-    if (!addName.trim() || !addClassId) return
+    const errs: typeof addErrors = {}
+    if (!addName.trim()) errs.name = 'Student name is required'
+    if (!addClassId) errs.class = 'Class is required'
+    if (addPhone.trim() && !isValidGhanaPhone(addPhone)) errs.phone = 'Must be a valid Ghana number (0XXXXXXXXX)'
+    setAddErrors(errs)
+    if (Object.keys(errs).length > 0) return
+
     setSaving(true)
     await supabase.from('students').insert({
       full_name: addName.trim(),
@@ -98,7 +108,7 @@ export default function AdminStudentsPage() {
       parent_phone: addPhone.trim() || null,
       is_active: true,
     })
-    setShowAdd(false); setAddName(''); setAddClassId(''); setAddPhone('')
+    setShowAdd(false); setAddName(''); setAddClassId(''); setAddPhone(''); setAddErrors({})
     await fetchData(); setSaving(false)
   }
 
@@ -208,21 +218,26 @@ export default function AdminStudentsPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
-            <input value={addName} onChange={e => setAddName(e.target.value)} placeholder="Student's full name"
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500" />
+            <input value={addName} onChange={e => { setAddName(e.target.value); setAddErrors(p => ({ ...p, name: undefined })) }}
+              placeholder="Student's full name"
+              className={`w-full border-2 rounded-xl px-4 py-2.5 text-sm outline-none transition ${fieldBorder(!!addErrors.name)}`} />
+            {addErrors.name && <p className="text-xs text-red-500 mt-1">{addErrors.name}</p>}
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Class *</label>
-            <select value={addClassId} onChange={e => setAddClassId(e.target.value)}
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500">
+            <select value={addClassId} onChange={e => { setAddClassId(e.target.value); setAddErrors(p => ({ ...p, class: undefined })) }}
+              className={`w-full border-2 rounded-xl px-4 py-2.5 text-sm outline-none transition ${fieldBorder(!!addErrors.class)}`}>
               <option value="">Select class…</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
+            {addErrors.class && <p className="text-xs text-red-500 mt-1">{addErrors.class}</p>}
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Parent Phone (optional)</label>
-            <input value={addPhone} onChange={e => setAddPhone(e.target.value)} placeholder="e.g. 0241234567" type="tel"
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500" />
+            <input value={addPhone} onChange={e => { setAddPhone(e.target.value); setAddErrors(p => ({ ...p, phone: undefined })) }}
+              placeholder="e.g. 0241234567" type="tel"
+              className={`w-full border-2 rounded-xl px-4 py-2.5 text-sm outline-none transition ${fieldBorder(!!addErrors.phone)}`} />
+            {addErrors.phone && <p className="text-xs text-red-500 mt-1">{addErrors.phone}</p>}
           </div>
         </div>
       </Modal>

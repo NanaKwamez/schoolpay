@@ -1,5 +1,4 @@
 import { TopBar } from '@/components/ui/TopBar'
-import { BottomNav } from '@/components/ui/BottomNav'
 import { SCHOOL_NAME } from '@/lib/constants'
 
 export const metadata = { title: `Classes — ${SCHOOL_NAME}` }

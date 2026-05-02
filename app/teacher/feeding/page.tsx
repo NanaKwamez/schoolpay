@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { CheckCircle, Edit2 } from 'lucide-react'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { TopBar } from '@/components/ui/TopBar'
 import { BottomNav } from '@/components/ui/BottomNav'
 import { Button } from '@/components/ui/Button'
@@ -17,6 +18,14 @@ import type { FeedingStatus } from '@/types'
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TeacherFeedingPage() {
+  return (
+    <ErrorBoundary>
+      <TeacherFeedingContent />
+    </ErrorBoundary>
+  )
+}
+
+function TeacherFeedingContent() {
   const today = new Date()
   const todayStr = today.toLocaleDateString('en-GB', {
     weekday: 'long', day: 'numeric', month: 'long',

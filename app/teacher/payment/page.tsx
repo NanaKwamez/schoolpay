@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Search, X, CheckCircle, MessageCircle, ChevronRight } from 'lucide-react'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { TopBar } from '@/components/ui/TopBar'
 import { BottomNav } from '@/components/ui/BottomNav'
 import { Button } from '@/components/ui/Button'
@@ -51,6 +52,14 @@ function formatWeekLabel(date: Date): string {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TeacherPaymentPage() {
+  return (
+    <ErrorBoundary>
+      <TeacherPaymentContent />
+    </ErrorBoundary>
+  )
+}
+
+function TeacherPaymentContent() {
   const { profile } = useAuth()
   const { savePayment, loading: saving } = usePayments()
 

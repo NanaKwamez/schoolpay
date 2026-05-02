@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import { Geist } from 'next/font/google'
 import './globals.css'
 import { ToastProvider } from '@/components/ui/Toast'
+import { OfflineBanner } from '@/components/ui/OfflineBanner'
+import { EnvCheck } from '@/components/ui/EnvCheck'
 import { SCHOOL_NAME } from '@/lib/constants'
 
 const geist = Geist({
@@ -44,7 +46,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable} h-full`}>
       <body className="min-h-full antialiased">
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          <EnvCheck />
+          <OfflineBanner />
+          {children}
+        </ToastProvider>
       </body>
     </html>
   )

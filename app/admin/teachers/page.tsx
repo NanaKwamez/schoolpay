@@ -1,7 +1,9 @@
 'use client'
 
 export const dynamic = 'force-dynamic'
+
 import { useState, useEffect, useCallback } from 'react'
+import { isValidPin, fieldBorder } from '@/lib/validation'
 import { useRouter } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
@@ -55,9 +57,11 @@ export default function AdminTeachersPage() {
   const [addEmail, setAddEmail] = useState('')
   const [addClassId, setAddClassId] = useState('')
   const [addPin, setAddPin] = useState('')
+  const [addErrors, setAddErrors] = useState<{ name?: string; email?: string; pin?: string }>({})
 
   // PIN reset
   const [newPin, setNewPin] = useState('')
+  const [pinError, setPinError] = useState('')
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -83,7 +87,12 @@ export default function AdminTeachersPage() {
   useEffect(() => { fetchData() }, [fetchData])
 
   const handleAdd = async () => {
-    if (!addName.trim() || !addEmail.trim() || !addPin.trim()) return
+    const errs: typeof addErrors = {}
+    if (!addName.trim()) errs.name = 'Full name is required'
+    if (!addEmail.trim() || !addEmail.includes('@')) errs.email = 'Valid email is required'
+    if (!isValidPin(addPin)) errs.pin = 'PIN must be exactly 4 digits'
+    setAddErrors(errs)
+    if (Object.keys(errs).length > 0) return
     setSaving(true)
     // Create auth user + profile
     const { data: authData } = await supabase.auth.admin?.createUser({
@@ -101,7 +110,7 @@ export default function AdminTeachersPage() {
         is_active: true,
       })
     }
-    setShowAdd(false); setAddName(''); setAddEmail(''); setAddClassId(''); setAddPin('')
+    setShowAdd(false); setAddName(''); setAddEmail(''); setAddClassId(''); setAddPin(''); setAddErrors({})
     await fetchData(); setSaving(false)
   }
 
@@ -178,18 +187,28 @@ export default function AdminTeachersPage() {
           </div>
         }>
         <div className="space-y-4">
-          {[
-            { label: 'Full Name *', value: addName, onChange: setAddName, placeholder: 'Teacher name', type: 'text' },
-            { label: 'Email *', value: addEmail, onChange: setAddEmail, placeholder: 'teacher@email.com', type: 'email' },
-            { label: 'PIN (4 digits) *', value: addPin, onChange: setAddPin, placeholder: '1234', type: 'password', maxLength: 4 },
-          ].map(field => (
-            <div key={field.label}>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">{field.label}</label>
-              <input type={field.type} value={field.value} onChange={e => field.onChange(e.target.value)}
-                placeholder={field.placeholder} maxLength={(field as { maxLength?: number }).maxLength}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500" />
-            </div>
-          ))}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
+            <input type="text" value={addName} onChange={e => { setAddName(e.target.value); setAddErrors(p => ({ ...p, name: undefined })) }}
+              placeholder="Teacher name"
+              className={`w-full border-2 rounded-xl px-4 py-2.5 text-sm outline-none transition ${fieldBorder(!!addErrors.name)}`} />
+            {addErrors.name && <p className="text-xs text-red-500 mt-1">{addErrors.name}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
+            <input type="email" value={addEmail} onChange={e => { setAddEmail(e.target.value); setAddErrors(p => ({ ...p, email: undefined })) }}
+              placeholder="teacher@email.com"
+              className={`w-full border-2 rounded-xl px-4 py-2.5 text-sm outline-none transition ${fieldBorder(!!addErrors.email)}`} />
+            {addErrors.email && <p className="text-xs text-red-500 mt-1">{addErrors.email}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">PIN (4 digits) *</label>
+            <input type="password" value={addPin} maxLength={4}
+              onChange={e => { setAddPin(e.target.value); setAddErrors(p => ({ ...p, pin: undefined })) }}
+              placeholder="1234"
+              className={`w-full border-2 rounded-xl px-4 py-2.5 text-sm outline-none transition ${fieldBorder(!!addErrors.pin)}`} />
+            {addErrors.pin && <p className="text-xs text-red-500 mt-1">{addErrors.pin}</p>}
+          </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Class (optional)</label>
             <select value={addClassId} onChange={e => setAddClassId(e.target.value)}
@@ -209,9 +228,10 @@ export default function AdminTeachersPage() {
             <Button variant="primary" fullWidth loading={saving} disabled={newPin.length !== 4}
               onClick={async () => {
                 if (!pinTarget) return
+                if (!isValidPin(newPin)) { setPinError('PIN must be exactly 4 digits'); return }
                 setSaving(true)
                 await supabase.auth.admin?.updateUserById(pinTarget.id, { password: newPin })
-                setPinTarget(null); setNewPin('')
+                setPinTarget(null); setNewPin(''); setPinError('')
                 setSaving(false)
               }}>
               Update PIN
@@ -220,9 +240,11 @@ export default function AdminTeachersPage() {
         }>
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">New 4-digit PIN</label>
-          <input type="password" maxLength={4} value={newPin} onChange={e => setNewPin(e.target.value)}
-            placeholder="Enter new 4-digit PIN"
-            className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-2xl tracking-widest outline-none focus:border-morning-green-500 text-center font-mono" />
+          <input type="password" maxLength={4} value={newPin}
+            onChange={e => { setNewPin(e.target.value); setPinError('') }}
+            placeholder="1234"
+            className={`w-full border-2 rounded-xl px-4 py-2.5 text-2xl tracking-widest outline-none transition text-center font-mono ${fieldBorder(!!pinError)}`} />
+          {pinError && <p className="text-xs text-red-500 mt-1">{pinError}</p>}
         </div>
       </Modal>
     </div>

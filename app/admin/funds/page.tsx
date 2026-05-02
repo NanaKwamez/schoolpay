@@ -9,7 +9,7 @@ import { TopBar } from '@/components/ui/TopBar'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { formatGHS, formatDate } from '@/lib/utils'
+import { formatGHS } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 interface FundDetail {
