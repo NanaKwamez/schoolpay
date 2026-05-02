@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Mark Feeding - JHS 2</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#e1e3e4",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#235fa8",
+                        "surface": "#f8f9fa",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#004689",
+                        "on-tertiary-fixed": "#001b3c",
+                        "on-secondary-fixed": "#2b1700",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed": "#d5e3ff",
+                        "surface-container-highest": "#e1e3e4",
+                        "inverse-primary": "#95d4b3",
+                        "on-tertiary-container": "#c7daff",
+                        "primary-fixed": "#b1f0ce",
+                        "secondary-fixed": "#ffddb9",
+                        "primary-fixed-dim": "#95d4b3",
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#694000",
+                        "primary-container": "#2d6a4f",
+                        "surface-tint": "#2c694e",
+                        "outline": "#707973",
+                        "on-secondary-fixed-variant": "#663e00",
+                        "secondary-container": "#fea520",
+                        "on-primary-fixed": "#002114",
+                        "inverse-surface": "#2e3132",
+                        "tertiary": "#00478a",
+                        "on-primary-fixed-variant": "#0e5138",
+                        "surface-dim": "#d9dadb",
+                        "surface-container-low": "#f3f4f5",
+                        "surface-container": "#edeeef",
+                        "secondary-fixed-dim": "#ffb961",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#a8e7c5",
+                        "surface-container-lowest": "#ffffff",
+                        "outline-variant": "#bfc9c1",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-background": "#191c1d",
+                        "background": "#f8f9fa",
+                        "surface-container-high": "#e7e8e9",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#a7c8ff",
+                        "on-surface": "#191c1d",
+                        "secondary": "#865300",
+                        "primary": "#0f5238",
+                        "on-surface-variant": "#404943",
+                        "on-secondary": "#ffffff",
+                        "surface-bright": "#f8f9fa"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "touch-target-min": "60px",
+                        "margin-tablet": "32px",
+                        "margin-mobile": "20px",
+                        "gutter": "16px",
+                        "base-unit": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-xl": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                        "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { -webkit-tap-highlight-color: transparent; }
+        .glass-card {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col pb-[100px] pt-[140px]">
+<!-- TopAppBar JSON Executed -->
+<header class="fixed top-0 left-0 w-full z-50 flex flex-col justify-between px-5 h-[60px] bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg rounded-b-[24px] border-b border-white/20 dark:border-slate-800/50 shadow-[0_4px_20px_rgba(0,0,0,0.04)] items-center justify-between flex-row">
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center w-10 h-10 rounded-full active:scale-95 duration-200 hover:bg-[#2D6A4F]/10 transition-colors">
+<span class="material-symbols-outlined text-[#2D6A4F] dark:text-emerald-400">arrow_back</span>
+</button>
+<h1 class="font-inter text-lg font-semibold tracking-tight text-[#2D6A4F] dark:text-emerald-400">Mark Feeding — JHS 2</h1>
+</div>
+<button class="flex items-center justify-center w-10 h-10 rounded-full active:scale-95 duration-200 hover:bg-[#2D6A4F]/10 transition-colors">
+<span class="material-symbols-outlined text-[#2D6A4F] dark:text-emerald-400">event</span>
+</button>
+</header>
+<!-- Sub-header & Date Context -->
+<div class="fixed top-[60px] left-0 w-full z-40 px-margin-mobile py-4 bg-background/90 backdrop-blur-md">
+<p class="font-body-md text-on-surface-variant mb-2">Monday, Oct 24</p>
+<div class="flex items-center gap-2">
+<span class="bg-primary-container text-on-primary-container font-label-lg px-4 py-2 rounded-full inline-flex items-center">
+                32 marked, 8 remaining
+            </span>
+</div>
+</div>
+<!-- Main Content: Roster List -->
+<main class="flex-1 px-margin-mobile flex flex-col gap-base-unit">
+<!-- Student Row 1 (PAID selected) -->
+<article class="glass-card rounded-[24px] p-4 flex flex-col gap-3 min-h-touch-target-min">
+<div class="flex justify-between items-center w-full">
+<h2 class="font-headline-md text-on-surface">Kofi Annan</h2>
+</div>
+<div class="flex gap-2 w-full justify-between overflow-x-auto pb-1 hide-scrollbar">
+<button class="flex-1 min-w-[70px] h-10 rounded-lg bg-primary text-on-primary font-label-sm flex items-center justify-center border border-primary active:scale-95 transition-transform">PAID</button>
+<button class="flex-1 min-w-[70px] h-10 rounded-lg bg-transparent text-secondary-container font-label-sm flex items-center justify-center border border-outline-variant active:scale-95 transition-transform">CREDIT</button>
+<button class="flex-1 min-w-[70px] h-10 rounded-lg bg-transparent text-outline font-label-sm flex items-center justify-center border border-outline-variant active:scale-95 transition-transform">ABSENT</button>
+<button class="flex-1 min-w-[70px] h-10 rounded-lg bg-transparent text-tertiary font-label-sm flex items-center justify-center border border-outline-variant active:scale-95 transition-transform">NO EAT</button>
+</div>
+</article>
+<!-- Student Row 2 (OWES badge) -->
+<article class="glass-card rounded-[24px] p-4 flex flex-col gap-3 min-h-touch-target-min">
+<div class="flex justify-between items-center w-full">
+<h2 class="font-headline-md text-on-surface">Kwame Mensah</h2>
+<span class="bg-error text-on-error font-label-sm px-2 py-1 rounded-full whitespace-nowrap">OWES GHS 3</span>
+</div>
+<div class="flex gap-2 w-full justify-between overflow-x-auto pb-1 hide-scrollbar">
+<button class="flex-1 min-w-[70px] h-10 rounded-lg bg-transparent text-primary font-label-sm flex items-center justify-center border border-outline-variant active:scale-95 transition-transform">PAID</button>
+<button class="flex-1 min-w-[70px] h-10 rounded-lg bg-transparent text-secondary-container font-label-sm flex items-center justify-center border border-outline-variant active:scale-95 transition-transform">CREDIT</button>
+<button class="flex-1 min-w-[70px] h-10 rounded-lg bg-transparent text-outline font-label-sm flex items-center justify-center border border-outline-variant active:scale-95 transition-transform">ABSENT</button>
+<button class="flex-1 min-w-[70px] h-10 rounded-lg bg-transparent text-tertiary font-label-sm flex items-center justify-center border border-outline-variant active:scale-95 transition-transform">NO EAT</button>
+</div>
+</article>
+<!-- Student Row 3 (WEEKLY badge) -->
+<article class="glass-card rounded-[24px] p-4 flex flex-col gap-3 min-h-touch-target-min">
+<div class="flex justify-between items-center w-full">
+<h2 class="font-headline-md text-on-surface">Ama Serwaa</h2>
+<span class="bg-primary text-on-primary font-label-sm px-2 py-1 rounded-full whitespace-nowrap">WEEKLY</span>
+</div>
+<div class="flex gap-2 w-full justify-between overflow-x-auto pb-1 hide-scrollbar">
+<button class="flex-1 min-w-[70px] h-10 rounded-lg bg-primary text-on-primary font-label-sm flex items-center justify-center border border-primary active:scale-95 transition-transform">PAID</button>
+<button class="flex-1 min-w-[70px] h-10 rounded-lg bg-transparent text-secondary-container font-label-sm flex items-center justify-center border border-outline-variant active:scale-95 transition-transform">CREDIT</button>
+<button class="flex-1 min-w-[70px] h-10 rounded-lg bg-transparent text-outline font-label-sm flex items-center justify-center border border-outline-variant active:scale-95 transition-transform">ABSENT</button>
+<button class="flex-1 min-w-[70px] h-10 rounded-lg bg-transparent text-tertiary font-label-sm flex items-center justify-center border border-outline-variant active:scale-95 transition-transform">NO EAT</button>
+</div>
+</article>
+<!-- Student Row 4 (CREDIT selected) -->
+<article class="glass-card rounded-[24px] p-4 flex flex-col gap-3 min-h-touch-target-min">
+<div class="flex justify-between items-center w-full">
+<h2 class="font-headline-md text-on-surface">Abena Osei</h2>
+</div>
+<div class="flex gap-2 w-full justify-between overflow-x-auto pb-1 hide-scrollbar">
+<button class="flex-1 min-w-[70px] h-10 rounded-lg bg-transparent text-primary font-label-sm flex items-center justify-center border border-outline-variant active:scale-95 transition-transform">PAID</button>
+<button class="flex-1 min-w-[70px] h-10 rounded-lg bg-secondary-container text-on-secondary-fixed font-label-sm flex items-center justify-center border border-secondary-container active:scale-95 transition-transform">CREDIT</button>
+<button class="flex-1 min-w-[70px] h-10 rounded-lg bg-transparent text-outline font-label-sm flex items-center justify-center border border-outline-variant active:scale-95 transition-transform">ABSENT</button>
+<button class="flex-1 min-w-[70px] h-10 rounded-lg bg-transparent text-tertiary font-label-sm flex items-center justify-center border border-outline-variant active:scale-95 transition-transform">NO EAT</button>
+</div>
+</article>
+</main>
+<!-- Fixed Footer Action -->
+<div class="fixed bottom-[80px] left-0 w-full px-margin-mobile py-4 bg-gradient-to-t from-background to-transparent pointer-events-none flex justify-center z-40">
+<button class="w-full h-touch-target-min max-w-md bg-primary text-on-primary font-headline-md rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] pointer-events-auto active:scale-95 transition-transform">
+            Submit to Admin
+        </button>
+</div>
+<!-- BottomNavBar JSON Executed -->
+<nav class="fixed bottom-0 left-0 w-full h-[80px] flex justify-around items-center px-4 pb-safe bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl rounded-t-[24px] border-t border-slate-100 dark:border-slate-800 shadow-[0_-8px_32px_rgba(0,0,0,0.06)] z-50 md:hidden">
+<button class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-[#2D6A4F] dark:hover:text-emerald-300 tap-highlight-transparent active:scale-90 transition-transform">
+<span class="material-symbols-outlined">home</span>
+<span class="font-inter text-[11px] font-medium mt-1">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-[#2D6A4F] dark:hover:text-emerald-300 tap-highlight-transparent active:scale-90 transition-transform">
+<span class="material-symbols-outlined">group</span>
+<span class="font-inter text-[11px] font-medium mt-1">Roster</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#2D6A4F] dark:text-emerald-400 bg-[#2D6A4F]/5 rounded-xl px-3 py-1 tap-highlight-transparent active:scale-90 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+<span class="font-inter text-[11px] font-medium mt-1">Feeding</span>
+</button>
+<button class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-[#2D6A4F] dark:hover:text-emerald-300 tap-highlight-transparent active:scale-90 transition-transform">
+<span class="material-symbols-outlined">assessment</span>
+<span class="font-inter text-[11px] font-medium mt-1">Reports</span>
+</button>
+</nav>
+<style>
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
+</body></html>

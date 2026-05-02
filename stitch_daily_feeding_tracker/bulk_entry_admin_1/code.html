@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bulk Entry — Backfill Data</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#d5e3ff",
+                        "surface-container-low": "#f3f4f5",
+                        "on-primary-fixed-variant": "#0e5138",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#191c1d",
+                        "tertiary-fixed-dim": "#a7c8ff",
+                        "surface-container-highest": "#e1e3e4",
+                        "primary-container": "#2d6a4f",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#95d4b3",
+                        "surface-container-high": "#e7e8e9",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#002114",
+                        "on-error-container": "#93000a",
+                        "on-primary": "#ffffff",
+                        "primary": "#0f5238",
+                        "on-secondary-fixed": "#2b1700",
+                        "outline": "#707973",
+                        "on-secondary-container": "#694000",
+                        "outline-variant": "#bfc9c1",
+                        "on-background": "#191c1d",
+                        "on-secondary": "#ffffff",
+                        "background": "#f8f9fa",
+                        "tertiary-container": "#235fa8",
+                        "on-secondary-fixed-variant": "#663e00",
+                        "secondary-fixed-dim": "#ffb961",
+                        "on-surface-variant": "#404943",
+                        "primary-fixed-dim": "#95d4b3",
+                        "surface": "#f8f9fa",
+                        "primary-fixed": "#b1f0ce",
+                        "inverse-on-surface": "#f0f1f2",
+                        "inverse-surface": "#2e3132",
+                        "on-tertiary-fixed-variant": "#004689",
+                        "on-tertiary-fixed": "#001b3c",
+                        "surface-tint": "#2c694e",
+                        "on-tertiary-container": "#c7daff",
+                        "secondary-container": "#fea520",
+                        "error": "#ba1a1a",
+                        "secondary": "#865300",
+                        "on-primary-container": "#a8e7c5",
+                        "surface-container": "#edeeef",
+                        "surface-bright": "#f8f9fa",
+                        "tertiary": "#00478a",
+                        "surface-variant": "#e1e3e4",
+                        "surface-dim": "#d9dadb",
+                        "secondary-fixed": "#ffddb9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "touch-target-min": "60px",
+                        "base-unit": "8px",
+                        "margin-mobile": "20px",
+                        "gutter": "16px",
+                        "margin-tablet": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-lg": ["Inter"],
+                        "headline-xl": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        .liquid-glass {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 10px 0 30px rgba(0,0,0,0.04);
+        }
+        .liquid-glass-input {
+            background-color: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid theme('colors.outline-variant');
+        }
+        .liquid-glass-input:focus-within {
+            border-color: theme('colors.primary');
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden antialiased">
+<!-- SideNavBar -->
+<aside class="h-full w-72 fixed left-0 top-0 border-r border-white/40 border-r border-white/20 dark:border-emerald-800/30 shadow-[10px_0_30px_rgba(0,0,0,0.04)] bg-white/75 dark:bg-emerald-950/40 backdrop-blur-lg flex flex-col h-full gap-2 p-6 z-20">
+<div class="mb-8 flex items-center gap-4">
+<div class="h-12 w-12 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-xl overflow-hidden shrink-0">
+<img alt="School Logo" class="h-full w-full object-cover" data-alt="A macro shot of a glossy, stylized school crest emblem. The lighting is soft and bright, creating a clean, modern aesthetic. The colors are predominantly deep green and white, fitting a polished academic brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2OvYkjdbJ4vtktGfrrj_xB74oIrZbm5n2Eney_AuOGxPvlnpskfIfvzNI33KBAJNUIOcAuR83z0gyeUmefJ_TWLsQ0PTBl2EQLZrxOPyENYQj3JDdZvwf3NIbuuSCZp1tJtnKwICNKg7r05N1jsdeH_3oB9jEBWHe1DvCN0OZcqlEs4j4qqTQHjRj8rwd_6J2B-_ODlP-nO2gG0zHbnIoIGihXTjKwksQjOZn975iiG9rGbu46IV-PH4kadedPlsPTcseDa-yA3GX"/>
+</div>
+<div>
+<h1 class="text-2xl font-bold text-emerald-800 dark:text-emerald-100 font-headline-md text-headline-md m-0">EduAdmin</h1>
+<p class="font-body-md text-body-md text-on-surface-variant m-0">Portal v2.0</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2 flex-1 font-['Inter'] text-sm font-medium tracking-tight">
+<a class="text-emerald-900/60 dark:text-emerald-100/60 flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="bg-emerald-600 dark:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 rounded-xl flex items-center gap-3 px-4 py-3 active:scale-[0.98] cursor-pointer" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span>Payments</span>
+</a>
+<a class="text-emerald-900/60 dark:text-emerald-100/60 flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl" href="#">
+<span class="material-symbols-outlined">money_off</span>
+<span>Debts</span>
+</a>
+<a class="text-emerald-900/60 dark:text-emerald-100/60 flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl" href="#">
+<span class="material-symbols-outlined">assessment</span>
+<span>Reports</span>
+</a>
+<a class="text-emerald-900/60 dark:text-emerald-100/60 flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl" href="#">
+<span class="material-symbols-outlined">school</span>
+<span>Students</span>
+</a>
+<a class="text-emerald-900/60 dark:text-emerald-100/60 flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl" href="#">
+<span class="material-symbols-outlined">record_voice_over</span>
+<span>Teachers</span>
+</a>
+<a class="text-emerald-900/60 dark:text-emerald-100/60 flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span>Fees</span>
+</a>
+<a class="text-emerald-900/60 dark:text-emerald-100/60 flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl mt-auto" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-72 flex-1 flex flex-col h-screen overflow-hidden relative">
+<!-- Background Graphic -->
+<div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+<div class="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-primary-container opacity-5 blur-[100px]"></div>
+<div class="absolute bottom-[-10%] left-[20%] w-[50%] h-[50%] rounded-full bg-secondary-container opacity-5 blur-[120px]"></div>
+</div>
+<!-- TopNavBar Structure equivalent (Integrated into Main for this specific layout) -->
+<header class="h-20 flex items-center justify-between px-10 z-10 shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-b border-white/20 dark:border-slate-800/50 shadow-sm w-full">
+<div class="flex-1"></div>
+<div class="flex items-center gap-4 text-emerald-700 dark:text-emerald-400">
+<button class="p-2 rounded-full hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors duration-200 text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors duration-200 text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<button class="p-2 rounded-full hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors duration-200 text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="flex-1 overflow-y-auto p-margin-tablet z-10 relative">
+<div class="max-w-[1200px] mx-auto flex flex-col gap-gutter h-full">
+<!-- Header Section -->
+<div class="mb-4">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">Bulk Entry — Backfill Data</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Enter last week and this week's feeding records</p>
+</div>
+<!-- Controls Area -->
+<div class="flex gap-4 mb-6">
+<!-- Select Class -->
+<div class="relative w-64">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1 absolute top-2 left-3 z-10 bg-transparent px-1 pointer-events-none">Select Class</label>
+<select class="liquid-glass-input w-full h-[60px] rounded-lg px-4 pt-5 pb-2 font-body-md text-body-md text-on-surface appearance-none cursor-pointer focus:outline-none focus:ring-0">
+<option>Grade 4 - Alpha</option>
+<option>Grade 4 - Beta</option>
+<option>Grade 5 - Alpha</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">arrow_drop_down</span>
+</div>
+<!-- Select Week -->
+<div class="relative w-64">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1 absolute top-2 left-3 z-10 bg-transparent px-1 pointer-events-none">Select Week</label>
+<select class="liquid-glass-input w-full h-[60px] rounded-lg px-4 pt-5 pb-2 font-body-md text-body-md text-on-surface appearance-none cursor-pointer focus:outline-none focus:ring-0">
+<option>Oct 16 - Oct 20 (Past Week)</option>
+<option>Oct 23 - Oct 27 (Current)</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">arrow_drop_down</span>
+</div>
+</div>
+<!-- Grid Container -->
+<div class="liquid-glass rounded-[24px] flex-1 flex flex-col overflow-hidden mb-6">
+<!-- Grid Header -->
+<div class="grid grid-cols-[200px_1fr_1fr_1fr_1fr_1fr] border-b border-surface-variant bg-surface-container-low/50 backdrop-blur-sm shrink-0">
+<div class="p-4 flex items-end">
+<span class="font-label-lg text-label-lg text-on-surface-variant">Student Name</span>
+</div>
+<div class="p-4 flex flex-col items-center justify-between border-l border-surface-variant/50">
+<span class="font-label-lg text-label-lg text-on-surface mb-2">Mon</span>
+<button class="font-label-sm text-label-sm text-primary hover:text-primary-container transition-colors">Mark All Paid</button>
+</div>
+<div class="p-4 flex flex-col items-center justify-between border-l border-surface-variant/50">
+<span class="font-label-lg text-label-lg text-on-surface mb-2">Tue</span>
+<button class="font-label-sm text-label-sm text-primary hover:text-primary-container transition-colors">Mark All Paid</button>
+</div>
+<div class="p-4 flex flex-col items-center justify-between border-l border-surface-variant/50 bg-primary/5">
+<span class="font-label-lg text-label-lg text-on-surface mb-2">Wed</span>
+<button class="font-label-sm text-label-sm text-primary hover:text-primary-container transition-colors">Mark All Paid</button>
+</div>
+<div class="p-4 flex flex-col items-center justify-between border-l border-surface-variant/50">
+<span class="font-label-lg text-label-lg text-on-surface mb-2">Thu</span>
+<button class="font-label-sm text-label-sm text-primary hover:text-primary-container transition-colors">Mark All Paid</button>
+</div>
+<div class="p-4 flex flex-col items-center justify-between border-l border-surface-variant/50">
+<span class="font-label-lg text-label-lg text-on-surface mb-2">Fri</span>
+<button class="font-label-sm text-label-sm text-primary hover:text-primary-container transition-colors">Mark All Paid</button>
+</div>
+</div>
+<!-- Grid Body (Scrollable) -->
+<div class="flex-1 overflow-y-auto">
+<!-- Row 1 -->
+<div class="grid grid-cols-[200px_1fr_1fr_1fr_1fr_1fr] border-b border-surface-variant/30 hover:bg-surface-container-low/30 transition-colors h-touch-target-min">
+<div class="px-4 py-2 flex items-center">
+<span class="font-body-md text-body-md text-on-surface font-medium truncate">Aisha Patel</span>
+</div>
+<div class="border-l border-surface-variant/50 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<span class="material-symbols-outlined text-primary font-bold" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="border-l border-surface-variant/50 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<span class="material-symbols-outlined text-primary font-bold" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="border-l border-surface-variant/50 bg-primary/5 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<span class="material-symbols-outlined text-outline-variant">remove</span>
+</div>
+<div class="border-l border-surface-variant/50 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<span class="material-symbols-outlined text-primary font-bold" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="border-l border-surface-variant/50 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-label-sm text-label-sm font-bold">C</div>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="grid grid-cols-[200px_1fr_1fr_1fr_1fr_1fr] border-b border-surface-variant/30 hover:bg-surface-container-low/30 transition-colors h-touch-target-min">
+<div class="px-4 py-2 flex items-center">
+<span class="font-body-md text-body-md text-on-surface font-medium truncate">Ben O'Connor</span>
+</div>
+<div class="border-l border-surface-variant/50 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<span class="material-symbols-outlined text-primary font-bold" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="border-l border-surface-variant/50 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<span class="material-symbols-outlined text-outline-variant">remove</span>
+</div>
+<div class="border-l border-surface-variant/50 bg-primary/5 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<span class="material-symbols-outlined text-outline-variant">remove</span>
+</div>
+<div class="border-l border-surface-variant/50 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors"></div>
+<div class="border-l border-surface-variant/50 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors"></div>
+</div>
+<!-- Row 3 -->
+<div class="grid grid-cols-[200px_1fr_1fr_1fr_1fr_1fr] border-b border-surface-variant/30 hover:bg-surface-container-low/30 transition-colors h-touch-target-min">
+<div class="px-4 py-2 flex items-center">
+<span class="font-body-md text-body-md text-on-surface font-medium truncate">Chloe Martinez</span>
+</div>
+<div class="border-l border-surface-variant/50 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-label-sm text-label-sm font-bold">C</div>
+</div>
+<div class="border-l border-surface-variant/50 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-label-sm text-label-sm font-bold">C</div>
+</div>
+<div class="border-l border-surface-variant/50 bg-primary/5 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-label-sm text-label-sm font-bold">C</div>
+</div>
+<div class="border-l border-surface-variant/50 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<span class="material-symbols-outlined text-primary font-bold" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="border-l border-surface-variant/50 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<span class="material-symbols-outlined text-primary font-bold" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<!-- Row 4 -->
+<div class="grid grid-cols-[200px_1fr_1fr_1fr_1fr_1fr] border-b border-surface-variant/30 hover:bg-surface-container-low/30 transition-colors h-touch-target-min">
+<div class="px-4 py-2 flex items-center">
+<span class="font-body-md text-body-md text-on-surface font-medium truncate">David Kim</span>
+</div>
+<div class="border-l border-surface-variant/50 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<span class="material-symbols-outlined text-primary font-bold" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="border-l border-surface-variant/50 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<span class="material-symbols-outlined text-primary font-bold" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="border-l border-surface-variant/50 bg-primary/5 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<span class="material-symbols-outlined text-primary font-bold" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="border-l border-surface-variant/50 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<span class="material-symbols-outlined text-primary font-bold" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="border-l border-surface-variant/50 flex items-center justify-center cursor-pointer hover:bg-surface-container-highest/20 transition-colors">
+<span class="material-symbols-outlined text-primary font-bold" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Action -->
+<div class="flex items-center justify-between shrink-0 mb-4 bg-white/50 backdrop-blur-md p-4 rounded-xl border border-white/40">
+<span class="font-body-md text-body-md text-on-surface-variant">128 of 200 cells marked</span>
+<button class="h-touch-target-min px-10 bg-primary text-on-primary rounded-xl font-label-lg text-label-lg shadow-sm hover:bg-primary-container hover:shadow-md transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">save</span>
+                        Save All
+                    </button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SchoolPay - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#a7c8ff",
+                        "surface-variant": "#e1e3e4",
+                        "outline-variant": "#bfc9c1",
+                        "on-secondary-fixed": "#2b1700",
+                        "outline": "#707973",
+                        "surface-tint": "#2c694e",
+                        "on-tertiary-container": "#c7daff",
+                        "inverse-on-surface": "#f0f1f2",
+                        "secondary-fixed": "#ffddb9",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#95d4b3",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#0e5138",
+                        "error": "#ba1a1a",
+                        "tertiary": "#00478a",
+                        "primary-container": "#2d6a4f",
+                        "secondary": "#865300",
+                        "inverse-surface": "#2e3132",
+                        "tertiary-container": "#235fa8",
+                        "on-tertiary-fixed-variant": "#004689",
+                        "tertiary-fixed": "#d5e3ff",
+                        "surface-dim": "#d9dadb",
+                        "surface-bright": "#f8f9fa",
+                        "surface": "#f8f9fa",
+                        "background": "#f8f9fa",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-container": "#a8e7c5",
+                        "on-background": "#191c1d",
+                        "secondary-fixed-dim": "#ffb961",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e7e8e9",
+                        "on-secondary-container": "#694000",
+                        "on-surface-variant": "#404943",
+                        "surface-container": "#edeeef",
+                        "primary-fixed": "#b1f0ce",
+                        "primary": "#0f5238",
+                        "primary-fixed-dim": "#95d4b3",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#191c1d",
+                        "surface-container-low": "#f3f4f5",
+                        "on-error-container": "#93000a",
+                        "secondary-container": "#fea520",
+                        "on-secondary-fixed-variant": "#663e00",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#001b3c",
+                        "on-primary-fixed": "#002114",
+                        "surface-container-highest": "#e1e3e4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "touch-target-min": "60px",
+                        "base-unit": "8px",
+                        "margin-mobile": "20px",
+                        "margin-tablet": "32px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-lg": ["Inter"],
+                        "label-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .liquid-glass {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04);
+        }
+        .liquid-glass-hollow {
+            background-color: transparent;
+            border: 1px solid theme('colors.surface-variant');
+            transition: all 0.3s ease;
+        }
+        .liquid-glass-hollow:focus-within {
+            border-color: theme('colors.primary');
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col md:flex-row antialiased">
+<!-- SideNavBar (Hidden on Mobile, Visible on Tablet/Desktop) -->
+<nav class="hidden md:flex flex-col fixed left-0 top-0 h-full w-72 bg-white/70 dark:bg-slate-900/75 backdrop-blur-xl border-r border-white/20 dark:border-slate-700/30 shadow-[0_8px_32px_0_rgba(0,0,0,0.04)] py-6 px-4 z-50 divide-y divide-white/10 dark:divide-slate-700/20">
+<!-- Header -->
+<div class="flex items-center gap-4 mb-8 px-2">
+<img alt="Headmistress profile photo" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" data-alt="A professional headshot of a confident female school administrator wearing a formal blazer. Soft, natural lighting highlights her professional demeanor in an academic setting. The image is captured with a shallow depth of field, blurring the modern office background to focus entirely on the subject. The overall tone is authoritative yet approachable, fitting an academic administrative portal context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6a1oxfGoxHGt86uw2L4e8PJ3egpqmQkpa_g8boHT2yGx_g_3pKDpFk6AHitfboPyOhJX4sW7UtIJJPeSSE70KiMc7z3jMyyM5VmCg0asclkyOyFxLb4cEVY6nViAG-aIv0flvysT5LzP0izpfk5u9hhCP-ulHOfStMSGeD1LotEP1-AcnMSoDbTrwxhu4AERfzk_Fmg5Mh0Nv2pxT8yQxIerYL_GnzdYseQTaWxdIwXgRZQLPTUv5MH8biG35rsAHnwT9cT89kNbj"/>
+<div>
+<h1 class="text-2xl font-black text-emerald-900 dark:text-emerald-100 italic">SchoolPay</h1>
+<p class="font-body-md text-label-sm text-surface-variant">Academic Finance Portal</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex flex-col gap-2 pt-6 w-full">
+<!-- Active Tab -->
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl min-h-touch-target-min text-emerald-700 dark:text-emerald-300 border-r-4 border-emerald-600 bg-emerald-50/50 dark:bg-emerald-900/20 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all duration-300 cursor-pointer active:scale-95 ease-in-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-body-md text-label-lg">Dashboard</span>
+</a>
+<!-- Inactive Tabs -->
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl min-h-touch-target-min text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all duration-300 cursor-pointer active:scale-95 ease-in-out" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-body-md text-label-lg">Payments</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl min-h-touch-target-min text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all duration-300 cursor-pointer active:scale-95 ease-in-out" href="#">
+<span class="material-symbols-outlined">money_off</span>
+<span class="font-body-md text-label-lg">Debts</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl min-h-touch-target-min text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all duration-300 cursor-pointer active:scale-95 ease-in-out" href="#">
+<span class="material-symbols-outlined">assessment</span>
+<span class="font-body-md text-label-lg">Reports</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl min-h-touch-target-min text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all duration-300 cursor-pointer active:scale-95 ease-in-out" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-body-md text-label-lg">Students</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl min-h-touch-target-min text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all duration-300 cursor-pointer active:scale-95 ease-in-out" href="#">
+<span class="material-symbols-outlined">school</span>
+<span class="font-body-md text-label-lg">Teachers</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl min-h-touch-target-min text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all duration-300 cursor-pointer active:scale-95 ease-in-out" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-body-md text-label-lg">Fees</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-xl min-h-touch-target-min text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-all duration-300 cursor-pointer active:scale-95 ease-in-out mt-auto" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-label-lg">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-72 flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="w-full h-[72px] bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border-b border-white/20 dark:border-slate-700/30 shadow-sm flex justify-between items-center px-8 sticky top-0 z-40">
+<h2 class="text-lg font-bold Inter tracking-tight text-emerald-800 dark:text-emerald-400">Financial Dashboard</h2>
+<div class="flex items-center gap-4">
+<!-- Search Bar -->
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="pl-10 pr-4 py-2 rounded-full liquid-glass-hollow min-h-[44px] w-64 text-body-md font-body-md focus:outline-none focus-within:ring-2 focus-within:ring-emerald-500" placeholder="Search..." type="text"/>
+</div>
+<!-- Trailing Actions -->
+<button class="text-slate-600 dark:text-slate-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/30 rounded-full p-2 transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-slate-600 dark:text-slate-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/30 rounded-full p-2 transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<!-- Mobile Avatar (Visible only on mobile if nav is hidden) -->
+<img alt="Headmistress avatar" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm md:hidden" data-alt="A professional headshot of a confident female school administrator wearing a formal blazer. Soft, natural lighting highlights her professional demeanor in an academic setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9CYG0wg1YtrSUBKtjHeOEk35TAlSJgUAAel1OvOAYw0yacbECVh2K_fFp_qrobDbr57Qxho5Do1UIeNeX3p0OxkCA3guALSXc_Ff0KrX0gxmEuKsXqIvh6cUmT2elD3sjNsyzIKU_kAaNYyrVknr-N5uEsar1KlmsbNjVSQz7FTP7b3iQ454Kx4gbOrgESeI1bIfh5rxwaM_NYQb6KQCI8X0FyNNIZl4jtabumKZY3C6-jAxsKOMDj0gCFoJBbQGzbyFBQyziKMJ9"/>
+</div>
+</header>
+<!-- Dashboard Canvas -->
+<div class="p-margin-mobile md:p-margin-tablet flex flex-col gap-8 pb-24">
+<!-- Key Metrics Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Stat Card 1 -->
+<div class="liquid-glass rounded-xl p-6 min-h-touch-target-min flex flex-col justify-center relative overflow-hidden">
+<div class="absolute right-0 top-0 w-2 h-full bg-tertiary"></div>
+<p class="font-body-md text-label-lg text-surface-variant mb-2">Total Expected</p>
+<h3 class="font-headline-lg text-headline-lg text-on-surface">GHS 48,000</h3>
+</div>
+<!-- Stat Card 2 -->
+<div class="liquid-glass rounded-xl p-6 min-h-touch-target-min flex flex-col justify-center relative overflow-hidden">
+<div class="absolute right-0 top-0 w-2 h-full bg-primary"></div>
+<p class="font-body-md text-label-lg text-surface-variant mb-2">Total Collected</p>
+<h3 class="font-headline-lg text-headline-lg text-on-surface">GHS 31,200</h3>
+</div>
+<!-- Stat Card 3 -->
+<div class="liquid-glass rounded-xl p-6 min-h-touch-target-min flex flex-col justify-center relative overflow-hidden">
+<div class="absolute right-0 top-0 w-2 h-full bg-error"></div>
+<p class="font-body-md text-label-lg text-surface-variant mb-2">Outstanding</p>
+<h3 class="font-headline-lg text-headline-lg text-on-surface">GHS 16,800</h3>
+</div>
+</section>
+<!-- Today's Classes -->
+<section>
+<div class="flex justify-between items-end mb-6">
+<h2 class="font-headline-md text-headline-md text-on-background">Today's Classes</h2>
+<a class="font-body-md text-label-lg text-primary hover:underline" href="#">View All</a>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Class Card 1 -->
+<div class="liquid-glass rounded-xl p-6 flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<h4 class="font-body-md text-body-lg font-semibold text-on-surface">JHS 1</h4>
+<div class="w-3 h-3 rounded-full bg-error shadow-sm"></div>
+</div>
+<div class="flex justify-between items-end">
+<p class="font-body-md text-label-sm text-outline">Submission pending</p>
+<p class="font-body-md text-label-lg text-on-surface font-bold">38/45</p>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-2 mt-2">
+<div class="bg-error h-2 rounded-full" style="width: 84%"></div>
+</div>
+</div>
+<!-- Class Card 2 -->
+<div class="liquid-glass rounded-xl p-6 flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<h4 class="font-body-md text-body-lg font-semibold text-on-surface">JHS 2</h4>
+<div class="w-3 h-3 rounded-full bg-secondary-container shadow-sm"></div>
+</div>
+<div class="flex justify-between items-end">
+<p class="font-body-md text-label-sm text-outline">Partial submission</p>
+<p class="font-body-md text-label-lg text-on-surface font-bold">42/45</p>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-2 mt-2">
+<div class="bg-secondary-container h-2 rounded-full" style="width: 93%"></div>
+</div>
+</div>
+<!-- Class Card 3 -->
+<div class="liquid-glass rounded-xl p-6 flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<h4 class="font-body-md text-body-lg font-semibold text-on-surface">JHS 3</h4>
+<div class="w-3 h-3 rounded-full bg-primary shadow-sm"></div>
+</div>
+<div class="flex justify-between items-end">
+<p class="font-body-md text-label-sm text-outline">Submitted</p>
+<p class="font-body-md text-label-lg text-on-surface font-bold">45/45</p>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-2 mt-2">
+<div class="bg-primary h-2 rounded-full" style="width: 100%"></div>
+</div>
+</div>
+<!-- Class Card 4 -->
+<div class="liquid-glass rounded-xl p-6 flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<h4 class="font-body-md text-body-lg font-semibold text-on-surface">Primary 6</h4>
+<div class="w-3 h-3 rounded-full bg-primary shadow-sm"></div>
+</div>
+<div class="flex justify-between items-end">
+<p class="font-body-md text-label-sm text-outline">Submitted</p>
+<p class="font-body-md text-label-lg text-on-surface font-bold">30/30</p>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-2 mt-2">
+<div class="bg-primary h-2 rounded-full" style="width: 100%"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Alerts Section -->
+<section>
+<h2 class="font-headline-md text-headline-md text-on-background mb-6">Alerts</h2>
+<div class="flex flex-col gap-4">
+<!-- Alert 1 -->
+<div class="bg-secondary-fixed text-on-secondary-fixed rounded-xl p-4 flex items-start gap-4 min-h-[60px] shadow-sm border border-secondary-fixed-dim/30">
+<span class="material-symbols-outlined text-secondary mt-1">warning</span>
+<div>
+<p class="font-body-md text-body-md font-semibold">JHS 1 has not submitted today</p>
+<p class="font-body-md text-label-sm opacity-80 mt-1">Action required by class teacher.</p>
+</div>
+</div>
+<!-- Alert 2 -->
+<div class="bg-secondary-fixed text-on-secondary-fixed rounded-xl p-4 flex items-start gap-4 min-h-[60px] shadow-sm border border-secondary-fixed-dim/30">
+<span class="material-symbols-outlined text-secondary mt-1">info</span>
+<div>
+<p class="font-body-md text-body-md font-semibold">5 students on credit for 3+ days</p>
+<p class="font-body-md text-label-sm opacity-80 mt-1">Review outstanding balances in the Debts tab.</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Floating Action Button (FAB) -->
+<button class="fixed bottom-8 right-8 bg-primary text-on-primary rounded-full px-6 py-4 flex items-center gap-2 shadow-lg hover:bg-primary-container transition-colors z-50 min-h-touch-target-min">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span class="font-body-md text-label-lg font-bold">Ask AI</span>
+</button>
+</main>
+</body></html>

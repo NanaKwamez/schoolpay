@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Payments History - EduAdmin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#d5e3ff",
+                        "surface-container-low": "#f3f4f5",
+                        "on-primary-fixed-variant": "#0e5138",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#191c1d",
+                        "tertiary-fixed-dim": "#a7c8ff",
+                        "surface-container-highest": "#e1e3e4",
+                        "primary-container": "#2d6a4f",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#95d4b3",
+                        "surface-container-high": "#e7e8e9",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#002114",
+                        "on-error-container": "#93000a",
+                        "on-primary": "#ffffff",
+                        "primary": "#0f5238",
+                        "on-secondary-fixed": "#2b1700",
+                        "outline": "#707973",
+                        "on-secondary-container": "#694000",
+                        "outline-variant": "#bfc9c1",
+                        "on-background": "#191c1d",
+                        "on-secondary": "#ffffff",
+                        "background": "#f8f9fa",
+                        "tertiary-container": "#235fa8",
+                        "on-secondary-fixed-variant": "#663e00",
+                        "secondary-fixed-dim": "#ffb961",
+                        "on-surface-variant": "#404943",
+                        "primary-fixed-dim": "#95d4b3",
+                        "surface": "#f8f9fa",
+                        "primary-fixed": "#b1f0ce",
+                        "inverse-on-surface": "#f0f1f2",
+                        "inverse-surface": "#2e3132",
+                        "on-tertiary-fixed-variant": "#004689",
+                        "on-tertiary-fixed": "#001b3c",
+                        "surface-tint": "#2c694e",
+                        "on-tertiary-container": "#c7daff",
+                        "secondary-container": "#fea520",
+                        "error": "#ba1a1a",
+                        "secondary": "#865300",
+                        "on-primary-container": "#a8e7c5",
+                        "surface-container": "#edeeef",
+                        "surface-bright": "#f8f9fa",
+                        "tertiary": "#00478a",
+                        "surface-variant": "#e1e3e4",
+                        "surface-dim": "#d9dadb",
+                        "secondary-fixed": "#ffddb9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "touch-target-min": "60px",
+                        "base-unit": "8px",
+                        "margin-mobile": "20px",
+                        "gutter": "16px",
+                        "margin-tablet": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-lg": ["Inter"],
+                        "headline-xl": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .liquid-glass {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+        }
+        .liquid-glass-input {
+            background-color: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(112, 121, 115, 0.2); /* outline color varied */
+        }
+        .liquid-glass-input:focus-within {
+            border-color: #0f5238; /* primary */
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        /* Background aesthetic */
+        body {
+            background: linear-gradient(135deg, #f0f1f2 0%, #e1e3e4 50%, #d5e3ff 100%);
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md text-on-surface h-screen overflow-hidden flex antialiased">
+<!-- Fixed decorative background element for glass depth -->
+<div class="fixed inset-0 pointer-events-none z-[-1]" style="background: radial-gradient(circle at 80% 20%, rgba(149,212,179,0.15) 0%, transparent 40%), radial-gradient(circle at 20% 80%, rgba(167,200,255,0.15) 0%, transparent 40%);"></div>
+<!-- SideNavBar (Shared Component) -->
+<nav class="bg-white/75 dark:bg-emerald-950/40 backdrop-blur-lg h-full w-72 fixed left-0 top-0 border-r border-white/40 shadow-[10px_0_30px_rgba(0,0,0,0.04)] z-50">
+<div class="flex flex-col h-full gap-2 p-6 border-r border-white/20 dark:border-emerald-800/30">
+<!-- Brand -->
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">school</span>
+</div>
+<div>
+<h1 class="font-['Inter'] text-sm font-medium tracking-tight text-2xl font-bold text-emerald-800 dark:text-emerald-100 leading-tight">EduAdmin</h1>
+<span class="font-['Inter'] text-sm font-medium tracking-tight text-xs text-emerald-700/60 block mt-0.5">Portal v2.0</span>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex flex-col gap-1 overflow-y-auto pr-2 pb-6">
+<!-- Dashboard -->
+<a class="text-emerald-900/60 dark:text-emerald-100/60 flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl font-['Inter'] text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                    Dashboard
+                </a>
+<!-- Payments (ACTIVE) -->
+<a class="bg-emerald-600 dark:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 rounded-xl flex items-center gap-3 px-4 py-3 active:scale-[0.98] cursor-pointer font-['Inter'] text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">payments</span>
+                    Payments
+                </a>
+<!-- Debts -->
+<a class="text-emerald-900/60 dark:text-emerald-100/60 flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl font-['Inter'] text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined">money_off</span>
+                    Debts
+                </a>
+<!-- Reports -->
+<a class="text-emerald-900/60 dark:text-emerald-100/60 flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl font-['Inter'] text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined">assessment</span>
+                    Reports
+                </a>
+<!-- Students -->
+<a class="text-emerald-900/60 dark:text-emerald-100/60 flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl font-['Inter'] text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined">school</span>
+                    Students
+                </a>
+<!-- Teachers -->
+<a class="text-emerald-900/60 dark:text-emerald-100/60 flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl font-['Inter'] text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined">record_voice_over</span>
+                    Teachers
+                </a>
+<!-- Fees -->
+<a class="text-emerald-900/60 dark:text-emerald-100/60 flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl font-['Inter'] text-sm font-medium tracking-tight" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+                    Fees
+                </a>
+<!-- Settings -->
+<a class="text-emerald-900/60 dark:text-emerald-100/60 flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl font-['Inter'] text-sm font-medium tracking-tight mt-auto" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    Settings
+                </a>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-72 h-full overflow-y-auto px-margin-tablet py-margin-tablet flex flex-col gap-gutter z-10 relative">
+<!-- Header Section -->
+<header class="flex items-center justify-between shrink-0 mb-4">
+<div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface">All Payments</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Review and manage transaction history.</p>
+</div>
+<button class="bg-primary text-on-primary font-label-lg text-label-lg h-touch-target-min px-6 rounded-xl flex items-center gap-2 hover:bg-surface-tint transition-colors shadow-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">download</span>
+                Export CSV
+            </button>
+</header>
+<!-- Filter Bar (Liquid Glass Card) -->
+<div class="liquid-glass rounded-xl p-4 shrink-0 flex flex-wrap items-center gap-4">
+<!-- Dropdowns -->
+<div class="flex-1 min-w-[200px] liquid-glass-input rounded-lg flex items-center px-4 h-touch-target-min transition-all relative">
+<span class="font-label-sm text-label-sm text-on-surface-variant absolute top-1 left-4">Class</span>
+<select class="w-full bg-transparent border-none p-0 mt-3 font-body-md text-body-md text-on-surface focus:ring-0 appearance-none outline-none cursor-pointer">
+<option>All Classes</option>
+<option>Grade 10 - Alpha</option>
+<option>Grade 11 - Beta</option>
+</select>
+<span class="material-symbols-outlined text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+<div class="flex-1 min-w-[200px] liquid-glass-input rounded-lg flex items-center px-4 h-touch-target-min transition-all relative">
+<span class="font-label-sm text-label-sm text-on-surface-variant absolute top-1 left-4">Fee Type</span>
+<select class="w-full bg-transparent border-none p-0 mt-3 font-body-md text-body-md text-on-surface focus:ring-0 appearance-none outline-none cursor-pointer">
+<option>All Types</option>
+<option>Tuition</option>
+<option>Transport</option>
+</select>
+<span class="material-symbols-outlined text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+<div class="flex-1 min-w-[200px] liquid-glass-input rounded-lg flex items-center px-4 h-touch-target-min transition-all relative">
+<span class="font-label-sm text-label-sm text-on-surface-variant absolute top-1 left-4">Payment Type</span>
+<select class="w-full bg-transparent border-none p-0 mt-3 font-body-md text-body-md text-on-surface focus:ring-0 appearance-none outline-none cursor-pointer">
+<option>All</option>
+<option>Full</option>
+<option>Credit</option>
+<option>Weekly</option>
+</select>
+<span class="material-symbols-outlined text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+<!-- Search -->
+<div class="flex-1 min-w-[300px] liquid-glass-input rounded-lg flex items-center px-4 h-touch-target-min transition-all group">
+<span class="material-symbols-outlined text-on-surface-variant mr-3 group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-transparent border-none p-0 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:ring-0 outline-none" placeholder="Search student or receipt..." type="text"/>
+</div>
+</div>
+<!-- Summary Row -->
+<div class="shrink-0 flex items-center justify-between px-2">
+<p class="font-label-lg text-label-lg text-on-surface-variant">Showing 245 records — <span class="text-on-surface">Total: GHS 31,200</span></p>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Sort by:</span>
+<button class="font-label-lg text-label-lg text-primary flex items-center gap-1 hover:text-surface-tint">
+                    Date (Newest) <span class="material-symbols-outlined text-[18px]">arrow_drop_down</span>
+</button>
+</div>
+</div>
+<!-- Data Table (Liquid Glass Card) -->
+<div class="liquid-glass rounded-xl flex-1 flex flex-col overflow-hidden">
+<div class="overflow-x-auto flex-1">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low/50 border-b border-surface-container-highest sticky top-0 z-10">
+<tr>
+<th class="font-label-lg text-label-lg text-on-surface-variant py-4 px-6 font-semibold whitespace-nowrap">Date</th>
+<th class="font-label-lg text-label-lg text-on-surface-variant py-4 px-6 font-semibold whitespace-nowrap">Student Name</th>
+<th class="font-label-lg text-label-lg text-on-surface-variant py-4 px-6 font-semibold whitespace-nowrap">Class</th>
+<th class="font-label-lg text-label-lg text-on-surface-variant py-4 px-6 font-semibold whitespace-nowrap">Fee Type</th>
+<th class="font-label-lg text-label-lg text-on-surface-variant py-4 px-6 font-semibold whitespace-nowrap text-right">Amount Paid</th>
+<th class="font-label-lg text-label-lg text-on-surface-variant py-4 px-6 font-semibold whitespace-nowrap text-center">Payment Type</th>
+<th class="font-label-lg text-label-lg text-on-surface-variant py-4 px-6 font-semibold whitespace-nowrap">Marked By</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-highest/50">
+<!-- Row 1: Full Payment -->
+<tr class="hover:bg-surface-container-low/30 transition-colors h-touch-target-min">
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface whitespace-nowrap">Oct 24, 2023</td>
+<td class="py-3 px-6 font-label-lg text-label-lg text-on-surface whitespace-nowrap flex items-center gap-3">
+<img alt="Student Avatar" class="w-8 h-8 rounded-full object-cover shadow-sm" data-alt="A portrait photograph of a young male student looking directly at the camera with a neutral expression. The lighting is bright and evenly diffused, typical of a modern school ID photo style. The background is a soft, blurred light grey. The image uses a clean, contemporary color grading consistent with a light-mode educational app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuClXeqWxSpbLbOuLuBTXvCfCaWlXmDE_Q0m0rEKYAqXibB2fHm5q2TdgTSUNSbZSZnx-i9cN43J7wuspw_6u5V4jDkCe5LrlIQpFD7D6CWEHQUbIqVyB8xzTJQfefdTPCe2q2ZV4cNmUz_YW10Lt1u45SlATXLIMvT0PLd1uk2gKG0b8GphY2MBRtesyNN3H4dmKkD8-PkmBTcs3uKrU5x1crV1RkP2ytmixRCOMDZdZJ2iwsQtIkorOLlMBtvtWMvgQLz5IVq8iXRx"/>
+                                Kwame Mensah
+                            </td>
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface-variant whitespace-nowrap">Grade 10 - Alpha</td>
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface whitespace-nowrap">Tuition (Term 1)</td>
+<td class="py-3 px-6 font-label-lg text-label-lg text-on-surface text-right whitespace-nowrap">GHS 1,200.00</td>
+<td class="py-3 px-6 text-center whitespace-nowrap">
+<span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-primary-container text-on-primary-container font-label-sm text-label-sm border border-primary-container/20">Full</span>
+</td>
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface-variant whitespace-nowrap">Admin Sarah</td>
+</tr>
+<!-- Row 2: Credit Payment (Highlighted) -->
+<tr class="bg-secondary-fixed/30 hover:bg-secondary-fixed/40 transition-colors h-touch-target-min">
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface whitespace-nowrap">Oct 23, 2023</td>
+<td class="py-3 px-6 font-label-lg text-label-lg text-on-surface whitespace-nowrap flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed font-label-lg shadow-sm">AO</div>
+                                Abena Osei
+                            </td>
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface-variant whitespace-nowrap">Grade 11 - Beta</td>
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface whitespace-nowrap">Transport</td>
+<td class="py-3 px-6 font-label-lg text-label-lg text-on-surface text-right whitespace-nowrap">GHS 400.00</td>
+<td class="py-3 px-6 text-center whitespace-nowrap">
+<span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm border border-secondary-container/20">Credit</span>
+</td>
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface-variant whitespace-nowrap">Admin John</td>
+</tr>
+<!-- Row 3: Weekly Payment -->
+<tr class="hover:bg-surface-container-low/30 transition-colors h-touch-target-min">
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface whitespace-nowrap">Oct 22, 2023</td>
+<td class="py-3 px-6 font-label-lg text-label-lg text-on-surface whitespace-nowrap flex items-center gap-3">
+<img alt="Student Avatar" class="w-8 h-8 rounded-full object-cover shadow-sm" data-alt="A portrait photograph of a young female student smiling warmly at the camera. The setting is indoors with soft, natural lighting coming from an off-camera window, creating a friendly and approachable mood. The background is softly out of focus, maintaining a pristine, light-mode aesthetic suitable for an educational platform interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAH8W6oSF8aL6VwpeXwOFbVODbkjIg2d8_YjKckDrYYoNWCx1QvuMR7C8CNBa_B-Wqn0zwFlJI9tofswDzdh-eXkE5NN38InDkyU7dwlg6LV_cnK-e7EbOtZEgL8WgCAUIbTsud7cGfYMHOcKSdWZa60zfESj4HbPgaCMDGWqcVmBCCf1aXJUgt0ArEI0XXqd_KPs1Nn9VU80DiNc76Ri6oaDd8FJgOJR_KyAXl7ZnU5zHQAp6tHTFLqm32p1KLbeMzwfoLER4Bib6K"/>
+                                Esi Yeboah
+                            </td>
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface-variant whitespace-nowrap">Grade 9 - Gamma</td>
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface whitespace-nowrap">Canteen</td>
+<td class="py-3 px-6 font-label-lg text-label-lg text-on-surface text-right whitespace-nowrap">GHS 150.00</td>
+<td class="py-3 px-6 text-center whitespace-nowrap">
+<span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm border border-tertiary-container/20">Weekly</span>
+</td>
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface-variant whitespace-nowrap">System Auto</td>
+</tr>
+<!-- Row 4: Full Payment -->
+<tr class="hover:bg-surface-container-low/30 transition-colors h-touch-target-min">
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface whitespace-nowrap">Oct 22, 2023</td>
+<td class="py-3 px-6 font-label-lg text-label-lg text-on-surface whitespace-nowrap flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant font-label-lg shadow-sm">KD</div>
+                                Kofi Darko
+                            </td>
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface-variant whitespace-nowrap">Grade 10 - Alpha</td>
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface whitespace-nowrap">Tuition (Term 1)</td>
+<td class="py-3 px-6 font-label-lg text-label-lg text-on-surface text-right whitespace-nowrap">GHS 1,200.00</td>
+<td class="py-3 px-6 text-center whitespace-nowrap">
+<span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-primary-container text-on-primary-container font-label-sm text-label-sm border border-primary-container/20">Full</span>
+</td>
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface-variant whitespace-nowrap">Admin Sarah</td>
+</tr>
+<!-- Row 5: Credit Payment (Highlighted) -->
+<tr class="bg-secondary-fixed/30 hover:bg-secondary-fixed/40 transition-colors h-touch-target-min border-b-0">
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface whitespace-nowrap">Oct 21, 2023</td>
+<td class="py-3 px-6 font-label-lg text-label-lg text-on-surface whitespace-nowrap flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-label-lg shadow-sm">MA</div>
+                                Ama Appiah
+                            </td>
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface-variant whitespace-nowrap">Grade 12 - Science</td>
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface whitespace-nowrap">Lab Fees</td>
+<td class="py-3 px-6 font-label-lg text-label-lg text-on-surface text-right whitespace-nowrap">GHS 300.00</td>
+<td class="py-3 px-6 text-center whitespace-nowrap">
+<span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm border border-secondary-container/20">Credit</span>
+</td>
+<td class="py-3 px-6 font-body-md text-body-md text-on-surface-variant whitespace-nowrap">Admin John</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer inside Glass Card -->
+<div class="border-t border-surface-container-highest/50 bg-white/40 p-4 flex items-center justify-between shrink-0">
+<p class="font-body-md text-body-md text-on-surface-variant">Showing 1 to 5 of 245</p>
+<div class="flex items-center gap-2">
+<button class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-50">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 rounded-lg flex items-center justify-center bg-primary text-on-primary font-label-lg transition-colors">1</button>
+<button class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant text-on-surface hover:bg-surface-container-low transition-colors font-label-lg">2</button>
+<button class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant text-on-surface hover:bg-surface-container-low transition-colors font-label-lg">3</button>
+<span class="text-on-surface-variant px-2">...</span>
+<button class="w-10 h-10 rounded-lg flex items-center justify-center border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

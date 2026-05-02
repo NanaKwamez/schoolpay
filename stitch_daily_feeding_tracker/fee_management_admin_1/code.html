@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EduAdmin - Fee Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#d5e3ff",
+                        "surface-container-low": "#f3f4f5",
+                        "on-primary-fixed-variant": "#0e5138",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#191c1d",
+                        "tertiary-fixed-dim": "#a7c8ff",
+                        "surface-container-highest": "#e1e3e4",
+                        "primary-container": "#2d6a4f",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#95d4b3",
+                        "surface-container-high": "#e7e8e9",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#002114",
+                        "on-error-container": "#93000a",
+                        "on-primary": "#ffffff",
+                        "primary": "#0f5238",
+                        "on-secondary-fixed": "#2b1700",
+                        "outline": "#707973",
+                        "on-secondary-container": "#694000",
+                        "outline-variant": "#bfc9c1",
+                        "on-background": "#191c1d",
+                        "on-secondary": "#ffffff",
+                        "background": "#f8f9fa",
+                        "tertiary-container": "#235fa8",
+                        "on-secondary-fixed-variant": "#663e00",
+                        "secondary-fixed-dim": "#ffb961",
+                        "on-surface-variant": "#404943",
+                        "primary-fixed-dim": "#95d4b3",
+                        "surface": "#f8f9fa",
+                        "primary-fixed": "#b1f0ce",
+                        "inverse-on-surface": "#f0f1f2",
+                        "inverse-surface": "#2e3132",
+                        "on-tertiary-fixed-variant": "#004689",
+                        "on-tertiary-fixed": "#001b3c",
+                        "surface-tint": "#2c694e",
+                        "on-tertiary-container": "#c7daff",
+                        "secondary-container": "#fea520",
+                        "error": "#ba1a1a",
+                        "secondary": "#865300",
+                        "on-primary-container": "#a8e7c5",
+                        "surface-container": "#edeeef",
+                        "surface-bright": "#f8f9fa",
+                        "tertiary": "#00478a",
+                        "surface-variant": "#e1e3e4",
+                        "surface-dim": "#d9dadb",
+                        "secondary-fixed": "#ffddb9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "touch-target-min": "60px",
+                        "base-unit": "8px",
+                        "margin-mobile": "20px",
+                        "gutter": "16px",
+                        "margin-tablet": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-lg": ["Inter"],
+                        "headline-xl": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-xl": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .liquid-glass {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 10px 0 30px rgba(0,0,0,0.04);
+        }
+        .liquid-glass-input {
+            background-color: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid theme('colors.outline-variant');
+        }
+        .liquid-glass-input:focus-within {
+            border-color: theme('colors.primary');
+            backdrop-filter: blur(20px);
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        body {
+            background-image: linear-gradient(135deg, #f3f4f5 0%, #e1e3e4 100%);
+            background-attachment: fixed;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface antialiased min-h-screen flex selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar -->
+<nav class="h-full w-72 fixed left-0 top-0 border-r border-white/40 shadow-[10px_0_30px_rgba(0,0,0,0.04)] z-50 bg-white/75 backdrop-blur-lg flex flex-col gap-2 p-6">
+<div class="mb-8 px-4 flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-primary-container flex items-center justify-center text-on-primary-container shadow-sm overflow-hidden border border-white/50">
+<img alt="School Logo" class="w-full h-full object-cover opacity-90" data-alt="A clean, minimalist abstract logo design for a modern educational institution. The logo features a stylized leaf or book motif rendered in deep emerald green and soft white. The image has a light, glass-like background aesthetic reflecting a high-end, organized academic environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBghZrfXKD_pjwW2dMltFpy0aaZ2HUhIUPknYHGjBzsKGGEWoswQ8BeXWSWCm6BLB1gc2Cf_OtQAay1KcTKMj3jfEcNbde3K0umxR_ztcO-NjBtyJBIXBCu_ibHZKaQ0ZVCyhb3qT6nc0hTPcT6EtAVomn0yq_FenADv0_9qDhZrq5GCyWDUfKMxBoB8Hczyp2-k4V_jWa_zYhqZC5HBsOvJagjuTxQ_21Ye67_B6jIv-EYR5BRWfsCkwda7jSdxk4OrJyYdV_mpp97"/>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary tracking-tight">EduAdmin</h1>
+<p class="font-label-sm text-label-sm text-outline">Portal v2.0</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto space-y-1 pr-2 custom-scrollbar">
+<a class="text-on-surface-variant flex items-center gap-3 px-4 py-3 hover:bg-surface-container/50 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </a>
+<a class="text-on-surface-variant flex items-center gap-3 px-4 py-3 hover:bg-surface-container/50 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+                Payments
+            </a>
+<a class="text-on-surface-variant flex items-center gap-3 px-4 py-3 hover:bg-surface-container/50 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="money_off">money_off</span>
+                Debts
+            </a>
+<a class="text-on-surface-variant flex items-center gap-3 px-4 py-3 hover:bg-surface-container/50 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="assessment">assessment</span>
+                Reports
+            </a>
+<a class="text-on-surface-variant flex items-center gap-3 px-4 py-3 hover:bg-surface-container/50 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="school">school</span>
+                Students
+            </a>
+<a class="text-on-surface-variant flex items-center gap-3 px-4 py-3 hover:bg-surface-container/50 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="record_voice_over">record_voice_over</span>
+                Teachers
+            </a>
+<!-- Active Tab -->
+<a class="bg-primary text-on-primary shadow-lg shadow-primary/20 rounded-xl flex items-center gap-3 px-4 py-3 active:scale-[0.98] cursor-pointer font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+                Fees
+            </a>
+<a class="text-on-surface-variant flex items-center gap-3 px-4 py-3 hover:bg-surface-container/50 transition-all duration-200 active:scale-[0.98] cursor-pointer rounded-xl font-label-lg text-label-lg mt-8" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Settings
+            </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-72 flex-1 flex flex-col h-screen overflow-hidden">
+<!-- TopNavBar equivalent logic (Header) -->
+<header class="h-20 shrink-0 liquid-glass border-b border-white/30 px-10 flex items-center justify-between sticky top-0 z-40">
+<h2 class="font-headline-lg text-headline-lg text-primary tracking-tight">Fee Management</h2>
+<div class="flex items-center gap-4">
+<button class="h-touch-target-min px-6 bg-primary text-on-primary rounded-xl font-label-lg text-label-lg flex items-center gap-2 hover:bg-surface-tint transition-colors active:scale-[0.98] shadow-md shadow-primary/20">
+<span class="material-symbols-outlined">add</span>
+                    Add New Fee
+                </button>
+</div>
+</header>
+<!-- Scrollable Canvas -->
+<div class="flex-1 overflow-y-auto p-10 space-y-8">
+<!-- Bento Layout Container -->
+<div class="grid grid-cols-12 gap-8">
+<!-- Fee List Section (Spans 7 cols) -->
+<section class="col-span-12 xl:col-span-7 flex flex-col gap-4">
+<h3 class="font-headline-md text-headline-md text-on-surface">Existing Fee Types</h3>
+<!-- Fee Card 1 -->
+<div class="liquid-glass rounded-[24px] p-6 border-l-4 border-l-primary flex items-center justify-between group hover:shadow-lg transition-shadow relative overflow-hidden">
+<!-- Decorative gradient background hint -->
+<div class="absolute inset-0 bg-gradient-to-r from-primary-fixed/10 to-transparent pointer-events-none"></div>
+<div class="flex flex-col gap-3 z-10">
+<div class="flex items-center gap-3">
+<h4 class="font-headline-md text-headline-md text-on-surface">Feeding Fee</h4>
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full font-label-sm text-label-sm uppercase tracking-wider">Daily</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-label-sm text-label-sm text-outline">Amount:</span>
+<span class="font-headline-lg text-headline-lg text-primary">GHS 15.00</span>
+</div>
+<div class="flex items-center gap-2 mt-2">
+<span class="font-label-sm text-label-sm text-outline">Applies to:</span>
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-surface-container-high text-on-surface-variant rounded font-label-sm text-label-sm">Primary 1</span>
+<span class="px-2 py-1 bg-surface-container-high text-on-surface-variant rounded font-label-sm text-label-sm">Primary 2</span>
+<span class="px-2 py-1 bg-surface-container-high text-on-surface-variant rounded font-label-sm text-label-sm">Primary 3</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2 z-10 shrink-0">
+<button class="h-12 px-4 rounded-lg bg-surface-container text-on-surface font-label-lg text-label-lg hover:bg-surface-container-high transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">edit</span> Edit
+                            </button>
+<button class="h-12 px-4 rounded-lg bg-error-container text-on-error-container font-label-lg text-label-lg hover:bg-error/10 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">delete</span> Delete
+                            </button>
+</div>
+</div>
+<!-- Fee Card 2 -->
+<div class="liquid-glass rounded-[24px] p-6 border-l-4 border-l-primary flex items-center justify-between group hover:shadow-lg transition-shadow relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-r from-primary-fixed/10 to-transparent pointer-events-none"></div>
+<div class="flex flex-col gap-3 z-10">
+<div class="flex items-center gap-3">
+<h4 class="font-headline-md text-headline-md text-on-surface">Tuition Fee</h4>
+<span class="px-3 py-1 bg-tertiary-container text-on-tertiary-container rounded-full font-label-sm text-label-sm uppercase tracking-wider">Termly</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-label-sm text-label-sm text-outline">Amount:</span>
+<span class="font-headline-lg text-headline-lg text-primary">GHS 850.00</span>
+</div>
+<div class="flex items-center gap-2 mt-2">
+<span class="font-label-sm text-label-sm text-outline">Applies to:</span>
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-surface-container-high text-on-surface-variant rounded font-label-sm text-label-sm">All Primary</span>
+<span class="px-2 py-1 bg-surface-container-high text-on-surface-variant rounded font-label-sm text-label-sm">All JHS</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2 z-10 shrink-0">
+<button class="h-12 px-4 rounded-lg bg-surface-container text-on-surface font-label-lg text-label-lg hover:bg-surface-container-high transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">edit</span> Edit
+                            </button>
+<button class="h-12 px-4 rounded-lg bg-error-container text-on-error-container font-label-lg text-label-lg hover:bg-error/10 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">delete</span> Delete
+                            </button>
+</div>
+</div>
+<!-- Fee Card 3 -->
+<div class="liquid-glass rounded-[24px] p-6 border-l-4 border-l-primary flex items-center justify-between group hover:shadow-lg transition-shadow relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-r from-primary-fixed/10 to-transparent pointer-events-none"></div>
+<div class="flex flex-col gap-3 z-10">
+<div class="flex items-center gap-3">
+<h4 class="font-headline-md text-headline-md text-on-surface">PTA Levy</h4>
+<span class="px-3 py-1 bg-tertiary-container text-on-tertiary-container rounded-full font-label-sm text-label-sm uppercase tracking-wider">Termly</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-label-sm text-label-sm text-outline">Amount:</span>
+<span class="font-headline-lg text-headline-lg text-primary">GHS 50.00</span>
+</div>
+<div class="flex items-center gap-2 mt-2">
+<span class="font-label-sm text-label-sm text-outline">Applies to:</span>
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-surface-container-high text-on-surface-variant rounded font-label-sm text-label-sm">Entire School</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2 z-10 shrink-0">
+<button class="h-12 px-4 rounded-lg bg-surface-container text-on-surface font-label-lg text-label-lg hover:bg-surface-container-high transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">edit</span> Edit
+                            </button>
+<button class="h-12 px-4 rounded-lg bg-error-container text-on-error-container font-label-lg text-label-lg hover:bg-error/10 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">delete</span> Delete
+                            </button>
+</div>
+</div>
+</section>
+<!-- Form Section (Spans 5 cols) -->
+<section class="col-span-12 xl:col-span-5 relative">
+<div class="liquid-glass rounded-[24px] p-8 sticky top-10 flex flex-col h-auto">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-6 border-b border-outline-variant/30 pb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">edit_document</span>
+                            Add / Edit Fee
+                        </h3>
+<form class="flex flex-col gap-6 flex-1">
+<!-- Input: Fee Name -->
+<div class="flex flex-col gap-2">
+<label class="font-label-lg text-label-lg text-on-surface-variant ml-1" for="feeName">Fee Name</label>
+<div class="relative liquid-glass-input rounded-xl h-touch-target-min flex items-center px-4 overflow-hidden transition-all">
+<span class="material-symbols-outlined text-outline mr-3">label</span>
+<input class="bg-transparent border-none outline-none w-full font-body-lg text-body-lg text-on-surface placeholder-outline-variant focus:ring-0" id="feeName" placeholder="e.g. Feeding Fee" type="text"/>
+</div>
+</div>
+<!-- Input: Amount -->
+<div class="flex flex-col gap-2">
+<label class="font-label-lg text-label-lg text-on-surface-variant ml-1" for="amount">Amount (GHS)</label>
+<div class="relative liquid-glass-input rounded-xl h-touch-target-min flex items-center px-4 overflow-hidden transition-all">
+<span class="font-label-lg text-label-lg text-outline mr-3">GHS</span>
+<input class="bg-transparent border-none outline-none w-full font-body-lg text-body-lg text-on-surface placeholder-outline-variant focus:ring-0" id="amount" placeholder="0.00" step="0.01" type="number"/>
+</div>
+</div>
+<!-- Select: Frequency -->
+<div class="flex flex-col gap-2">
+<label class="font-label-lg text-label-lg text-on-surface-variant ml-1" for="frequency">Frequency</label>
+<div class="relative liquid-glass-input rounded-xl h-touch-target-min flex items-center px-4 overflow-hidden transition-all">
+<span class="material-symbols-outlined text-outline mr-3">calendar_month</span>
+<select class="bg-transparent border-none outline-none w-full font-body-lg text-body-lg text-on-surface focus:ring-0 appearance-none cursor-pointer" id="frequency">
+<option value="daily">Daily</option>
+<option value="weekly">Weekly</option>
+<option selected="" value="termly">Termly</option>
+<option value="once">Once</option>
+</select>
+<span class="material-symbols-outlined text-outline absolute right-4 pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Select: Term -->
+<div class="flex flex-col gap-2">
+<label class="font-label-lg text-label-lg text-on-surface-variant ml-1" for="term">Applicable Term</label>
+<div class="relative liquid-glass-input rounded-xl h-touch-target-min flex items-center px-4 overflow-hidden transition-all">
+<span class="material-symbols-outlined text-outline mr-3">event_note</span>
+<select class="bg-transparent border-none outline-none w-full font-body-lg text-body-lg text-on-surface focus:ring-0 appearance-none cursor-pointer" id="term">
+<option value="all">All Terms</option>
+<option value="term1">Term 1</option>
+<option value="term2">Term 2</option>
+<option value="term3">Term 3</option>
+</select>
+<span class="material-symbols-outlined text-outline absolute right-4 pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Multi-Select: Applies To (Checkboxes) -->
+<div class="flex flex-col gap-2 mt-2">
+<label class="font-label-lg text-label-lg text-on-surface-variant ml-1">Applies To (Classes)</label>
+<div class="liquid-glass-input rounded-xl p-4 max-h-48 overflow-y-auto custom-scrollbar flex flex-col gap-3">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-6 h-6 rounded text-primary focus:ring-primary border-outline-variant bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary transition-colors">Creche</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-6 h-6 rounded text-primary focus:ring-primary border-outline-variant bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary transition-colors">Nursery 1</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="w-6 h-6 rounded text-primary focus:ring-primary border-outline-variant bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary transition-colors">Primary 1</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="w-6 h-6 rounded text-primary focus:ring-primary border-outline-variant bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary transition-colors">Primary 2</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="w-6 h-6 rounded text-primary focus:ring-primary border-outline-variant bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary transition-colors">Primary 3</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-6 h-6 rounded text-primary focus:ring-primary border-outline-variant bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-primary transition-colors">JHS 1</span>
+</label>
+</div>
+</div>
+<!-- Save Button -->
+<div class="mt-6 pt-6 border-t border-outline-variant/30">
+<button class="w-full h-touch-target-min bg-primary text-on-primary rounded-xl font-headline-md text-headline-md flex items-center justify-center gap-2 hover:bg-surface-tint transition-colors active:scale-[0.98] shadow-lg shadow-primary/20" type="button">
+<span class="material-symbols-outlined">save</span>
+                                    Save Fee Type
+                                </button>
+</div>
+</form>
+</div>
+</section>
+</div>
+</div>
+</main>
+<style>
+        /* Custom Scrollbar for better aesthetic on web */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: theme('colors.outline-variant');
+            border-radius: 20px;
+        }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+            background-color: theme('colors.outline');
+        }
+    </style>
+</body></html>

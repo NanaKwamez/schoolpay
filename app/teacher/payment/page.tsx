@@ -1,16 +1,450 @@
+'use client'
+
+import { useState, useMemo, useCallback } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { Search, X, CheckCircle, MessageCircle, ChevronRight } from 'lucide-react'
 import { TopBar } from '@/components/ui/TopBar'
 import { BottomNav } from '@/components/ui/BottomNav'
-import { SCHOOL_NAME } from '@/lib/constants'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { useAuth } from '@/hooks/useAuth'
+import { usePayments } from '@/hooks/usePayments'
+import { db } from '@/lib/dexie/schema'
+import { formatGHS, getWeekStart } from '@/lib/utils'
+import { WEEKLY_FEEDING_AMOUNT } from '@/lib/constants'
+import { cn } from '@/lib/utils'
+import type { Student, FeeType, PaymentType } from '@/types'
 
-export const metadata = { title: `Record Payment — ${SCHOOL_NAME}` }
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface SavedReceipt {
+  receiptNumber: string
+  studentName: string
+  className: string
+  feeName: string
+  amount: number
+  paymentType: PaymentType
+  date: string
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function paymentTypeLabel(pt: PaymentType): string {
+  const labels: Record<PaymentType, string> = {
+    full: 'Full Payment',
+    credit: 'Part Payment',
+    weekly_advance: 'Weekly Advance',
+    daily: 'Daily',
+  }
+  return labels[pt]
+}
+
+function formatWeekLabel(date: Date): string {
+  return `Week of ${date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TeacherPaymentPage() {
+  const { profile } = useAuth()
+  const { savePayment, loading: saving } = usePayments()
+
+  const classId = profile?.class_id ?? null
+
+  // ── State machine ───────────────────────────────────────────────────────────
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+  const [selectedFeeType, setSelectedFeeType] = useState<FeeType | null>(null)
+  const [paymentType, setPaymentType] = useState<PaymentType>('full')
+  const [amount, setAmount] = useState('')
+  const [notes, setNotes] = useState('')
+  const [search, setSearch] = useState('')
+  const [weekOffset, setWeekOffset] = useState(0) // 0 = current, -1 = last week
+  const [savedReceipt, setSavedReceipt] = useState<SavedReceipt | null>(null)
+
+  // ── Data from Dexie ─────────────────────────────────────────────────────────
+  const allStudents = useLiveQuery(
+    async () => {
+      if (!classId) return []
+      return db.students.where('class_id').equals(classId).and(s => s.is_active).sortBy('full_name')
+    },
+    [classId],
+    []
+  )
+
+  const feeTypes = useLiveQuery(
+    async () => {
+      const all = await db.feeTypes.toArray()
+      return all.filter(f => f.is_active)
+    },
+    [],
+    []
+  )
+
+  const currentTerm = useLiveQuery(
+    async () => {
+      const terms = await db.terms.toArray()
+      return terms.find(t => t.is_current) ?? null
+    },
+    [],
+    null
+  )
+
+  const classData = useLiveQuery(
+    async () => (classId ? db.classes.get(classId) : undefined),
+    [classId]
+  )
+
+  // ── Filtered students ────────────────────────────────────────────────────────
+  const filteredStudents = useMemo(() => {
+    if (!search.trim()) return allStudents ?? []
+    const q = search.toLowerCase()
+    return (allStudents ?? []).filter(s => s.full_name.toLowerCase().includes(q))
+  }, [allStudents, search])
+
+  // ── Week for weekly advance ──────────────────────────────────────────────────
+  const weekDate = useMemo(() => {
+    const base = getWeekStart(new Date())
+    base.setDate(base.getDate() + weekOffset * 7)
+    return base
+  }, [weekOffset])
+
+  const weekCoveredStr = useMemo(
+    () => weekDate.toISOString().split('T')[0] ?? '',
+    [weekDate]
+  )
+
+  // ── Auto-set amount when fee type or payment type changes ────────────────────
+  const resolvedAmount = useMemo(() => {
+    if (!selectedFeeType) return ''
+    if (paymentType === 'full') return selectedFeeType.amount.toFixed(2)
+    if (paymentType === 'weekly_advance') return WEEKLY_FEEDING_AMOUNT.toFixed(2)
+    return amount
+  }, [selectedFeeType, paymentType, amount])
+
+  // ── Save ─────────────────────────────────────────────────────────────────────
+  const handleSave = useCallback(async () => {
+    if (!selectedStudent || !selectedFeeType || !profile || !currentTerm) return
+
+    const amountNum = parseFloat(resolvedAmount)
+    if (isNaN(amountNum) || amountNum <= 0) return
+
+    const today = new Date().toISOString().split('T')[0] ?? ''
+
+    const receiptNumber = await savePayment({
+      student_id: selectedStudent.id,
+      fee_type_id: selectedFeeType.id,
+      term_id: currentTerm.id,
+      amount_paid: amountNum,
+      payment_type: paymentType,
+      week_covered: paymentType === 'weekly_advance' ? weekCoveredStr : null,
+      date_paid: today,
+      marked_by: profile.id,
+      notes: notes.trim() || null,
+    })
+
+    setSavedReceipt({
+      receiptNumber,
+      studentName: selectedStudent.full_name,
+      className: classData?.name ?? '',
+      feeName: selectedFeeType.name,
+      amount: amountNum,
+      paymentType,
+      date: new Date().toLocaleDateString('en-GB', {
+        day: 'numeric', month: 'short', year: 'numeric',
+      }),
+    })
+  }, [
+    selectedStudent, selectedFeeType, profile, currentTerm,
+    resolvedAmount, paymentType, weekCoveredStr, notes, savePayment, classData,
+  ])
+
+  const handleReset = () => {
+    setSavedReceipt(null)
+    setSelectedStudent(null)
+    setSelectedFeeType(null)
+    setPaymentType('full')
+    setAmount('')
+    setNotes('')
+    setSearch('')
+  }
+
+  const handleWhatsApp = () => {
+    if (!savedReceipt) return
+    const text = [
+      `Morning Glory Academy — Receipt`,
+      `Student: ${savedReceipt.studentName} (${savedReceipt.className})`,
+      `Fee: ${savedReceipt.feeName}`,
+      `Amount: ${formatGHS(savedReceipt.amount)}`,
+      `Type: ${paymentTypeLabel(savedReceipt.paymentType)}`,
+      `Date: ${savedReceipt.date}`,
+      `Receipt: ${savedReceipt.receiptNumber}`,
+    ].join('\n')
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer')
+  }
+
+  // ── Success screen ──────────────────────────────────────────────────────────
+  if (savedReceipt) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <TopBar title="Payment Saved" backHref="/teacher/home" />
+        <main className="px-4 py-8 space-y-5">
+          <div className="flex flex-col items-center text-center gap-2">
+            <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
+              <CheckCircle className="h-9 w-9 text-green-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">Payment Saved!</h2>
+            <p className="text-gray-500 text-sm">Stored offline, will sync when online</p>
+          </div>
+
+          {/* Receipt card */}
+          <Card variant="green" className="font-mono text-sm space-y-2">
+            <p className="text-center font-bold text-morning-green-800 text-base not-italic mb-3">
+              Morning Glory Academy
+            </p>
+            {[
+              ['Student', `${savedReceipt.studentName} — ${savedReceipt.className}`],
+              ['Fee', savedReceipt.feeName],
+              ['Amount', formatGHS(savedReceipt.amount)],
+              ['Type', paymentTypeLabel(savedReceipt.paymentType)],
+              ['Date', savedReceipt.date],
+              ['Receipt', savedReceipt.receiptNumber],
+            ].map(([label, value]) => (
+              <div key={label} className="flex justify-between gap-3">
+                <span className="text-morning-green-600 shrink-0">{label}:</span>
+                <span className="text-morning-green-900 text-right">{value}</span>
+              </div>
+            ))}
+          </Card>
+
+          <Button
+            variant="success"
+            fullWidth
+            size="lg"
+            icon={<MessageCircle className="h-5 w-5" />}
+            onClick={handleWhatsApp}
+          >
+            Share via WhatsApp
+          </Button>
+
+          <Button variant="secondary" fullWidth size="lg" onClick={handleReset}>
+            Record Another Payment
+          </Button>
+        </main>
+        <BottomNav />
+      </div>
+    )
+  }
+
+  // ── Main form ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <TopBar title="Record Payment" />
-      <main className="px-4 py-4">
-        <p className="text-gray-500 text-sm">Payment recording form will appear here.</p>
+    <div className="min-h-screen bg-gray-50">
+      <TopBar title="Record Payment" backHref="/teacher/home" showSync />
+
+      <main className="pb-24 space-y-0">
+
+        {/* ── Step 1: Select student ─────────────────────────────────────── */}
+        <section className="bg-white border-b border-gray-100 px-4 pt-4 pb-3">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Step 1 — Student</p>
+
+          {selectedStudent ? (
+            <div className="flex items-center gap-3 bg-morning-green-50 rounded-xl px-4 py-3 border border-morning-green-200">
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-gray-900">{selectedStudent.full_name}</p>
+                <p className="text-xs text-morning-green-600">{classData?.name}</p>
+              </div>
+              <button
+                onClick={() => { setSelectedStudent(null); setSelectedFeeType(null) }}
+                className="min-h-[48px] min-w-[48px] flex items-center justify-center text-gray-400 hover:text-gray-600"
+                aria-label="Clear student selection"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="relative mb-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                <input
+                  type="search"
+                  placeholder="Search student name..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="w-full min-h-[48px] pl-10 pr-4 py-2 border-2 border-gray-200 rounded-xl text-base outline-none focus:border-morning-green-500 transition"
+                />
+              </div>
+              <div className="max-h-52 overflow-y-auto divide-y divide-gray-50">
+                {filteredStudents.map(student => (
+                  <button
+                    key={student.id}
+                    onClick={() => { setSelectedStudent(student); setSearch('') }}
+                    className="w-full flex items-center justify-between px-2 py-3 min-h-[52px] hover:bg-gray-50 active:bg-gray-100 transition text-left"
+                  >
+                    <span className="font-medium text-gray-900 text-base">{student.full_name}</span>
+                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                  </button>
+                ))}
+                {filteredStudents.length === 0 && (
+                  <p className="text-gray-400 text-sm py-4 text-center">No students found</p>
+                )}
+              </div>
+            </>
+          )}
+        </section>
+
+        {/* ── Step 2: Select fee type (only after student selected) ─────── */}
+        {selectedStudent && (
+          <section className="bg-white border-b border-gray-100 px-4 pt-4 pb-3">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Step 2 — Fee Type</p>
+            <div className="space-y-2">
+              {(feeTypes ?? []).map(fee => {
+                const isSelected = selectedFeeType?.id === fee.id
+                return (
+                  <button
+                    key={fee.id}
+                    onClick={() => { setSelectedFeeType(fee); setPaymentType('full') }}
+                    className={cn(
+                      'w-full min-h-[56px] rounded-xl border-2 px-4 flex items-center justify-between transition',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-morning-green-500',
+                      isSelected
+                        ? 'bg-morning-green-600 border-morning-green-600 text-white'
+                        : 'bg-white border-gray-200 text-gray-900 hover:border-morning-green-300'
+                    )}
+                  >
+                    <span className="font-semibold text-base">{fee.name}</span>
+                    <span className={cn('text-sm font-bold', isSelected ? 'text-white/90' : 'text-morning-green-600')}>
+                      {formatGHS(fee.amount)}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* ── Step 3: Payment details ───────────────────────────────────── */}
+        {selectedStudent && selectedFeeType && (
+          <section className="bg-white px-4 pt-4 pb-4 space-y-4">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Step 3 — Payment Details</p>
+
+            {/* Payment type */}
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-2">Payment type</p>
+              <div className="grid grid-cols-3 gap-2">
+                {(['full', 'credit', 'weekly_advance'] as PaymentType[]).map(pt => (
+                  <button
+                    key={pt}
+                    onClick={() => setPaymentType(pt)}
+                    className={cn(
+                      'min-h-[48px] rounded-xl border-2 text-xs font-bold transition',
+                      paymentType === pt
+                        ? 'bg-morning-green-600 border-morning-green-600 text-white'
+                        : 'bg-white border-gray-200 text-gray-700 hover:border-morning-green-300'
+                    )}
+                  >
+                    {pt === 'full' ? 'Full' : pt === 'credit' ? 'Part' : 'Weekly'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Amount */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Amount (GHS)</label>
+              {paymentType === 'credit' ? (
+                <>
+                  <input
+                    type="number"
+                    min="0.01"
+                    max={selectedFeeType.amount}
+                    step="0.01"
+                    value={amount}
+                    onChange={e => setAmount(e.target.value)}
+                    placeholder={`Up to ${formatGHS(selectedFeeType.amount)}`}
+                    className="w-full min-h-[56px] border-2 border-gray-200 rounded-xl px-4 text-xl font-bold outline-none focus:border-morning-green-500 transition"
+                  />
+                  {amount && !isNaN(parseFloat(amount)) && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Remaining: {formatGHS(Math.max(0, selectedFeeType.amount - parseFloat(amount)))}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <div className="min-h-[56px] bg-gray-50 border-2 border-gray-200 rounded-xl px-4 flex items-center">
+                  <span className="text-xl font-bold text-gray-900">{formatGHS(parseFloat(resolvedAmount))}</span>
+                  <span className="text-xs text-gray-400 ml-2">(fixed)</span>
+                </div>
+              )}
+            </div>
+
+            {/* Week selector for weekly advance */}
+            {paymentType === 'weekly_advance' && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Week covered</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setWeekOffset(w => w - 1)}
+                    className="min-h-[48px] min-w-[48px] border-2 border-gray-200 rounded-xl text-xl font-bold text-gray-600 hover:bg-gray-50"
+                  >
+                    ‹
+                  </button>
+                  <div className="flex-1 bg-gray-50 border-2 border-gray-200 rounded-xl px-3 py-2 text-center">
+                    <p className="text-sm font-semibold text-gray-800">{formatWeekLabel(weekDate)}</p>
+                  </div>
+                  <button
+                    onClick={() => setWeekOffset(w => Math.min(0, w + 1))}
+                    disabled={weekOffset >= 0}
+                    className="min-h-[48px] min-w-[48px] border-2 border-gray-200 rounded-xl text-xl font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-30"
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Notes */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Notes (optional)</label>
+              <textarea
+                rows={2}
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Any additional notes…"
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base outline-none focus:border-morning-green-500 transition resize-none"
+              />
+            </div>
+
+            {/* Receipt preview */}
+            <Card variant="green" className="text-sm">
+              <p className="text-xs font-bold text-morning-green-700 uppercase tracking-wide mb-2">Receipt Preview</p>
+              <div className="space-y-1 font-mono text-morning-green-900">
+                <p>Morning Glory Academy</p>
+                <p>Student: {selectedStudent.full_name} — {classData?.name}</p>
+                <p>Fee: {selectedFeeType.name}</p>
+                <p>Amount: {formatGHS(parseFloat(resolvedAmount) || 0)}</p>
+                <p>Type: {paymentTypeLabel(paymentType)}</p>
+                <p>Date: {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+              </div>
+            </Card>
+          </section>
+        )}
       </main>
+
+      {/* Sticky save button */}
+      {selectedStudent && selectedFeeType && (
+        <div className="fixed bottom-16 left-0 right-0 z-20 bg-white border-t border-gray-100 px-4 py-3">
+          <Button
+            variant="primary"
+            fullWidth
+            size="lg"
+            loading={saving}
+            disabled={!resolvedAmount || parseFloat(resolvedAmount) <= 0}
+            onClick={handleSave}
+          >
+            Save Payment
+          </Button>
+        </div>
+      )}
+
       <BottomNav />
     </div>
   )

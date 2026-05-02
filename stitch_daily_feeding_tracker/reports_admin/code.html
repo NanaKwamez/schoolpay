@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SchoolPay - Reports</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-variant": "#e1e3e4",
+                      "primary-container": "#2d6a4f",
+                      "surface-container-low": "#f3f4f5",
+                      "on-primary-fixed": "#002114",
+                      "on-error-container": "#93000a",
+                      "error": "#ba1a1a",
+                      "tertiary-fixed-dim": "#a7c8ff",
+                      "secondary-fixed-dim": "#ffb961",
+                      "on-secondary-fixed-variant": "#663e00",
+                      "outline-variant": "#bfc9c1",
+                      "tertiary": "#00478a",
+                      "on-surface-variant": "#404943",
+                      "on-background": "#191c1d",
+                      "primary-fixed-dim": "#95d4b3",
+                      "on-primary-container": "#a8e7c5",
+                      "surface-container": "#edeeef",
+                      "outline": "#707973",
+                      "surface-container-highest": "#e1e3e4",
+                      "secondary-fixed": "#ffddb9",
+                      "on-tertiary": "#ffffff",
+                      "secondary": "#865300",
+                      "on-error": "#ffffff",
+                      "on-primary-fixed-variant": "#0e5138",
+                      "on-secondary-container": "#694000",
+                      "on-tertiary-fixed": "#001b3c",
+                      "primary-fixed": "#b1f0ce",
+                      "surface-tint": "#2c694e",
+                      "on-tertiary-container": "#c7daff",
+                      "inverse-primary": "#95d4b3",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-container-high": "#e7e8e9",
+                      "surface-dim": "#d9dadb",
+                      "surface": "#f8f9fa",
+                      "secondary-container": "#fea520",
+                      "tertiary-fixed": "#d5e3ff",
+                      "surface-bright": "#f8f9fa",
+                      "error-container": "#ffdad6",
+                      "primary": "#0f5238",
+                      "inverse-surface": "#2e3132",
+                      "background": "#f8f9fa",
+                      "on-primary": "#ffffff",
+                      "on-surface": "#191c1d",
+                      "tertiary-container": "#235fa8",
+                      "on-secondary": "#ffffff",
+                      "inverse-on-surface": "#f0f1f2",
+                      "on-secondary-fixed": "#2b1700",
+                      "on-tertiary-fixed-variant": "#004689"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "20px",
+                      "gutter": "16px",
+                      "touch-target-min": "60px",
+                      "margin-tablet": "32px",
+                      "base-unit": "8px"
+              },
+              "fontFamily": {
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "headline-xl": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "label-lg": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-xl": [
+                              "40px",
+                              {
+                                      "lineHeight": "48px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-lg": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .liquid-glass {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+        .liquid-glass-dark {
+            background-color: rgba(243, 244, 245, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+      </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex font-body-md overflow-x-hidden">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-screen w-72 fixed left-0 top-0 border-r border-white/10 bg-emerald-900 shadow-2xl z-50 divide-y divide-emerald-800/50">
+<div class="p-6">
+<h1 class="text-2xl font-black text-white font-headline-md tracking-tight">SchoolPay</h1>
+<p class="text-emerald-100/70 font-label-sm mt-1">Admin Portal</p>
+</div>
+<div class="flex-1 overflow-y-auto py-4">
+<ul class="space-y-1">
+<li>
+<a class="flex items-center gap-4 px-6 py-4 text-emerald-100/70 hover:bg-emerald-800/50 transition-colors font-label-lg active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                        Dashboard
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-4 text-emerald-100/70 hover:bg-emerald-800/50 transition-colors font-label-lg active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined">payments</span>
+                        Payments
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-4 text-emerald-100/70 hover:bg-emerald-800/50 transition-colors font-label-lg active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined">money_off</span>
+                        Debts
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-4 bg-white/10 text-white border-l-4 border-white font-bold font-label-lg active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">assessment</span>
+                        Reports
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-4 text-emerald-100/70 hover:bg-emerald-800/50 transition-colors font-label-lg active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined">school</span>
+                        Students
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-4 text-emerald-100/70 hover:bg-emerald-800/50 transition-colors font-label-lg active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined">person</span>
+                        Teachers
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-4 text-emerald-100/70 hover:bg-emerald-800/50 transition-colors font-label-lg active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+                        Fees
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-4 text-emerald-100/70 hover:bg-emerald-800/50 transition-colors font-label-lg active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined">settings</span>
+                        Settings
+                    </a>
+</li>
+</ul>
+</div>
+<div class="p-6">
+<div class="flex items-center gap-3">
+<img alt="School administrator profile" class="w-10 h-10 rounded-full border-2 border-emerald-700 object-cover" data-alt="A professional headshot of a smiling school administrator, wearing a crisp blue shirt, set against a soft, well-lit indoor background, representing a reliable and friendly user persona in the SchoolPay application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDfOX1PymlwX3QY2xf3u1-1uUOMu-gmnIwI3XZl0UoMck350Wt9f2OvMpveLnt2qlaC36BBTgW8QfqC_5xAL44Zo_0chVR7K6o-vpsgEakyomqCv2qRM7e6hDh9BFMwIWoWzycKtFA_uHhAf29vxJCVjsdiQxCyV4LgjMZ9gty9By0iHD8lFz4i8pEs6V2ZZl8QaoOszStWuz5q6uMalTu71mdZlz70oGwT6coQo3f-kZtegY-T4eOOBd6rUv80QTLnb1xoQ76UxmP"/>
+<div>
+<p class="text-white font-label-lg">Admin User</p>
+<p class="text-emerald-100/70 font-label-sm">System Admin</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 md:ml-72 flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="sticky top-0 w-full h-[72px] border-b border-white/20 bg-white/75 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] z-40 px-8 flex justify-between items-center font-label-lg text-sm font-medium">
+<div class="text-emerald-900 font-headline-md font-bold hidden">SchoolPay</div>
+<div class="flex items-center bg-surface-container-low rounded-full px-4 h-10 w-96 border border-outline-variant/50 focus-within:border-primary focus-within:bg-white transition-colors">
+<span class="material-symbols-outlined text-outline mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body-md placeholder-outline" placeholder="Search reports..." type="text"/>
+</div>
+<div class="flex items-center gap-6">
+<span class="text-on-surface-variant font-label-lg">October 24, 2023</span>
+<div class="flex items-center gap-2">
+<button class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all cursor-pointer tap-highlight-transparent">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all cursor-pointer tap-highlight-transparent">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<main class="flex-1 p-margin-tablet lg:p-8 space-y-6">
+<!-- Header & Actions -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+<h2 class="font-headline-lg text-on-background">Reports</h2>
+<div class="flex gap-3">
+<button class="h-[60px] px-6 rounded-xl liquid-glass flex items-center gap-2 text-tertiary font-label-lg hover:bg-white/90 transition-colors">
+<span class="material-symbols-outlined">download</span>
+                        Export CSV
+                    </button>
+<button class="h-[60px] px-6 rounded-xl bg-primary text-on-primary font-label-lg hover:bg-primary-container transition-colors shadow-lg shadow-primary/20 flex items-center gap-2">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+                        Export PDF
+                    </button>
+</div>
+</div>
+<!-- Report Tabs -->
+<div class="flex flex-wrap gap-2 mb-2">
+<button class="h-[60px] px-8 rounded-xl bg-primary text-on-primary font-label-lg shadow-md transition-all">Term</button>
+<button class="h-[60px] px-8 rounded-xl liquid-glass text-on-surface-variant font-label-lg hover:bg-white/90 transition-all">Daily</button>
+<button class="h-[60px] px-8 rounded-xl liquid-glass text-on-surface-variant font-label-lg hover:bg-white/90 transition-all">Weekly</button>
+<button class="h-[60px] px-8 rounded-xl liquid-glass text-on-surface-variant font-label-lg hover:bg-white/90 transition-all">Outstanding</button>
+</div>
+<!-- Filters -->
+<div class="liquid-glass rounded-2xl p-4 flex flex-wrap gap-4 items-center">
+<div class="flex items-center gap-2">
+<label class="font-label-sm text-on-surface-variant uppercase tracking-wider">Academic Year</label>
+<select class="bg-surface-container-low border border-outline-variant rounded-lg h-10 px-4 font-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary">
+<option>2023/2024</option>
+<option>2022/2023</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<label class="font-label-sm text-on-surface-variant uppercase tracking-wider">Term</label>
+<select class="bg-surface-container-low border border-outline-variant rounded-lg h-10 px-4 font-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary">
+<option>Term 1</option>
+<option>Term 2</option>
+<option>Term 3</option>
+</select>
+</div>
+</div>
+<!-- Bento Grid Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Stat Card 1 -->
+<div class="liquid-glass rounded-3xl p-6 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform duration-500">
+<span class="material-symbols-outlined text-8xl text-primary">account_balance_wallet</span>
+</div>
+<p class="font-label-lg text-on-surface-variant mb-2">Total Expected</p>
+<h3 class="font-headline-xl text-on-background">GHS 450,000</h3>
+<div class="mt-4 flex items-center gap-2 text-primary font-label-sm">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span>+5% from last term</span>
+</div>
+</div>
+<!-- Stat Card 2 -->
+<div class="liquid-glass rounded-3xl p-6 relative overflow-hidden group border-l-4 border-l-primary">
+<div class="absolute top-0 right-0 p-4 opacity-10 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform duration-500">
+<span class="material-symbols-outlined text-8xl text-primary">payments</span>
+</div>
+<p class="font-label-lg text-on-surface-variant mb-2">Total Collected</p>
+<h3 class="font-headline-xl text-primary">GHS 380,500</h3>
+<div class="mt-4 flex items-center gap-2 text-primary font-label-sm">
+<div class="w-full bg-surface-variant rounded-full h-1.5 mt-1">
+<div class="bg-primary h-1.5 rounded-full" style="width: 84%"></div>
+</div>
+<span class="shrink-0">84%</span>
+</div>
+</div>
+<!-- Stat Card 3 -->
+<div class="liquid-glass rounded-3xl p-6 relative overflow-hidden group border-l-4 border-l-error">
+<div class="absolute top-0 right-0 p-4 opacity-10 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform duration-500">
+<span class="material-symbols-outlined text-8xl text-error">money_off</span>
+</div>
+<p class="font-label-lg text-on-surface-variant mb-2">Total Shortfall</p>
+<h3 class="font-headline-xl text-error">GHS 69,500</h3>
+<div class="mt-4 flex items-center gap-2 text-error font-label-sm">
+<span class="material-symbols-outlined text-sm">warning</span>
+<span>Requires attention</span>
+</div>
+</div>
+</div>
+<!-- Content Area Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Table Section -->
+<div class="lg:col-span-2 liquid-glass rounded-3xl p-6 flex flex-col">
+<h3 class="font-headline-md text-on-background mb-6">Fee Summary by Type</h3>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant/50">
+<th class="py-4 px-2 font-label-lg text-on-surface-variant">Fee Type</th>
+<th class="py-4 px-2 font-label-lg text-on-surface-variant text-right">Expected (GHS)</th>
+<th class="py-4 px-2 font-label-lg text-on-surface-variant text-right">Collected (GHS)</th>
+<th class="py-4 px-2 font-label-lg text-on-surface-variant text-right">Shortfall (GHS)</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-on-surface">
+<tr class="border-b border-outline-variant/20 hover:bg-surface-container-low/50 transition-colors">
+<td class="py-4 px-2 font-medium">Tuition Fees</td>
+<td class="py-4 px-2 text-right">250,000</td>
+<td class="py-4 px-2 text-right text-primary">220,000</td>
+<td class="py-4 px-2 text-right text-error font-medium">30,000</td>
+</tr>
+<tr class="border-b border-outline-variant/20 hover:bg-surface-container-low/50 transition-colors">
+<td class="py-4 px-2 font-medium">Boarding Fees</td>
+<td class="py-4 px-2 text-right">150,000</td>
+<td class="py-4 px-2 text-right text-primary">130,000</td>
+<td class="py-4 px-2 text-right text-error font-medium">20,000</td>
+</tr>
+<tr class="border-b border-outline-variant/20 hover:bg-surface-container-low/50 transition-colors">
+<td class="py-4 px-2 font-medium">PTA Dues</td>
+<td class="py-4 px-2 text-right">30,000</td>
+<td class="py-4 px-2 text-right text-primary">20,500</td>
+<td class="py-4 px-2 text-right text-error font-medium">9,500</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-4 px-2 font-medium">Exams Fees</td>
+<td class="py-4 px-2 text-right">20,000</td>
+<td class="py-4 px-2 text-right text-primary">10,000</td>
+<td class="py-4 px-2 text-right text-error font-medium">10,000</td>
+</tr>
+</tbody>
+<tfoot class="border-t-2 border-outline-variant/50 font-label-lg">
+<tr>
+<td class="py-4 px-2">Total</td>
+<td class="py-4 px-2 text-right">450,000</td>
+<td class="py-4 px-2 text-right text-primary">380,500</td>
+<td class="py-4 px-2 text-right text-error">69,500</td>
+</tr>
+</tfoot>
+</table>
+</div>
+</div>
+<!-- Chart Section -->
+<div class="liquid-glass rounded-3xl p-6 flex flex-col">
+<h3 class="font-headline-md text-on-background mb-2">Collection by Class</h3>
+<p class="font-body-md text-on-surface-variant mb-6">Collected vs Expected</p>
+<div class="flex-1 flex flex-col justify-end gap-4 min-h-[300px]">
+<!-- Bar Item 1 -->
+<div class="space-y-1">
+<div class="flex justify-between font-label-sm text-on-surface">
+<span>Form 1</span>
+<span>85%</span>
+</div>
+<div class="h-4 bg-surface-variant rounded-full overflow-hidden relative">
+<div class="absolute top-0 left-0 h-full bg-primary rounded-full" style="width: 85%"></div>
+</div>
+</div>
+<!-- Bar Item 2 -->
+<div class="space-y-1">
+<div class="flex justify-between font-label-sm text-on-surface">
+<span>Form 2</span>
+<span>72%</span>
+</div>
+<div class="h-4 bg-surface-variant rounded-full overflow-hidden relative">
+<div class="absolute top-0 left-0 h-full bg-primary rounded-full" style="width: 72%"></div>
+</div>
+</div>
+<!-- Bar Item 3 -->
+<div class="space-y-1">
+<div class="flex justify-between font-label-sm text-on-surface">
+<span>Form 3</span>
+<span>92%</span>
+</div>
+<div class="h-4 bg-surface-variant rounded-full overflow-hidden relative">
+<div class="absolute top-0 left-0 h-full bg-primary rounded-full" style="width: 92%"></div>
+</div>
+</div>
+<!-- Bar Item 4 -->
+<div class="space-y-1">
+<div class="flex justify-between font-label-sm text-on-surface">
+<span>JHS 1</span>
+<span>65%</span>
+</div>
+<div class="h-4 bg-surface-variant rounded-full overflow-hidden relative">
+<div class="absolute top-0 left-0 h-full bg-primary rounded-full" style="width: 65%"></div>
+</div>
+</div>
+<!-- Legend -->
+<div class="flex items-center gap-4 mt-4 pt-4 border-t border-outline-variant/30">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-primary"></div>
+<span class="font-label-sm text-on-surface-variant">Collected</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-surface-variant border border-outline-variant/50"></div>
+<span class="font-label-sm text-on-surface-variant">Expected Gap</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>
