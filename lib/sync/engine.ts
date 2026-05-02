@@ -1,11 +1,11 @@
 'use client'
 
 import { processSyncQueue } from './queue'
-import { createClient } from '@/lib/supabase/client'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import type { SyncQueueItem } from '@/types'
 
 export async function runSyncEngine(): Promise<{ success: number; failed: number }> {
-  const supabase = createClient()
+  const supabase = createSupabaseBrowserClient()
 
   return processSyncQueue(async (item: SyncQueueItem) => {
     const { tableName, operation, payload } = item

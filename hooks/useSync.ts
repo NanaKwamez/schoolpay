@@ -13,7 +13,7 @@ interface SyncState {
 }
 
 export function useSync() {
-  const isOnline = useOnline()
+  const { isOnline } = useOnline()
   const [state, setState] = useState<SyncState>({
     isSyncing: false,
     lastSyncAt: null,
@@ -25,8 +25,13 @@ export function useSync() {
     if (!isOnline || state.isSyncing) return
     setState(prev => ({ ...prev, isSyncing: true, error: null }))
     try {
-      await runSyncEngine()
-      setState(prev => ({ ...prev, isSyncing: false, lastSyncAt: new Date() }))
+      const { failed } = await runSyncEngine()
+      setState(prev => ({
+        ...prev,
+        isSyncing: false,
+        lastSyncAt: new Date(),
+        pendingCount: failed,
+      }))
     } catch (err) {
       setState(prev => ({
         ...prev,

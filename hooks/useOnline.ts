@@ -2,8 +2,13 @@
 
 import { useState, useEffect } from 'react'
 
-export function useOnline(): boolean {
+interface OnlineStatus {
+  isOnline: boolean
+}
+
+export function useOnline(): OnlineStatus {
   const [isOnline, setIsOnline] = useState<boolean>(
+    // SSR-safe: default true on server, real value on client
     typeof navigator !== 'undefined' ? navigator.onLine : true
   )
 
@@ -20,5 +25,5 @@ export function useOnline(): boolean {
     }
   }, [])
 
-  return isOnline
+  return { isOnline }
 }
