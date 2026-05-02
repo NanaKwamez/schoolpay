@@ -11,7 +11,6 @@ export default function AdminClassesPage() {
       <main className="px-4 py-4">
         <p className="text-gray-500 text-sm">Classes will be loaded from the database.</p>
       </main>
-      <BottomNav role="admin" />
     </div>
   )
 }

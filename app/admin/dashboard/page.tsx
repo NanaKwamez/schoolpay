@@ -52,7 +52,6 @@ export default function AdminDashboardPage() {
           </Card>
         </div>
       </main>
-      <BottomNav role="admin" />
     </div>
   )
 }

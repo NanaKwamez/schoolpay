@@ -109,7 +109,7 @@ export function ExpenseForm({ fundType, onSubmit, onCancel }: ExpenseFormProps) 
         />
       </div>
       <div className="flex gap-3 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+        <Button type="button" variant="secondary" onClick={onCancel} className="flex-1">
           Cancel
         </Button>
         <Button type="submit" loading={loading} className="flex-1">

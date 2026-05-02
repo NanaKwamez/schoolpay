@@ -10,11 +10,10 @@ export default async function ClassDetailPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <TopBar title="Class Detail" showBack />
+      <TopBar title="Class Detail" backHref="/admin/classes" />
       <main className="px-4 py-4">
         <p className="text-gray-500 text-sm">Class ID: {classId}</p>
       </main>
-      <BottomNav role="admin" />
     </div>
   )
 }

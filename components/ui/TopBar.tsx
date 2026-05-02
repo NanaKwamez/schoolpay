@@ -1,40 +1,74 @@
 'use client'
 
 import { type ReactNode } from 'react'
+import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { SCHOOL_NAME } from '@/lib/constants'
+import { SyncIndicator } from './SyncIndicator'
+import { useSync } from '@/hooks/useSync'
+import { useOnline } from '@/hooks/useOnline'
 
 interface TopBarProps {
-  title?: string
-  showBack?: boolean
-  rightElement?: ReactNode
+  title: string
   subtitle?: string
+  /** href for the back arrow link; omit to hide the back button */
+  backHref?: string
+  /** Element rendered on the right side (alongside sync indicator) */
+  rightAction?: ReactNode
+  /** Show the sync status indicator in the top right */
+  showSync?: boolean
 }
 
-export function TopBar({ title, showBack, rightElement, subtitle }: TopBarProps) {
-  const router = useRouter()
+export function TopBar({
+  title,
+  subtitle,
+  backHref,
+  rightAction,
+  showSync = false,
+}: TopBarProps) {
+  const { pendingCount, isSyncing } = useSync()
+  const { isOnline } = useOnline()
 
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-gray-100 safe-top">
-      <div className="flex items-center justify-between px-4 h-14">
-        <div className="flex items-center gap-2 min-w-0">
-          {showBack && (
-            <button
-              onClick={() => router.back()}
-              className="flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
+    <header className="sticky top-0 z-30 bg-morning-green-600 safe-top shadow-md">
+      <div className="flex items-center justify-between px-3 min-h-[64px]">
+
+        {/* Left: back + title */}
+        <div className="flex items-center gap-1 min-w-0 flex-1">
+          {backHref && (
+            <Link
+              href={backHref}
               aria-label="Go back"
+              className={[
+                'flex items-center justify-center h-12 w-12 rounded-xl shrink-0',
+                'hover:bg-white/20 active:bg-white/30 transition-colors',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60',
+              ].join(' ')}
             >
-              <ChevronLeft className="h-5 w-5 text-gray-600" />
-            </button>
+              <ChevronLeft className="h-6 w-6 text-white" />
+            </Link>
           )}
-          <div className="min-w-0">
-            <p className="text-xs text-morning-green-600 font-medium truncate">{SCHOOL_NAME}</p>
-            {title && <h1 className="text-base font-semibold text-gray-900 truncate leading-tight">{title}</h1>}
-            {subtitle && <p className="text-xs text-gray-500 truncate">{subtitle}</p>}
+          <div className="min-w-0 py-2">
+            <h1 className="text-lg font-bold text-white truncate leading-tight">{title}</h1>
+            {subtitle && (
+              <p className="text-xs text-white/75 truncate leading-tight mt-0.5">{subtitle}</p>
+            )}
           </div>
         </div>
-        {rightElement && <div className="shrink-0 ml-2">{rightElement}</div>}
+
+        {/* Right: sync + optional action */}
+        {(showSync || rightAction) && (
+          <div className="flex items-center gap-2 shrink-0 ml-2">
+            {showSync && (
+              <SyncIndicator
+                isOnline={isOnline}
+                isSyncing={isSyncing}
+                pendingCount={pendingCount}
+                inverted
+              />
+            )}
+            {rightAction}
+          </div>
+        )}
       </div>
     </header>
   )

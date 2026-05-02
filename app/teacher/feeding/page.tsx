@@ -11,7 +11,7 @@ export default function TeacherFeedingPage() {
       <main className="px-4 py-4">
         <p className="text-gray-500 text-sm">Daily feeding register will appear here.</p>
       </main>
-      <BottomNav role="teacher" />
+      <BottomNav />
     </div>
   )
 }

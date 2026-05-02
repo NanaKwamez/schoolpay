@@ -11,7 +11,7 @@ export default function TeacherSummaryPage() {
       <main className="px-4 py-4">
         <p className="text-gray-500 text-sm">Class summary will appear here.</p>
       </main>
-      <BottomNav role="teacher" />
+      <BottomNav />
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Users, BookOpen, BarChart2, Settings } from 'lucide-react'
+import { Home, Utensils, CreditCard, BarChart2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -11,45 +11,50 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>
 }
 
-const adminNavItems: NavItem[] = [
-  { href: '/admin/dashboard', label: 'Home', icon: Home },
-  { href: '/admin/students', label: 'Students', icon: Users },
-  { href: '/admin/classes', label: 'Classes', icon: BookOpen },
-  { href: '/admin/reports', label: 'Reports', icon: BarChart2 },
-  { href: '/admin/fees', label: 'Fees', icon: Settings },
-]
-
+/** Teacher bottom navigation — 4 items */
 const teacherNavItems: NavItem[] = [
-  { href: '/teacher/home', label: 'Home', icon: Home },
-  { href: '/teacher/feeding', label: 'Feeding', icon: BookOpen },
-  { href: '/teacher/payment', label: 'Payment', icon: BarChart2 },
-  { href: '/teacher/summary', label: 'Summary', icon: Users },
+  { href: '/teacher/home',    label: 'Home',           icon: Home },
+  { href: '/teacher/feeding', label: 'Mark Feeding',   icon: Utensils },
+  { href: '/teacher/payment', label: 'Record Payment', icon: CreditCard },
+  { href: '/teacher/summary', label: 'Class Summary',  icon: BarChart2 },
 ]
 
-interface BottomNavProps {
-  role?: 'admin' | 'teacher'
-}
-
-export function BottomNav({ role = 'teacher' }: BottomNavProps) {
+export function BottomNav() {
   const pathname = usePathname()
-  const items = role === 'admin' ? adminNavItems : teacherNavItems
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100 safe-bottom">
-      <div className="flex items-center justify-around px-2 h-16">
-        {items.map(({ href, label, icon: Icon }) => {
+    <nav
+      aria-label="Teacher navigation"
+      className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100 safe-bottom"
+    >
+      <div className="flex items-stretch h-16">
+        {teacherNavItems.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href)
+
           return (
             <Link
               key={href}
               href={href}
+              aria-current={active ? 'page' : undefined}
               className={cn(
-                'flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-colors',
-                active ? 'text-morning-green-600' : 'text-gray-400'
+                'flex flex-col items-center justify-center flex-1 gap-0.5 min-h-[48px]',
+                'transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2',
+                'focus-visible:ring-morning-green-500 focus-visible:ring-inset',
+                active ? 'text-morning-green-600' : 'text-gray-400 hover:text-gray-600'
               )}
             >
-              <Icon className={cn('h-5 w-5', active && 'text-morning-green-600')} />
-              <span className={cn('text-xs font-medium', active && 'text-morning-green-600')}>
+              <Icon
+                className={cn(
+                  'h-5 w-5 transition-transform duration-100',
+                  active && 'text-morning-green-600 scale-110'
+                )}
+              />
+              <span
+                className={cn(
+                  'text-[10px] font-semibold leading-tight',
+                  active ? 'text-morning-green-600' : 'text-gray-400'
+                )}
+              >
                 {label}
               </span>
             </Link>

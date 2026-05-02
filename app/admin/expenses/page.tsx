@@ -11,7 +11,6 @@ export default function AdminExpensesPage() {
       <main className="px-4 py-4">
         <p className="text-gray-500 text-sm">Expense records will appear here.</p>
       </main>
-      <BottomNav role="admin" />
     </div>
   )
 }

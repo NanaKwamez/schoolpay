@@ -6,14 +6,25 @@ interface SyncIndicatorProps {
   pendingCount: number
   isOnline: boolean
   isSyncing: boolean
+  /** When true, renders text in white (for use on dark/green backgrounds) */
+  inverted?: boolean
 }
 
-export function SyncIndicator({ pendingCount, isOnline, isSyncing }: SyncIndicatorProps) {
+export function SyncIndicator({
+  pendingCount,
+  isOnline,
+  isSyncing,
+  inverted = false,
+}: SyncIndicatorProps) {
+  const textBase = inverted ? 'text-white/90' : ''
+
   if (!isOnline) {
     return (
       <div className="flex items-center gap-1.5">
-        <span className="block h-2 w-2 rounded-full bg-red-500 shrink-0" />
-        <span className="text-xs text-gray-500 font-medium">Offline</span>
+        <span className="block h-2 w-2 rounded-full bg-red-400 shrink-0" />
+        <span className={cn('text-xs font-medium', inverted ? 'text-white/80' : 'text-gray-500')}>
+          Offline
+        </span>
       </div>
     )
   }
@@ -21,11 +32,10 @@ export function SyncIndicator({ pendingCount, isOnline, isSyncing }: SyncIndicat
   if (isSyncing) {
     return (
       <div className="flex items-center gap-1.5">
-        <span className={cn(
-          'block h-2 w-2 rounded-full bg-orange-400 shrink-0',
-          'animate-pulse'
-        )} />
-        <span className="text-xs text-orange-600 font-medium">Syncing…</span>
+        <span className="block h-2 w-2 rounded-full bg-orange-400 shrink-0 animate-pulse" />
+        <span className={cn('text-xs font-medium', inverted ? textBase : 'text-orange-600')}>
+          Syncing…
+        </span>
       </div>
     )
   }
@@ -34,15 +44,19 @@ export function SyncIndicator({ pendingCount, isOnline, isSyncing }: SyncIndicat
     return (
       <div className="flex items-center gap-1.5">
         <span className="block h-2 w-2 rounded-full bg-orange-400 shrink-0" />
-        <span className="text-xs text-orange-600 font-medium">{pendingCount} pending</span>
+        <span className={cn('text-xs font-medium', inverted ? textBase : 'text-orange-600')}>
+          {pendingCount} pending
+        </span>
       </div>
     )
   }
 
   return (
     <div className="flex items-center gap-1.5">
-      <span className="block h-2 w-2 rounded-full bg-morning-green-500 shrink-0" />
-      <span className="text-xs text-morning-green-600 font-medium">Synced</span>
+      <span className="block h-2 w-2 rounded-full bg-morning-green-400 shrink-0" />
+      <span className={cn('text-xs font-medium', inverted ? textBase : 'text-morning-green-600')}>
+        Synced
+      </span>
     </div>
   )
 }
