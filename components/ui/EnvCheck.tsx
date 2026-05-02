@@ -8,10 +8,14 @@ export function EnvCheck() {
   useEffect(() => {
     const missing: string[] = []
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
+    // Accept either the new publishable key name or the legacy anon key name
+    const key =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+      ''
 
     if (!url.startsWith('http')) missing.push('NEXT_PUBLIC_SUPABASE_URL')
-    if (key.length < 10) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+    if (key.length < 10) missing.push('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY')
 
     setMissingVars(missing)
   }, [])
