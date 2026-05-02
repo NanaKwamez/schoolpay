@@ -1,73 +1,97 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Sparkles, RefreshCw } from 'lucide-react'
+import { AlertTriangle, TrendingDown, TrendingUp, BarChart2 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { cn } from '@/lib/utils'
+import type { AiInsightCache } from '@/types'
 
 interface AiInsightBannerProps {
-  financialData?: {
-    totalIncome: number
-    totalExpenses: number
-    netBalance: number
-    debtCount: number
-    debtAmount: number
-  }
+  insightType?: string
+  content?: string
+  generatedAt?: string
 }
 
-export function AiInsightBanner({ financialData }: AiInsightBannerProps) {
-  const [insight, setInsight] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+function hoursAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const h = Math.floor(diff / (1000 * 60 * 60))
+  if (h < 1) return 'just now'
+  return `${h}h ago`
+}
 
-  const fetchInsight = async () => {
-    if (!financialData) return
-    setLoading(true)
-    try {
-      const res = await fetch('/api/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'insight', data: financialData }),
-      })
-      const data = await res.json()
-      setInsight(data.reply ?? null)
-    } catch {
-      setInsight(null)
-    } finally {
-      setLoading(false)
-    }
+function InsightIcon({ type }: { type: string }) {
+  if (type === 'anomaly') return <AlertTriangle className="h-5 w-5 text-orange-500" />
+  if (type === 'trend') return <TrendingDown className="h-5 w-5 text-blue-500" />
+  if (type === 'forecast') return <BarChart2 className="h-5 w-5 text-green-600" />
+  return <TrendingUp className="h-5 w-5 text-blue-500" />
+}
+
+function borderColor(type: string): string {
+  if (type === 'anomaly') return 'border-l-orange-400'
+  if (type === 'trend') return 'border-l-blue-400'
+  if (type === 'forecast') return 'border-l-green-500'
+  return 'border-l-gray-400'
+}
+
+function insightHeading(type: string): string {
+  if (type === 'anomaly') return 'Anomaly Detected'
+  if (type === 'trend') return 'Collection Trend'
+  if (type === 'forecast') return 'Term Forecast'
+  return 'Insight'
+}
+
+// Single card used directly on the dashboard
+export function AiInsightBanner({ insightType, content, generatedAt }: AiInsightBannerProps) {
+  if (!insightType || !content || !generatedAt) {
+    return <Skeleton className="h-24 rounded-2xl" />
   }
 
-  useEffect(() => {
-    if (financialData) fetchInsight()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <div className={cn(
+      'bg-white rounded-2xl border border-gray-200 border-l-4 p-4',
+      borderColor(insightType)
+    )}>
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 shrink-0">
+          <InsightIcon type={insightType} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-gray-800">{insightHeading(insightType)}</p>
+          <p className="text-sm text-gray-600 mt-1 leading-relaxed">{content}</p>
+          <p className="text-xs text-gray-400 mt-1.5">Updated {hoursAgo(generatedAt)}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-  if (!financialData) return null
+// Grid of 3 insight cards from cache data
+export function AiInsightsGrid({ insights, loading }: { insights: AiInsightCache[]; loading: boolean }) {
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[0, 1, 2].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+      </div>
+    )
+  }
+
+  if (!insights.length) {
+    return (
+      <div className="bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-4 text-center">
+        <p className="text-sm text-gray-400">No AI insights yet. Insights are generated at 6am on school days.</p>
+      </div>
+    )
+  }
 
   return (
-    <div className="bg-gradient-to-r from-morning-green-600 to-morning-green-700 rounded-xl p-4 text-white">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4" />
-          <span className="text-sm font-semibold">AI Insight</span>
-        </div>
-        <button
-          onClick={fetchInsight}
-          disabled={loading}
-          className="p-1.5 rounded-lg hover:bg-white/20 transition-colors"
-          aria-label="Refresh insight"
-        >
-          <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
-        </button>
-      </div>
-      {loading ? (
-        <div className="space-y-2">
-          <div className="h-3 bg-white/30 rounded animate-pulse" />
-          <div className="h-3 bg-white/30 rounded animate-pulse w-4/5" />
-        </div>
-      ) : insight ? (
-        <p className="text-sm text-white/90 leading-relaxed">{insight}</p>
-      ) : (
-        <p className="text-sm text-white/70">Tap refresh to get an AI-powered financial insight.</p>
-      )}
+    <div className="space-y-3">
+      {insights.map(insight => (
+        <AiInsightBanner
+          key={insight.id}
+          insightType={insight.insight_type}
+          content={insight.content}
+          generatedAt={insight.generated_at}
+        />
+      ))}
     </div>
   )
 }

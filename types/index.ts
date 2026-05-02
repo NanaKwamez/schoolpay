@@ -200,6 +200,34 @@ export interface FundSummary {
   net_balance: number
 }
 
+export interface ClassDailySubmission {
+  id: string
+  class_id: string
+  date: string
+  submitted_at: string
+  submitted_by: string
+}
+
+export interface ClassWithStats extends Class {
+  teacher_name: string
+  total_students: number
+  marked_count: number
+  paid_count: number
+  credit_count: number
+  absent_count: number
+  collected_today: number
+  submitted_at: string | null
+  last_updated?: string
+}
+
+export interface AiInsightCache {
+  id: string
+  insight_type: 'anomaly' | 'trend' | 'forecast'
+  content: string
+  generated_at: string
+  valid_until: string
+}
+
 export interface SyncQueueItem {
   localId: string // PK — generated string UUID
   tableName: string // Supabase table name to sync to

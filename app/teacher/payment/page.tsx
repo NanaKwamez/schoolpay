@@ -13,6 +13,7 @@ import { db } from '@/lib/dexie/schema'
 import { formatGHS, getWeekStart } from '@/lib/utils'
 import { WEEKLY_FEEDING_AMOUNT } from '@/lib/constants'
 import { cn } from '@/lib/utils'
+import { generateReceiptText, getWhatsAppReceiptUrl } from '@/lib/receipt'
 import type { Student, FeeType, PaymentType } from '@/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -25,6 +26,10 @@ interface SavedReceipt {
   amount: number
   paymentType: PaymentType
   date: string
+  parentPhone: string | null
+  markedByName: string
+  weekCovered?: string
+  remainingBalance?: number
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -142,6 +147,10 @@ export default function TeacherPaymentPage() {
       notes: notes.trim() || null,
     })
 
+    const remainingBalance = paymentType === 'credit'
+      ? Math.max(0, selectedFeeType.amount - amountNum)
+      : undefined
+
     setSavedReceipt({
       receiptNumber,
       studentName: selectedStudent.full_name,
@@ -149,9 +158,11 @@ export default function TeacherPaymentPage() {
       feeName: selectedFeeType.name,
       amount: amountNum,
       paymentType,
-      date: new Date().toLocaleDateString('en-GB', {
-        day: 'numeric', month: 'short', year: 'numeric',
-      }),
+      date: today ?? '',
+      parentPhone: selectedStudent.parent_phone ?? null,
+      markedByName: profile.full_name ?? profile.id,
+      weekCovered: paymentType === 'weekly_advance' ? weekCoveredStr : undefined,
+      remainingBalance,
     })
   }, [
     selectedStudent, selectedFeeType, profile, currentTerm,
@@ -170,16 +181,20 @@ export default function TeacherPaymentPage() {
 
   const handleWhatsApp = () => {
     if (!savedReceipt) return
-    const text = [
-      `Morning Glory Academy — Receipt`,
-      `Student: ${savedReceipt.studentName} (${savedReceipt.className})`,
-      `Fee: ${savedReceipt.feeName}`,
-      `Amount: ${formatGHS(savedReceipt.amount)}`,
-      `Type: ${paymentTypeLabel(savedReceipt.paymentType)}`,
-      `Date: ${savedReceipt.date}`,
-      `Receipt: ${savedReceipt.receiptNumber}`,
-    ].join('\n')
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer')
+    const receiptText = generateReceiptText({
+      studentName: savedReceipt.studentName,
+      className: savedReceipt.className,
+      feeName: savedReceipt.feeName,
+      amountPaid: savedReceipt.amount,
+      paymentType: savedReceipt.paymentType,
+      date: savedReceipt.date,
+      receiptNumber: savedReceipt.receiptNumber,
+      markedBy: savedReceipt.markedByName,
+      weekCovered: savedReceipt.weekCovered,
+      remainingBalance: savedReceipt.remainingBalance,
+    })
+    const url = getWhatsAppReceiptUrl(receiptText, savedReceipt.parentPhone ?? undefined)
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   // ── Success screen ──────────────────────────────────────────────────────────
@@ -197,23 +212,21 @@ export default function TeacherPaymentPage() {
           </div>
 
           {/* Receipt card */}
-          <Card variant="green" className="font-mono text-sm space-y-2">
-            <p className="text-center font-bold text-morning-green-800 text-base not-italic mb-3">
-              Morning Glory Academy
-            </p>
-            {[
-              ['Student', `${savedReceipt.studentName} — ${savedReceipt.className}`],
-              ['Fee', savedReceipt.feeName],
-              ['Amount', formatGHS(savedReceipt.amount)],
-              ['Type', paymentTypeLabel(savedReceipt.paymentType)],
-              ['Date', savedReceipt.date],
-              ['Receipt', savedReceipt.receiptNumber],
-            ].map(([label, value]) => (
-              <div key={label} className="flex justify-between gap-3">
-                <span className="text-morning-green-600 shrink-0">{label}:</span>
-                <span className="text-morning-green-900 text-right">{value}</span>
-              </div>
-            ))}
+          <Card variant="green" className="font-mono text-sm">
+            <pre className="whitespace-pre-wrap text-morning-green-900 text-xs leading-relaxed">
+              {generateReceiptText({
+                studentName: savedReceipt.studentName,
+                className: savedReceipt.className,
+                feeName: savedReceipt.feeName,
+                amountPaid: savedReceipt.amount,
+                paymentType: savedReceipt.paymentType,
+                date: savedReceipt.date,
+                receiptNumber: savedReceipt.receiptNumber,
+                markedBy: savedReceipt.markedByName,
+                weekCovered: savedReceipt.weekCovered,
+                remainingBalance: savedReceipt.remainingBalance,
+              })}
+            </pre>
           </Card>
 
           <Button

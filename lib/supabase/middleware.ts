@@ -43,9 +43,14 @@ function makeRedirect(request: NextRequest, pathname: string, baseResponse: Next
 export async function updateSession(request: NextRequest): Promise<NextResponse> {
   let supabaseResponse = NextResponse.next({ request })
 
+  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+  const rawKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
+  const supabaseUrl = rawUrl.startsWith('http') ? rawUrl : 'https://placeholder.supabase.co'
+  const supabaseKey = rawKey.length > 10 ? rawKey : 'placeholder-anon-key'
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         getAll() {

@@ -7,10 +7,12 @@ let client: SupabaseClient | null = null
 export function createSupabaseBrowserClient(): SupabaseClient {
   if (client) return client
 
-  client = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  // Guard against placeholder/missing env vars during build
+  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+  const rawKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
+  const url = rawUrl.startsWith('http') ? rawUrl : 'https://placeholder.supabase.co'
+  const key = rawKey.length > 10 ? rawKey : 'placeholder-anon-key'
+  client = createBrowserClient(url, key)
 
   return client
 }

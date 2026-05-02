@@ -5,9 +5,14 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 export async function createSupabaseServerClient(): Promise<SupabaseClient> {
   const cookieStore = await cookies()
 
+  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+  const rawKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
+  const url = rawUrl.startsWith('http') ? rawUrl : 'https://placeholder.supabase.co'
+  const key = rawKey.length > 10 ? rawKey : 'placeholder-anon-key'
+
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    key,
     {
       cookies: {
         getAll() {
