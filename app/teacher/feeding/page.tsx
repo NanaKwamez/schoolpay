@@ -13,6 +13,7 @@ import { useFeeding } from '@/hooks/useFeeding'
 import { useStudents } from '@/hooks/useStudents'
 import { db } from '@/lib/dexie/schema'
 import { getWeekStart } from '@/lib/utils'
+import { FEEDING_FEE_AMOUNT } from '@/lib/constants'
 import type { FeedingStatus } from '@/types'
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -53,6 +54,20 @@ function TeacherFeedingContent() {
     () => new Set((weeklyAdvances ?? []).map(wa => wa.student_id)),
     [weeklyAdvances]
   )
+
+  // ── Credit balance per student (count of credit logs × fee amount) ───────────
+  const allCreditLogs = useLiveQuery(
+    () => db.feedingLog.filter(l => l.status === 'credit').toArray(),
+    [],
+    []
+  )
+  const creditBalanceMap = useMemo(() => {
+    const map = new Map<string, number>()
+    ;(allCreditLogs ?? []).forEach(log => {
+      map.set(log.student_id, (map.get(log.student_id) ?? 0) + 1)
+    })
+    return map
+  }, [allCreditLogs])
 
   // ── Handler ─────────────────────────────────────────────────────────────────
   const handleMark = useCallback(
@@ -116,7 +131,7 @@ function TeacherFeedingContent() {
               student={student}
               currentStatus={feedingLog.get(student.id)?.status ?? null}
               isCoveredWeekly={coveredIds.has(student.id)}
-              creditBalance={0}
+              creditBalance={(creditBalanceMap.get(student.id) ?? 0) * FEEDING_FEE_AMOUNT}
               onMark={handleMark}
             />
           ))

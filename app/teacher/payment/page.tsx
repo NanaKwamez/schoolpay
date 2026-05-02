@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { usePayments } from '@/hooks/usePayments'
 import { db } from '@/lib/dexie/schema'
 import { formatGHS, getWeekStart } from '@/lib/utils'
-import { WEEKLY_FEEDING_AMOUNT } from '@/lib/constants'
+import { WEEKLY_FEEDING_AMOUNT, SCHOOL_NAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { generateReceiptText, getWhatsAppReceiptUrl } from '@/lib/receipt'
 import type { Student, FeeType, PaymentType } from '@/types'
@@ -439,7 +439,7 @@ function TeacherPaymentContent() {
             <Card variant="green" className="text-sm">
               <p className="text-xs font-bold text-morning-green-700 uppercase tracking-wide mb-2">Receipt Preview</p>
               <div className="space-y-1 font-mono text-morning-green-900">
-                <p>Morning Glory Academy</p>
+                <p>{SCHOOL_NAME}</p>
                 <p>Student: {selectedStudent.full_name} — {classData?.name}</p>
                 <p>Fee: {selectedFeeType.name}</p>
                 <p>Amount: {formatGHS(parseFloat(resolvedAmount) || 0)}</p>

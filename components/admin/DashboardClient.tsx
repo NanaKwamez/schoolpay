@@ -13,6 +13,7 @@ import { SyncIndicator } from '@/components/ui/SyncIndicator'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useSync } from '@/hooks/useSync'
 import { useOnline } from '@/hooks/useOnline'
+import { SCHOOL_NAME } from '@/lib/constants'
 import { formatGHS } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import type { ClassWithStats, FundSummary, AiInsightCache } from '@/types'
@@ -252,7 +253,7 @@ export function DashboardClient() {
         <div className="px-4 py-3">
           <div className="flex items-start justify-between mb-1">
             <div className="min-w-0">
-              <h1 className="text-lg font-bold text-white leading-tight">Morning Glory Academy</h1>
+              <h1 className="text-lg font-bold text-white leading-tight">{SCHOOL_NAME}</h1>
               <p className="text-sm text-white/80 mt-0.5">
                 {greeting}, {profile?.full_name?.split(' ')[0] ?? 'Admin'}
               </p>
