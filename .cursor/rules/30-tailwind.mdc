@@ -1,0 +1,39 @@
+---
+description: Tailwind CSS v4 conventions — CSS-based config, custom tokens, cn() usage
+globs: **/*.tsx,**/*.css
+alwaysApply: false
+---
+
+# Tailwind CSS (v4)
+
+## Configuration
+- This project uses Tailwind v4. Configuration lives in `app/globals.css` inside
+  `@theme { }` — there is NO `tailwind.config.ts`.
+- Custom tokens (colors, spacing, screens) are added to `@theme { }` in `globals.css`.
+- Custom colors follow the pattern `--color-morning-green-600: #16a34a;` and are
+  used as `bg-morning-green-600`, `text-morning-green-600`, etc.
+
+## Utilities and styling
+- Tailwind utilities for all styling. No `style={{ ... }}` unless the value is
+  unknown at build time (user-supplied color, computed width).
+- No CSS Modules, styled-components, or extra `.css` files except `globals.css`
+  for `@import "tailwindcss"`, `@theme {}`, and `@layer base` resets.
+- Conditional classes through `cn()` from `@/lib/utils`:
+  `export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));`
+  ✅ `cn('px-4 py-2', { 'bg-morning-green-600': active, 'bg-gray-200': !active })`
+  ❌ `'px-4 py-2 ' + (active ? 'bg-morning-green-600' : 'bg-gray-200')`
+- Use semantic token classes (`bg-morning-green-600`, `text-morning-gold-500`)
+  rather than raw Tailwind scale values (`bg-green-600`) for project-specific UI.
+- No arbitrary values (`w-[437px]`) without a comment explaining why an existing
+  token is insufficient.
+- Mobile-first ordering: base classes, then `sm:`, `md:`, `lg:`, `xl:`.
+- Always include focus rings (`focus-visible:ring-2`), visible disabled states,
+  and semantic HTML.
+
+## Touch targets
+- All interactive elements (buttons, links, inputs) must have `min-h-[48px]`
+  or `min-h-touch-target` for mobile usability.
+
+## Safe area (PWA/mobile)
+- Use `.safe-top` and `.safe-bottom` utility classes (defined in `globals.css`)
+  for fixed headers/footers on notched phones.

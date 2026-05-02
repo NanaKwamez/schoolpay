@@ -1,0 +1,62 @@
+---
+description: Supabase auth, RLS, and query conventions — these patterns prevent production breakage
+globs: lib/supabase/**,supabase/**,app/**/actions.ts,proxy.ts
+alwaysApply: false
+---
+
+# Supabase (CRITICAL — incorrect patterns BREAK auth in production)
+
+## 🚨 Forbidden patterns (will break the app)
+
+❌ `import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'`
+❌ `import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'`
+❌ Cookie methods named `get`, `set`, `remove`
+❌ `await supabase.auth.getSession()` for authorization
+❌ Any `SUPABASE_SERVICE_ROLE_KEY` use in a Client Component or `NEXT_PUBLIC_*` var
+
+## ✅ Required patterns
+
+- ALWAYS import from `@supabase/ssr`.
+- ALWAYS use ONLY `getAll` / `setAll` cookie methods.
+- ALWAYS use `await supabase.auth.getUser()` for authorization checks.
+
+## Three client factories live in `lib/supabase/`
+
+- `client.ts` — `createBrowserClient(...)` for Client Components.
+- `server.ts` — `createServerClient(...)` with `cookies()` from
+  `next/headers`. Wrap `cookieStore.set` in try/catch; Server Components can't
+  set cookies, that's expected.
+- `middleware.ts` — `createServerClient(...)` reading from
+  `request.cookies`, writing to `supabaseResponse.cookies`.
+  IMMEDIATELY call `await supabase.auth.getUser()` after creating the client.
+  DO NOT put any code between client creation and `getUser()`.
+  RETURN `supabaseResponse` as-is, OR copy `supabaseResponse.cookies.getAll()`
+  onto any new response. Otherwise cookies desync and users log out randomly.
+
+## RLS
+
+- Every table in `public` MUST have RLS enabled and explicit policies for each
+  of SELECT/INSERT/UPDATE/DELETE separately. Never `FOR ALL`.
+- Always specify `TO authenticated` or `TO anon` — never default.
+- Use `auth.uid()` and `auth.jwt()` for user checks. NEVER trust
+  `auth.jwt() -> 'user_metadata'` for authorization (user-mutable).
+- Performance: index every column referenced in a policy. Wrap function calls
+  as `(select auth.uid())` so Postgres caches them per statement.
+- RLS migrations live in the SAME migration file as the table definition.
+
+## Service-role client
+
+- Constructed in a server-only module (`import 'server-only'` at top).
+- Used only from Route Handlers / Server Actions / cron with their own
+  authorization check already done.
+- Never logged. Never embedded in URLs.
+
+## Types and queries
+
+- All clients typed with the Database generic once it's generated.
+- Always destructure `{ data, error }` and check `error` before using `data`.
+  Never `data!`.
+- `.single()` for exactly-one, `.maybeSingle()` for zero-or-one.
+- Prefer narrow `.select('id, name, ...')` over `.select('*')` for type narrowing.
+- Multi-step writes: wrap in a Postgres function (RPC). Call via
+  `supabase.rpc('fn_name', args)` — Supabase JS does not expose ad-hoc transactions.

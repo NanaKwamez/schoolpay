@@ -1,0 +1,61 @@
+---
+description: TypeScript strict rules for all .ts/.tsx files
+globs: **/*.ts,**/*.tsx
+alwaysApply: false
+---
+
+# TypeScript (strict)
+
+## tsconfig (must be enabled)
+strict, noImplicitAny, strictNullChecks, strictFunctionTypes,
+strictBindCallApply, strictPropertyInitialization, exactOptionalPropertyTypes,
+noUncheckedIndexedAccess, noFallthroughCasesInSwitch, noImplicitReturns,
+noUnusedLocals, noUnusedParameters.
+
+## No `any`, no unjustified casts
+- Never `any`. Use `unknown` and narrow with type guards or Zod.
+- Never use `as Foo` for external data (API responses, JSON.parse, localStorage,
+  IndexedDB reads, FormData, env). Validate at the boundary with Zod, then
+  `type X = z.infer<typeof XSchema>`.
+- Acceptable `as` only: `as const`; `as unknown as T` with a comment; narrowing
+  inside a discriminated union when TS cannot infer.
+- No `!` non-null assertions. The only exception is `process.env.X!` AFTER the
+  startup `EnvSchema.parse(process.env)` validation.
+
+## Types and shapes
+- Explicit types on all exported function params and return types. Internal
+  helpers may rely on inference.
+- Prefer `interface` for extendable object shapes; `type` for unions and
+  intersections. No `React.FC`. Use named `*Props` interfaces.
+- Use `readonly` for immutable props; `ReadonlyArray<T>` on public APIs.
+- Use utility types (`Partial`, `Pick`, `Omit`, `Required`, `Record`, `Awaited`,
+  `ReturnType`, `Parameters`, `NonNullable`) — never re-declare derivable shapes.
+- No enums. Use `as const` objects or string literal unions.
+- Use `satisfies` to constrain a value without widening it.
+
+## Discriminated unions and exhaustiveness
+- Model multi-state values with a `kind` or `status` discriminant.
+- Every `switch` over a union ends with:
+    `default: { const _exhaustive: never = value; throw new Error(_exhaustive); }`
+
+## Branded types
+- Use branded types for IDs and validated primitives:
+    `type UserId = string & { readonly __brand: 'UserId' };`
+- Construct branded values via Zod transforms or factory functions — never with `as`.
+
+## Zod everywhere data crosses a boundary
+- Server Action input (FormData), route handler bodies, fetch responses,
+  IndexedDB reads, localStorage, and env vars — all parsed by Zod.
+- Define a single `env.ts`: `export const env = EnvSchema.parse(process.env);`
+  Read env only through `env.X`, never `process.env.X` ad-hoc.
+- `.parse()` for programmer-error inputs; `.safeParse()` when failure is
+  expected and surfaces to the user.
+
+## Imports
+- Group: built-in → external → internal (`@/...`) → parent → sibling → index
+  → object → type. Sort alphabetically. Blank line between groups.
+- Absolute imports via the `@/` alias. Never `../../...`.
+
+## ✅ vs ❌
+✅ `const result = OrderSchema.safeParse(input); if (!result.success) return { ok: false, error: result.error };`
+❌ `const order = input as Order;`

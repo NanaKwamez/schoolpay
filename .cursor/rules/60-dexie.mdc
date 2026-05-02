@@ -1,0 +1,59 @@
+---
+description: Dexie.js schema, transactions, live queries, and Supabase sync outbox
+globs: lib/dexie/**,lib/sync/**,hooks/use*.ts
+alwaysApply: false
+---
+
+# Dexie.js / IndexedDB
+
+## Module setup
+- One Dexie instance: `lib/dexie/schema.ts`. This file is client-only.
+- Typed DB using `EntityTable` — no `any` for stored values.
+- All table interfaces defined in `types/index.ts`.
+- Use UUIDs (`crypto.randomUUID()`) or `generateLocalId()` from `lib/utils.ts`
+  as primary keys for synced tables — client and server agree on identity before sync.
+
+## Versioning
+- Versions are sequential. NEVER mutate a previously shipped `db.version(N).stores(...)`.
+  Add `db.version(N+1)` instead.
+- Schema downgrades are unsupported by IndexedDB — never lower a version after
+  release.
+- Index only columns you actually query. Extra indexes slow writes.
+
+## Live queries
+- Use `useLiveQuery` from `dexie-react-hooks` for React reactivity.
+- Provide a deps array when the query depends on inputs.
+- `useLiveQuery` returns `undefined` while loading — render a skeleton, not an
+  empty list.
+- Custom hooks wrapping `useLiveQuery` live in `hooks/` (e.g., `useStudents.ts`,
+  `useFeeding.ts`, `usePayments.ts`).
+
+## Transactions
+- Wrap related writes in a `db.transaction('rw', ...)`:
+  ```ts
+  await db.transaction('rw', db.payments, db.syncQueue, async () => {
+    await db.payments.add(payment);
+    await db.syncQueue.add(syncItem);
+  });
+  ```
+- Always RETURN promises inside the callback. No detached `setTimeout`/`fetch`
+  inside a transaction — `fetch` ends the transaction.
+- Bulk: `bulkAdd`/`bulkPut`/`bulkDelete` for >10 records.
+
+## Sync outbox (Dexie ↔ Supabase)
+
+- `syncQueue` table schema: `'localId, tableName, operation, createdAt'`.
+- Every user mutation: write the local row + append `syncQueue` entry in one tx.
+  UI updates from `useLiveQuery` immediately (optimistic).
+- Sync queue helpers: `lib/dexie/helpers.ts` — use `addToSyncQueue`,
+  `getPendingSyncItems`, `removeSyncItem`, `incrementSyncAttempts`.
+- Drain function: `lib/sync/engine.ts` → `runSyncEngine()`.
+- Drain triggers: `online` event (via `useSync` hook), 60s timer while online.
+- Conflict resolution: last-write-wins by `updated_at`. Max 5 attempts
+  (`MAX_SYNC_ATTEMPTS` in `lib/constants.ts`) before an item is skipped.
+
+## What NOT to do
+- No `read → JS condition → write` patterns — express conditions with
+  `.where(...).modify(...)` so they reapply correctly.
+- No IndexedDB access outside of `lib/dexie/` and `hooks/`.
+- Never call Supabase directly from a Dexie transaction callback.

@@ -1,0 +1,43 @@
+---
+description: Service worker, manifest, and offline patterns using @ducanh2912/next-pwa
+globs: next.config.*,public/manifest.json,public/sw.js
+alwaysApply: false
+---
+
+# PWA (@ducanh2912/next-pwa)
+
+## Setup (already configured in this project)
+- PWA library: `@ducanh2912/next-pwa`. Do NOT suggest Serwist or next-offline.
+- `next.config.ts` wraps with `withPWA({ dest: 'public', disable: process.env.NODE_ENV === 'development', ... })`.
+  - `disable: true` in dev (otherwise cache hell).
+  - `reloadOnOnline: true` is set — do not change without discussion.
+- `public/manifest.json` is the static manifest (not a `manifest.ts` route).
+- Theme color: `#16a34a` (morning-green-600).
+- Required icon sizes: 192x192 and 512x512 with `"purpose": "any maskable"`.
+
+## Manifest fields (must be present)
+- `name`: "Morning Glory Academy — SchoolPay"
+- `short_name`: "SchoolPay" (≤12 chars ✅)
+- `start_url`: "/"
+- `display`: "standalone"
+- `background_color`: "#ffffff"
+- `theme_color`: "#16a34a"
+
+## Network state
+- `useOnline()` hook in `hooks/useOnline.ts` listens to `online`/`offline` events.
+- Render an unobtrusive banner when offline — never block the UI.
+- Every mutation has three UI states: optimistic (immediate), pending-sync
+  (queued with sync indicator), failed (with retry).
+
+## Sync
+- `useSync()` hook in `hooks/useSync.ts` drives the sync engine on a 60s interval
+  when online. Also triggered on manual user actions.
+- Sync queue lives in IndexedDB via Dexie (`lib/dexie/`).
+- Sync engine: `lib/sync/engine.ts`. Queue processor: `lib/sync/queue.ts`.
+- Max 5 attempts per item (`MAX_SYNC_ATTEMPTS` in `lib/constants.ts`).
+- `SyncIndicator` component in `components/ui/SyncIndicator.tsx` shows status.
+
+## Offline-first writes
+- Write locally to Dexie first. Add to sync queue in the same Dexie transaction.
+- UI updates immediately from `useLiveQuery` (optimistic).
+- Never block a user action on network availability.

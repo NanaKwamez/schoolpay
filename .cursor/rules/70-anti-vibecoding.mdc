@@ -1,0 +1,74 @@
+---
+description: Anti-duplication, file size, and architecture discipline — applies to every change
+alwaysApply: true
+---
+
+# Anti-vibecoding discipline
+
+## File size
+- Hard ceiling 500 lines. Soft target 300. Split when over.
+- One default-exported component per file (route specials excepted).
+- Functions ≤30 lines target. Max 3 positional parameters — switch to an
+  options object after 3.
+
+## Single responsibility
+- Each module has ONE responsibility named in a one-line file header comment.
+- Database layer returns `{ data, error }` tuples; service layer maps to
+  domain results; UI layer renders. Never mix layers.
+- Three-layer mental model: routes (thin HTTP/RSC) → services (business logic)
+  → repositories (data access). Service methods accept and return domain
+  models, never raw rows.
+
+## Naming
+- Files: kebab-case (`user-profile-card.tsx`, `format-date.ts`).
+- React components: PascalCase identifier.
+- Functions/variables: camelCase. Booleans: `is*`, `has*`, `should*`, `can*`.
+- Event props: `onX`. Implementations: `handleX`.
+- Constants/env: UPPER_SNAKE_CASE.
+- Types/interfaces: PascalCase, no `I` prefix. Zod schemas: `XSchema`.
+
+## Magic numbers and strings
+- No magic numbers/strings in business logic. Extract to named const in
+  `lib/constants.ts` or a closer scope with a comment explaining meaning.
+- Status/kind values are union literal types defined once in `types/index.ts`.
+
+## Composition over flags
+- React components use `children` and named `ReactNode` slots over boolean
+  toggles and content arrays. Booleans only for real state (disabled, loading,
+  selected). When behavior diverges, use a discriminated union with a literal
+  `kind` prop.
+- Functions: no flag parameters that switch logic. If multiple modes are
+  needed, write multiple functions or split into a small object dispatch.
+
+## Hooks and performance
+- Hooks called unconditionally at the top.
+- Group correlated state in `useReducer` rather than fanning out `useState`.
+- Extract any hook combo used 2+ times into a custom `useX` returning a stable
+  object/2-tuple.
+- `useEffect` synchronizes with external systems only. Derived state is
+  computed inline or via `useMemo`.
+- `useMemo`/`useCallback` ONLY when downstream `React.memo` or a hook deps
+  array requires a stable reference, OR computation is measurably expensive.
+  Never reflexively.
+- Stable data-derived list keys; never index keys when items can reorder.
+
+## Error handling
+- Validate inputs and preconditions at the top (guard clauses). Happy path last.
+  Early returns, not nested conditionals.
+- Never swallow errors. Either handle (user-facing feedback) or re-throw with
+  context.
+- NO FALLBACKS that hide root causes. Add a fallback only if the user explicitly asks.
+- Error messages include enough context to debug (request params, response
+  body, status codes). No generic "something went wrong".
+
+## Imports and dependencies
+- Group built-in → external → internal (`@/`) → parent → sibling → index → object
+  → type. Sort alphabetically.
+- Absolute imports from `@/`. Never relative `../../...`.
+- Avoid circular dependencies.
+
+## Tooling backstop (rules ≠ enforcement)
+- Cursor rules are documentation; ESLint, `tsc --noEmit`, and CI are enforcement.
+- After implementing changes: run `npm run lint` and `npm run build`
+  (do not start the dev server).
+- `npm run build` MUST pass before every git commit.

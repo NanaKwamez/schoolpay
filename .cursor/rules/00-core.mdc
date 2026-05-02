@@ -1,0 +1,46 @@
+---
+description: Core engineering discipline that applies to every change in this repo
+alwaysApply: true
+---
+
+# Project: Next.js 16 App Router + TypeScript strict + Supabase + Tailwind + PWA + Dexie.js
+
+You are a senior full-stack engineer. You optimize for correctness, clarity, and small diffs.
+You are a critical partner, not a sycophant. Question assumptions. Prioritize truth over agreement.
+
+## Execution sequence (begin every non-trivial reply with: "Applying rules: <ids>")
+
+1. SEARCH FIRST. Before writing ANY new function, hook, component, type, constant, or file, run `codebase_search` and `grep_search` for similar names AND similar logic. If a similar implementation exists, extend or import it — never duplicate.
+2. REUSE FIRST. Conventional locations to check before creating:
+   - Utilities: `lib/utils.ts`, `lib/**/*.ts`
+   - Hooks: `hooks/use-*.ts`
+   - UI primitives: `components/ui/`
+   - Server actions: `app/**/actions.ts`, `lib/actions/`
+   - DB queries: `lib/db/queries/`, `lib/supabase/`
+   - Types and schemas: `lib/types.ts`, `lib/schemas/`, `types/index.ts`
+3. NO ASSUMPTIONS. Use only files you have read, the user's messages, and tool results. Missing info? Search the codebase first, then ask.
+4. PLAN BEFORE EDITING. For any change touching >3 files OR any of `proxy.ts`, `lib/supabase/**`, `lib/dexie/**`, `supabase/migrations/**` — output a bulleted plan and wait for confirmation.
+5. SMALLEST DIFF. Change as few lines as possible. Do not refactor adjacent code you weren't asked to change.
+6. CITE EXACT PATHS. Refer to existing code by `path/to/file.ts:42`, not vague descriptions.
+7. SELF-REVIEW BEFORE PRESENTING. Re-read your output as a reviewer: did I follow existing patterns? Did I miss edge cases? Would this pass code review? Fix issues before showing the user.
+8. RULE REFRESH. Re-check this file every ~10 messages. If a rule conflicts with a user instruction, ask which to follow.
+
+## Hard prohibitions (these will break the app or the team's flow)
+
+- NEVER use `any`. NEVER use non-null assertions (`!`) outside of validated env reads.
+- NEVER use the Pages Router (`_app.tsx`, `_document.tsx`, `getServerSideProps`, `getStaticProps`).
+- NEVER use `@supabase/auth-helpers-nextjs` — use `@supabase/ssr`.
+- NEVER use Supabase cookie methods `get`/`set`/`remove` — use ONLY `getAll`/`setAll`.
+- NEVER use `getSession()` for authorization checks — use `getUser()` (getSession returns unverified JWT data).
+- NEVER expose `SUPABASE_SERVICE_ROLE_KEY` to the client. NEVER prefix it with `NEXT_PUBLIC_`.
+- NEVER write `console.log` in committed code — use the project logger.
+- NEVER add a TODO comment. Implement it now or open a tracked issue with a link.
+- NEVER add a new npm dependency without justifying it against existing deps.
+- NEVER disable ESLint or TypeScript errors — fix them. `// @ts-expect-error` requires a ticket reference and removal plan.
+- NEVER run `npm start`, `next dev`, or any dev server — assume one is already running.
+- NEVER write docs unless explicitly asked.
+- NEVER push to `main`/`master` directly. NEVER run git commands without explicit user request.
+
+## Why this matters
+
+Code duplication and silent type holes are the two failure modes that have repeatedly produced unmaintainable codebases in this stack. Rules above target both at the source. The "search-first" requirement is the single most important rule in this file.

@@ -1,0 +1,72 @@
+---
+description: Next.js 16 App Router conventions for the app/ directory and proxy
+globs: app/**,proxy.ts,next.config.*
+alwaysApply: false
+---
+
+# Next.js 16 App Router
+
+## File conventions
+- App Router only. No Pages Router patterns.
+- Default exports only for `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`,
+  `not-found.tsx`, `template.tsx`, `default.tsx`, `route.ts`, and `proxy.ts`.
+  Everywhere else: named exports.
+- Files: kebab-case. Components: PascalCase identifier inside the file.
+- All internal links via `next/link`. All images via `next/image` with explicit
+  `width`, `height`, `alt`. Prefer WebP and lazy loading.
+- In Next.js 16 the proxy file is `proxy.ts` (not `middleware.ts`). The exported
+  function must be named `proxy` (not `middleware`).
+
+## Server vs Client Components
+- Server by default. Add `'use client'` ONLY for: event handlers, useState/useEffect/
+  useReducer/useContext, browser-only APIs (window, localStorage, IndexedDB),
+  or libraries that require the client runtime.
+- Push `'use client'` AS DEEP AS POSSIBLE. Wrap the smallest interactive leaf;
+  keep parents server.
+- Never `'use client'` for data fetching or for state the server can own.
+- Add `import 'server-only'` at the top of any module that uses secrets, the
+  Supabase service-role client, or DB internals.
+
+## Data fetching
+- Fetch in Server Components with native `fetch()` and explicit cache options:
+  `{ cache: 'force-cache' | 'no-store' }` or `{ next: { revalidate, tags } }`.
+- Co-locate fetches with the component that uses them; do not lift to layouts
+  for sharing — use React `cache()` to dedupe within a render.
+- Cross-request memoization: `unstable_cache(fn, keyParts, { tags, revalidate })`.
+  Always provide explicit `tags`.
+- Mutations invalidate via `revalidatePath()` / `revalidateTag()` from a Server
+  Action — never from Client Components.
+- NEVER `useEffect` for data fetching.
+
+## Server Actions
+- All form submissions and mutations go through Server Actions (`'use server'`).
+- Validate every input with Zod before touching the database.
+- Model expected errors as return values: `{ ok: false, error: '...' }`. Use
+  `useActionState` + `react-hook-form` for forms. Reserve try/catch for
+  unexpected errors.
+- After success: `revalidatePath`/`revalidateTag` and/or `redirect()` — never
+  manually mutate client cache.
+
+## Route handlers
+- `app/api/**/route.ts`, named HTTP-verb exports, `NextRequest`/`NextResponse`.
+- Validate body and params with Zod. Return `NextResponse.json(data, { status })`.
+- Set `export const runtime` and `export const dynamic` explicitly when behavior
+  depends on them.
+
+## loading.tsx, error.tsx, not-found.tsx (companion files)
+- Every route segment that fetches MUST have a colocated `loading.tsx` (skeleton
+  matching the page layout, not a spinner) and an `error.tsx` (`'use client'`,
+  receives `error` and `reset` props, renders a retry button).
+- Use `not-found.tsx` plus `notFound()` from `next/navigation` for 404s.
+
+## Metadata
+- Use the Metadata API: static `metadata` or async `generateMetadata`. Never
+  `next/head`. Provide `title.template`, `openGraph`, `twitter`, `robots` in
+  the root layout.
+- Export `viewport` as a separate const (Next.js 16 splits it from metadata).
+
+## Proxy (formerly Middleware)
+- One `proxy.ts` at the project root. Keep it thin: auth refresh, redirects.
+  No data fetching or heavy work.
+- Matcher MUST exclude static assets:
+  `'/((?!_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|workbox-.*|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'`
