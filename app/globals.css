@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+@theme {
+  /* Morning Green palette (primary) */
+  --color-morning-green-50: #f0fdf4;
+  --color-morning-green-100: #dcfce7;
+  --color-morning-green-200: #bbf7d0;
+  --color-morning-green-300: #86efac;
+  --color-morning-green-400: #4ade80;
+  --color-morning-green-500: #22c55e;
+  --color-morning-green-600: #16a34a;
+  --color-morning-green-700: #15803d;
+  --color-morning-green-800: #166534;
+  --color-morning-green-900: #14532d;
+
+  /* Morning Gold palette (accent) */
+  --color-morning-gold-50: #fffbeb;
+  --color-morning-gold-100: #fef3c7;
+  --color-morning-gold-200: #fde68a;
+  --color-morning-gold-300: #fcd34d;
+  --color-morning-gold-400: #fbbf24;
+  --color-morning-gold-500: #f59e0b;
+  --color-morning-gold-600: #d97706;
+  --color-morning-gold-700: #b45309;
+  --color-morning-gold-800: #92400e;
+  --color-morning-gold-900: #78350f;
+
+  /* Spacing */
+  --spacing-touch-target: 48px;
+
+  /* Screens */
+  --breakpoint-tablet: 768px;
+}
+
+/* Base styles */
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: #f9fafb;
+  color: #111827;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Touch target minimum size */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"] {
+  min-height: 44px;
+}
+
+/* Safe area insets for notched phones */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Thin green scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #16a34a;
+  border-radius: 9999px;
+}
+
+/* Slide-up animation for toasts */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.2s ease-out;
+}
