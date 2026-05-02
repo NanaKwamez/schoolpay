@@ -1,7 +1,60 @@
 @import "tailwindcss";
 
 @theme {
-  /* Morning Green palette (primary) */
+  /* ── Liquid Glass Design System (MD3 tokens from Stitch) ─────────── */
+  --color-ds-primary: #0f5238;
+  --color-ds-on-primary: #ffffff;
+  --color-ds-primary-container: #2d6a4f;
+  --color-ds-on-primary-container: #a8e7c5;
+  --color-ds-primary-fixed: #b1f0ce;
+  --color-ds-primary-fixed-dim: #95d4b3;
+  --color-ds-on-primary-fixed: #002114;
+  --color-ds-on-primary-fixed-variant: #0e5138;
+
+  --color-ds-secondary: #865300;
+  --color-ds-on-secondary: #ffffff;
+  --color-ds-secondary-container: #fea520;
+  --color-ds-on-secondary-container: #694000;
+  --color-ds-secondary-fixed: #ffddb9;
+  --color-ds-secondary-fixed-dim: #ffb961;
+  --color-ds-on-secondary-fixed: #2b1700;
+  --color-ds-on-secondary-fixed-variant: #663e00;
+
+  --color-ds-tertiary: #00478a;
+  --color-ds-on-tertiary: #ffffff;
+  --color-ds-tertiary-container: #235fa8;
+  --color-ds-on-tertiary-container: #c7daff;
+  --color-ds-tertiary-fixed: #d5e3ff;
+  --color-ds-tertiary-fixed-dim: #a7c8ff;
+  --color-ds-on-tertiary-fixed: #001b3c;
+  --color-ds-on-tertiary-fixed-variant: #004689;
+
+  --color-ds-error: #ba1a1a;
+  --color-ds-on-error: #ffffff;
+  --color-ds-error-container: #ffdad6;
+  --color-ds-on-error-container: #93000a;
+
+  --color-ds-surface: #f8f9fa;
+  --color-ds-surface-dim: #d9dadb;
+  --color-ds-surface-bright: #f8f9fa;
+  --color-ds-surface-container-lowest: #ffffff;
+  --color-ds-surface-container-low: #f3f4f5;
+  --color-ds-surface-container: #edeeef;
+  --color-ds-surface-container-high: #e7e8e9;
+  --color-ds-surface-container-highest: #e1e3e4;
+  --color-ds-surface-variant: #e1e3e4;
+  --color-ds-on-surface: #191c1d;
+  --color-ds-on-surface-variant: #404943;
+
+  --color-ds-outline: #707973;
+  --color-ds-outline-variant: #bfc9c1;
+  --color-ds-inverse-surface: #2e3132;
+  --color-ds-inverse-on-surface: #f0f1f2;
+  --color-ds-surface-tint: #2c694e;
+  --color-ds-background: #f8f9fa;
+  --color-ds-on-background: #191c1d;
+
+  /* ── Morning Green palette (project primary) ──────────────────────── */
   --color-morning-green-50: #f0fdf4;
   --color-morning-green-100: #dcfce7;
   --color-morning-green-200: #bbf7d0;
@@ -95,3 +148,49 @@ textarea,
 .animate-slide-up {
   animation: slide-up 0.2s ease-out;
 }
+
+/* ── Liquid Glass Design System Utilities ─────────────────────────────── */
+
+/* Primary glass card: white/80, blur-20, glass stroke, ambient shadow */
+.glass {
+  background-color: rgba(255, 255, 255, 0.80);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.50);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+}
+
+/* Elevated glass: higher opacity, stronger blur for overlapping elements */
+.glass-elevated {
+  background-color: rgba(255, 255, 255, 0.90);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.70);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+/* Hollow glass for inputs: transparent bg, focus transitions to green border */
+.glass-input {
+  background-color: rgba(255, 255, 255, 0.50);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(191, 201, 193, 0.80); /* outline-variant */
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.glass-input:focus-within {
+  background-color: rgba(255, 255, 255, 0.90);
+  border-color: #0f5238; /* ds-primary */
+  box-shadow: 0 0 0 2px rgba(15, 82, 56, 0.15);
+}
+
+/* Dark glass for admin sidebar backgrounds */
+.glass-dark {
+  background-color: rgba(15, 82, 56, 0.90);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+/* Hide scrollbar but keep scroll */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
