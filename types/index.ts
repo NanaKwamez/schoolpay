@@ -64,6 +64,76 @@ export interface FeeType {
   description: string | null
 }
 
+export interface StudentFeeAssignment {
+  id: string
+  student_id: string
+  fee_type_id: string
+  term_id: string
+  is_active: boolean
+}
+
+export interface WeeklyAdvance {
+  id: string
+  student_id: string
+  fee_type_id: string
+  term_id: string
+  week_covered: string // ISO date of Monday for that week
+  amount_paid: number
+  payment_id: string // references the payments record
+}
+
+// ─── Local-first records (created offline, synced later) ─────────────────────
+
+/**
+ * Local feeding log — lives in IndexedDB, identified by local_id before sync.
+ * `id` is the Supabase UUID; empty string '' until successfully synced.
+ */
+export interface LocalFeedingLog {
+  local_id: string // local PK (generated client-side)
+  id: string // Supabase UUID, '' until synced
+  student_id: string
+  date: string // YYYY-MM-DD
+  status: FeedingStatus
+  amount: number
+  marked_by: string
+  synced: boolean
+}
+
+/**
+ * Local payment — lives in IndexedDB, identified by local_id before sync.
+ * `id` is the Supabase UUID; empty string '' until successfully synced.
+ */
+export interface LocalPayment {
+  local_id: string // local PK (generated client-side)
+  id: string // Supabase UUID, '' until synced
+  student_id: string
+  fee_type_id: string
+  term_id: string
+  amount_paid: number
+  payment_type: PaymentType
+  week_covered: string | null
+  date_paid: string
+  marked_by: string
+  receipt_number: string | null
+  notes: string | null
+  synced: boolean
+}
+
+// ─── Legacy types kept for compatibility ──────────────────────────────────────
+
+/** @deprecated Use LocalFeedingLog for offline use */
+export interface FeedingDailyLog {
+  id: string
+  student_id: string
+  date: string
+  status: FeedingStatus
+  amount: number
+  marked_by: string
+  synced: boolean
+  local_id: string | null
+}
+
+/** @deprecated Use LocalPayment for offline use */
 export interface Payment {
   id: string
   student_id: string
@@ -76,17 +146,6 @@ export interface Payment {
   marked_by: string
   receipt_number: string | null
   notes: string | null
-  synced: boolean
-  local_id: string | null
-}
-
-export interface FeedingDailyLog {
-  id: string
-  student_id: string
-  date: string
-  status: FeedingStatus
-  amount: number
-  marked_by: string
   synced: boolean
   local_id: string | null
 }
@@ -142,10 +201,11 @@ export interface FundSummary {
 }
 
 export interface SyncQueueItem {
-  localId: string
-  tableName: string
+  localId: string // PK — generated string UUID
+  tableName: string // Supabase table name to sync to
   operation: SyncOperation
   payload: Record<string, unknown>
   createdAt: string
   attempts: number
+  synced: boolean
 }

@@ -1,16 +1,9 @@
 'use client'
 
-import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from '@/lib/dexie/schema'
+// Expenses are admin-only and loaded directly from Supabase — not cached in IndexedDB.
+// This hook is a placeholder; full implementation will fetch from Supabase in admin pages.
 import type { Expense } from '@/types'
 
-export function useExpenses(fundId?: string): Expense[] {
-  return useLiveQuery(
-    () =>
-      fundId
-        ? db.expenses.where('fund_id').equals(fundId).toArray()
-        : db.expenses.toArray(),
-    [fundId],
-    []
-  ) as Expense[]
+export function useExpenses(_fundId?: string): Expense[] {
+  return []
 }

@@ -1,52 +1,44 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { runSyncEngine } from '@/lib/sync/engine'
-import { SYNC_INTERVAL_MS } from '@/lib/constants'
-import { useOnline } from './useOnline'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { syncEngine } from '@/lib/sync/engine'
+import { db } from '@/lib/dexie/schema'
 
-interface SyncState {
+interface UseSyncReturn {
+  pendingCount: number
   isSyncing: boolean
   lastSyncAt: Date | null
-  pendingCount: number
-  error: string | null
+  syncNow: () => Promise<void>
 }
 
-export function useSync() {
-  const { isOnline } = useOnline()
-  const [state, setState] = useState<SyncState>({
-    isSyncing: false,
-    lastSyncAt: null,
-    pendingCount: 0,
-    error: null,
-  })
+export function useSync(): UseSyncReturn {
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null)
 
-  const sync = useCallback(async () => {
-    if (!isOnline || state.isSyncing) return
-    setState(prev => ({ ...prev, isSyncing: true, error: null }))
-    try {
-      const { failed } = await runSyncEngine()
-      setState(prev => ({
-        ...prev,
-        isSyncing: false,
-        lastSyncAt: new Date(),
-        pendingCount: failed,
-      }))
-    } catch (err) {
-      setState(prev => ({
-        ...prev,
-        isSyncing: false,
-        error: err instanceof Error ? err.message : 'Sync failed',
-      }))
-    }
-  }, [isOnline, state.isSyncing])
+  // Live count of unsynced items — updates automatically via Dexie reactivity
+  const pendingCount = useLiveQuery(
+    () => db.syncQueue.where('synced').equals(0).count(),
+    [],
+    0
+  ) ?? 0
 
+  // Start/stop the engine on mount/unmount
   useEffect(() => {
-    if (!isOnline) return
-    sync()
-    const interval = setInterval(sync, SYNC_INTERVAL_MS)
-    return () => clearInterval(interval)
-  }, [isOnline, sync])
+    syncEngine.start()
+    return () => syncEngine.stop()
+  }, [])
 
-  return { ...state, isOnline, sync }
+  const syncNow = useCallback(async () => {
+    if (isSyncing) return
+    setIsSyncing(true)
+    try {
+      await syncEngine.syncNow()
+      setLastSyncAt(new Date())
+    } finally {
+      setIsSyncing(false)
+    }
+  }, [isSyncing])
+
+  return { pendingCount, isSyncing, lastSyncAt, syncNow }
 }
