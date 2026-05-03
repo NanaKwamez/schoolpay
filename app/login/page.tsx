@@ -2,122 +2,19 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { Eye, EyeOff } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { SCHOOL_NAME } from '@/lib/constants'
-import { Building2, Eye, EyeOff, Delete } from 'lucide-react'
+import { Keypad, PinDotRow } from '@/components/login/pin-keypad'
+import { MgaLogoMark } from '@/components/branding/mga-logo-mark'
 import { cn } from '@/lib/utils'
 import type { UserRole } from '@/types'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type LoginMode = 'staff' | 'teacher-pin'
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getDashboard(role: UserRole): string {
   if (role === 'teacher') return '/teacher/home'
   return '/admin/dashboard'
 }
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-interface PinDotRowProps {
-  length: number
-  filled: number
-}
-
-function PinDotRow({ length, filled }: PinDotRowProps) {
-  return (
-    <div className="flex justify-center gap-4 py-4">
-      {Array.from({ length }).map((_, i) => (
-        <div
-          key={i}
-          className={cn(
-            'h-4 w-4 rounded-full border-2 transition-all duration-150',
-            i < filled
-              ? 'bg-morning-green-600 border-morning-green-600'
-              : 'bg-white border-gray-300'
-          )}
-        />
-      ))}
-    </div>
-  )
-}
-
-interface KeypadProps {
-  onDigit: (digit: string) => void
-  onBackspace: () => void
-  disabled?: boolean
-}
-
-const KEYPAD_ROWS = [
-  ['1', '2', '3'],
-  ['4', '5', '6'],
-  ['7', '8', '9'],
-] as const
-
-function Keypad({ onDigit, onBackspace, disabled }: KeypadProps) {
-  return (
-    <div className="space-y-3">
-      {KEYPAD_ROWS.map(row => (
-        <div key={row.join('')} className="grid grid-cols-3 gap-3">
-          {row.map(digit => (
-            <button
-              key={digit}
-              type="button"
-              disabled={disabled}
-              onClick={() => onDigit(digit)}
-              className={cn(
-                'h-16 rounded-2xl bg-gray-50 border border-gray-200 text-2xl font-semibold',
-                'text-gray-900 transition-all duration-100 select-none',
-                'active:scale-95 active:bg-gray-100',
-                'focus-visible:ring-2 focus-visible:ring-morning-green-500 outline-none',
-                'disabled:opacity-40 disabled:cursor-not-allowed'
-              )}
-            >
-              {digit}
-            </button>
-          ))}
-        </div>
-      ))}
-      {/* Bottom row: blank | 0 | backspace */}
-      <div className="grid grid-cols-3 gap-3">
-        <div />
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => onDigit('0')}
-          className={cn(
-            'h-16 rounded-2xl bg-gray-50 border border-gray-200 text-2xl font-semibold',
-            'text-gray-900 transition-all duration-100 select-none',
-            'active:scale-95 active:bg-gray-100',
-            'focus-visible:ring-2 focus-visible:ring-morning-green-500 outline-none',
-            'disabled:opacity-40 disabled:cursor-not-allowed'
-          )}
-        >
-          0
-        </button>
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={onBackspace}
-          aria-label="Delete last digit"
-          className={cn(
-            'h-16 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-center',
-            'text-gray-600 transition-all duration-100',
-            'active:scale-95 active:bg-gray-100',
-            'focus-visible:ring-2 focus-visible:ring-morning-green-500 outline-none',
-            'disabled:opacity-40 disabled:cursor-not-allowed'
-          )}
-        >
-          <Delete className="h-6 w-6" />
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function LoginPage() {
   const router = useRouter()
@@ -129,8 +26,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // ─── PIN keypad handlers ─────────────────────────────────────────────────
-
   const handleDigit = useCallback((digit: string) => {
     setPin(prev => (prev.length < 4 ? prev + digit : prev))
   }, [])
@@ -138,8 +33,6 @@ export default function LoginPage() {
   const handleBackspace = useCallback(() => {
     setPin(prev => prev.slice(0, -1))
   }, [])
-
-  // ─── Auth helpers ────────────────────────────────────────────────────────
 
   async function resolveRoleAndRedirect(userId: string): Promise<void> {
     const supabase = createSupabaseBrowserClient()
@@ -157,8 +50,6 @@ export default function LoginPage() {
     const { role } = data as { role: UserRole }
     router.push(getDashboard(role))
   }
-
-  // ─── Staff login (email + password) ──────────────────────────────────────
 
   const handleStaffLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -183,8 +74,6 @@ export default function LoginPage() {
 
     setLoading(false)
   }
-
-  // ─── Teacher PIN login (email + 4-digit PIN as password) ─────────────────
 
   const handlePinLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -222,147 +111,165 @@ export default function LoginPage() {
     setPassword('')
   }
 
-  // ─── Render ───────────────────────────────────────────────────────────────
+  const inputClass =
+    'w-full h-[52px] min-h-[52px] rounded-xl border border-gray-200 px-4 text-base text-gray-900 placeholder:text-gray-400 outline-none transition focus:border-mga-green-mid focus:ring-2 focus:ring-mga-green-pale'
+
+  const tabBtn = (active: boolean) =>
+    cn(
+      'flex-1 py-3 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-mga-green-pale rounded-t-lg',
+      active
+        ? 'font-semibold text-mga-green-dark border-b-2 border-mga-green-dark'
+        : 'font-medium text-gray-400 border-b-2 border-transparent hover:text-gray-600'
+    )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-morning-green-600 to-morning-green-700 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-sm">
+    <div
+      className={cn(
+        'relative flex min-h-screen flex-col',
+        'bg-[linear-gradient(160deg,#0D3B2E_0%,#1A5C40_50%,#0D3B2E_100%)]'
+      )}
+    >
+      <div
+        className="pointer-events-none absolute left-1/2 top-[12%] h-[min(88vw,22rem)] w-[min(88vw,22rem)] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(201,168,76,0.15)_0%,transparent_70%)]"
+        aria-hidden
+      />
 
-        {/* School header */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center h-20 w-20 rounded-3xl bg-white shadow-xl mb-4">
-            <Building2 className="h-10 w-10 text-morning-green-600" strokeWidth={1.5} />
+      <div className="relative flex flex-1 flex-col items-center justify-center px-4 py-10">
+        <div
+          className={cn(
+            'w-full max-w-sm rounded-3xl border border-mga-gold/20 bg-white/95 p-8 shadow-2xl',
+            'backdrop-blur-md backdrop-saturate-150'
+          )}
+        >
+          <div className="mx-auto mb-3 flex justify-center">
+            <MgaLogoMark
+              size={80}
+              priority
+              wrapperClassName="border-4 border-mga-gold shadow-lg"
+            />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">SchoolPay</h1>
-          <p className="text-morning-green-100 font-medium mt-1 text-lg">{SCHOOL_NAME}</p>
-          <p className="text-morning-green-200 text-sm mt-0.5">School Finance Management</p>
-        </div>
+          <h1 className="text-center text-xl font-bold text-mga-green-dark">
+            Morning Glory Academy
+          </h1>
+          <p className="mt-1 text-center text-sm italic text-mga-gold">
+            God Is Our Light
+          </p>
+          <div className="mt-4 border-t border-mga-gold/30" />
 
-        {/* Card */}
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-          {/* Mode tabs */}
-          <div className="flex border-b border-gray-100">
+          <div className="mt-2 flex">
             <button
+              type="button"
               onClick={() => switchMode('staff')}
-              className={cn(
-                'flex-1 py-4 text-sm font-semibold transition-colors focus-visible:ring-2 outline-none',
-                mode === 'staff'
-                  ? 'text-morning-green-700 border-b-2 border-morning-green-600'
-                  : 'text-gray-400 hover:text-gray-600'
-              )}
+              className={tabBtn(mode === 'staff')}
             >
               Staff Login
             </button>
             <button
+              type="button"
               onClick={() => switchMode('teacher-pin')}
-              className={cn(
-                'flex-1 py-4 text-sm font-semibold transition-colors focus-visible:ring-2 outline-none',
-                mode === 'teacher-pin'
-                  ? 'text-morning-green-700 border-b-2 border-morning-green-600'
-                  : 'text-gray-400 hover:text-gray-600'
-              )}
+              className={tabBtn(mode === 'teacher-pin')}
             >
               Teacher PIN
             </button>
           </div>
 
-          <div className="p-6">
-            {/* Error banner */}
+          <div className="mt-6">
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-medium">
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
                 {error}
               </div>
             )}
 
-            {/* ── Staff mode ── */}
             {mode === 'staff' && (
               <form onSubmit={handleStaffLogin} className="space-y-4">
                 <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-2">
+                  <label
+                    htmlFor="login-email-staff"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
                     Email address
                   </label>
                   <input
+                    id="login-email-staff"
                     type="email"
                     required
                     autoComplete="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="you@morningglory.edu.gh"
-                    style={{ fontSize: '20px' }}
-                    className="w-full min-h-[56px] border-2 border-gray-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-morning-green-500 focus:border-morning-green-500 outline-none transition"
+                    className={inputClass}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-2">
+                  <label
+                    htmlFor="login-password"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
                     Password
                   </label>
                   <div className="relative">
                     <input
+                      id="login-password"
                       type={showPassword ? 'text' : 'password'}
                       required
                       autoComplete="current-password"
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      style={{ fontSize: '20px' }}
-                      className="w-full min-h-[56px] border-2 border-gray-200 rounded-2xl px-4 py-3 pr-14 focus:ring-2 focus:ring-morning-green-500 focus:border-morning-green-500 outline-none transition"
+                      className={cn(inputClass, 'pr-12')}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(s => !s)}
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus-visible:ring-2 outline-none rounded-lg p-1"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-gray-400 hover:text-gray-600 focus-visible:ring-2 focus-visible:ring-mga-green-pale outline-none"
                     >
-                      {showPassword
-                        ? <EyeOff className="h-5 w-5" />
-                        : <Eye className="h-5 w-5" />}
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
                     </button>
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={cn(
-                    'w-full min-h-[56px] rounded-2xl font-bold text-lg text-white transition-all',
-                    'bg-morning-green-600 hover:bg-morning-green-700 active:scale-98',
-                    'focus-visible:ring-2 focus-visible:ring-morning-green-500 outline-none',
-                    'disabled:opacity-60 disabled:cursor-not-allowed',
-                    'flex items-center justify-center gap-2'
-                  )}
-                >
+                <button type="submit" disabled={loading} className="mga-btn-primary">
                   {loading ? (
                     <>
-                      <span className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
                       Signing in…
                     </>
-                  ) : 'Sign In'}
+                  ) : (
+                    'Sign In to SchoolPay'
+                  )}
                 </button>
               </form>
             )}
 
-            {/* ── Teacher PIN mode ── */}
             {mode === 'teacher-pin' && (
               <form onSubmit={handlePinLogin} className="space-y-4">
                 <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-2">
+                  <label
+                    htmlFor="login-email-pin"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
                     Email address
                   </label>
                   <input
+                    id="login-email-pin"
                     type="email"
                     required
                     autoComplete="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="you@morningglory.edu.gh"
-                    style={{ fontSize: '20px' }}
-                    className="w-full min-h-[56px] border-2 border-gray-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-morning-green-500 focus:border-morning-green-500 outline-none transition"
+                    className={inputClass}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-1 text-center">
+                  <label className="mb-1 block text-center text-sm font-medium text-gray-700">
                     Enter your 4-digit PIN
                   </label>
                   <PinDotRow length={4} filled={pin.length} />
@@ -377,29 +284,29 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading || pin.length < 4}
-                  className={cn(
-                    'w-full min-h-[56px] rounded-2xl font-bold text-lg text-white transition-all',
-                    'bg-morning-green-600 hover:bg-morning-green-700 active:scale-98',
-                    'focus-visible:ring-2 focus-visible:ring-morning-green-500 outline-none',
-                    'disabled:opacity-60 disabled:cursor-not-allowed',
-                    'flex items-center justify-center gap-2'
-                  )}
+                  className="mga-btn-primary"
                 >
                   {loading ? (
                     <>
-                      <span className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
                       Signing in…
                     </>
-                  ) : 'Sign In'}
+                  ) : (
+                    'Sign In to SchoolPay'
+                  )}
                 </button>
               </form>
             )}
 
-            <p className="text-xs text-gray-400 text-center mt-5">
+            <p className="mt-5 text-center text-xs text-gray-400">
               Contact your administrator if you cannot sign in.
             </p>
           </div>
         </div>
+
+        <p className="mt-10 text-center text-sm text-white/30">
+          Morning Glory Academy — SchoolPay v1.0
+        </p>
       </div>
     </div>
   )

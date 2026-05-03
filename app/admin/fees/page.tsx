@@ -93,7 +93,7 @@ export default function AdminFeesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-mga-cream">
       <TopBar
         title="Fee Types"
         backHref="/admin/dashboard"
@@ -104,7 +104,7 @@ export default function AdminFeesPage() {
       />
 
       <main className="px-4 py-4">
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="mga-card overflow-hidden">
           {loading ? (
             <div className="p-4 space-y-3">
               {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14" />)}
@@ -112,7 +112,7 @@ export default function AdminFeesPage() {
           ) : fees.length === 0 ? (
             <div className="p-8 text-center text-gray-400 text-sm">No fee types yet</div>
           ) : (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-mga-green-pale/40">
               {fees.map(fee => (
                 <div key={fee.id} className="px-4 py-3 flex items-center gap-3">
                   <div className="flex-1 min-w-0">
@@ -132,7 +132,7 @@ export default function AdminFeesPage() {
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="font-bold text-morning-green-700">{formatGHS(fee.amount)}</p>
+                    <p className="font-bold text-mga-green-dark">{formatGHS(fee.amount)}</p>
                     <div className="flex gap-1 mt-1">
                       <button onClick={() => openEdit(fee)}
                         className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded-lg hover:bg-blue-100 min-h-[28px]">
@@ -141,7 +141,7 @@ export default function AdminFeesPage() {
                       <button onClick={() => handleToggle(fee)}
                         className={cn('text-xs font-semibold px-2 py-1 rounded-lg border min-h-[28px] transition',
                           fee.is_active
-                            ? 'text-gray-600 bg-gray-50 border-gray-200 hover:bg-gray-100'
+                            ? 'text-mga-green-dark bg-mga-green-pale border-mga-gold/25 hover:bg-mga-cream-dark'
                             : 'text-green-600 bg-green-50 border-green-200 hover:bg-green-100')}>
                         {fee.is_active ? 'Disable' : 'Enable'}
                       </button>
@@ -166,19 +166,19 @@ export default function AdminFeesPage() {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Fee Name *</label>
             <input value={formName} onChange={e => setFormName(e.target.value)} placeholder="e.g. Feeding Fee"
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500" />
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Amount (GHS) *</label>
               <input type="number" min="0" step="0.01" value={formAmount} onChange={e => setFormAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500" />
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Fund</label>
               <select value={formFund} onChange={e => setFormFund(e.target.value as FundType)}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500">
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid">
                 <option value="feeding">Feeding Fund</option>
                 <option value="general">General Fund</option>
               </select>
@@ -188,20 +188,20 @@ export default function AdminFeesPage() {
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Frequency</label>
               <select value={formFreq} onChange={e => setFormFreq(e.target.value as FeeFrequency)}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500">
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid">
                 {(Object.entries(FREQ_LABELS) as [FeeFrequency, string][]).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Term (optional)</label>
               <input value={formTerm} onChange={e => setFormTerm(e.target.value)} placeholder="1, 2, or 3"
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500" />
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid" />
             </div>
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Description (optional)</label>
             <textarea rows={2} value={formDesc} onChange={e => setFormDesc(e.target.value)}
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500 resize-none" />
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid resize-none" />
           </div>
         </div>
       </Modal>

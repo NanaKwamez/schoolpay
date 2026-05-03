@@ -34,7 +34,7 @@ const variantConfig: Record<BadgeVariant, BadgeConfig> = {
   credit:         { className: 'bg-orange-100 text-orange-800' },
   absent:         { className: 'bg-gray-100 text-gray-700' },
   did_not_eat:    { className: 'bg-blue-100 text-blue-800' },
-  covered_weekly: { className: 'bg-morning-green-100 text-morning-green-800' },
+  covered_weekly: { className: 'bg-mga-green-pale text-mga-green-dark' },
 
   // Approval statuses
   pending:        { className: 'bg-yellow-100 text-yellow-800' },

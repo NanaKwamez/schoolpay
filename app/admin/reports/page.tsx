@@ -193,7 +193,7 @@ export default function AdminReportsPage() {
   const totalShortfall = rows.reduce((s, r) => s + (r.shortfall ?? 0), 0)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-mga-cream">
       <TopBar
         title="Reports"
         backHref="/admin/dashboard"
@@ -218,7 +218,7 @@ export default function AdminReportsPage() {
           ] as { key: ReportType; label: string }[]).map(r => (
             <button key={r.key} onClick={() => setReportType(r.key)}
               className={cn('min-h-[44px] rounded-xl border-2 text-sm font-bold transition',
-                reportType === r.key ? 'bg-morning-green-600 border-morning-green-600 text-white' : 'bg-white border-gray-200 text-gray-700 hover:border-morning-green-300')}>
+                reportType === r.key ? 'bg-mga-green-mid border-mga-green-mid text-white' : 'bg-white border-gray-200 text-gray-700 hover:border-mga-gold/30')}>
               {r.label}
             </button>
           ))}
@@ -227,15 +227,15 @@ export default function AdminReportsPage() {
         {/* Date picker */}
         {reportType === 'daily' && (
           <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500 bg-white" />
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid bg-white" />
         )}
         {reportType === 'weekly' && (
           <input type="date" value={weekStart} onChange={e => setWeekStart(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500 bg-white" />
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid bg-white" />
         )}
 
         {/* Report content */}
-        <div ref={printRef} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div ref={printRef} className="mga-card overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100">
             <p className="font-bold text-gray-900 text-sm print:text-base">{reportTitle}</p>
           </div>
@@ -251,16 +251,16 @@ export default function AdminReportsPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100">
+                    <tr className="bg-mga-green-pale border-b border-mga-gold/15">
                       <th className="text-left px-4 py-2.5 font-semibold text-gray-600">Category</th>
                       {totalExpected > 0 && <th className="text-right px-4 py-2.5 font-semibold text-gray-600">Expected</th>}
                       <th className="text-right px-4 py-2.5 font-semibold text-gray-600">Collected</th>
                       {totalShortfall > 0 && <th className="text-right px-4 py-2.5 font-semibold text-red-600">Shortfall</th>}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-mga-green-pale/40">
                     {rows.map((row, i) => (
-                      <tr key={i} className="hover:bg-gray-50">
+                      <tr key={i} className="hover:bg-mga-green-pale/50">
                         <td className="px-4 py-2.5 text-gray-900">
                           {row.label}
                           {row.details && <span className="text-xs text-gray-400 ml-1">({row.details})</span>}
@@ -272,7 +272,7 @@ export default function AdminReportsPage() {
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr className="bg-gray-50 border-t-2 border-gray-200 font-bold">
+                    <tr className="bg-mga-green-pale border-t-2 border-mga-gold/25 font-bold">
                       <td className="px-4 py-2.5 text-gray-700">Total</td>
                       {totalExpected > 0 && <td className="px-4 py-2.5 text-right text-gray-700">{formatGHS(totalExpected)}</td>}
                       <td className="px-4 py-2.5 text-right text-green-700">{formatGHS(totalCollected)}</td>

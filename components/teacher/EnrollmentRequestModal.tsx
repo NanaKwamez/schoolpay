@@ -106,8 +106,8 @@ export function EnrollmentRequestModal({ isOpen, onClose, classId, className }: 
       {success ? (
         /* ── Success state ── */
         <div className="flex flex-col items-center text-center py-6 gap-3">
-          <div className="h-16 w-16 rounded-full bg-morning-green-100 flex items-center justify-center">
-            <CheckCircle2 className="h-8 w-8 text-morning-green-600" />
+          <div className="h-16 w-16 rounded-full bg-mga-green-pale flex items-center justify-center">
+            <CheckCircle2 className="h-8 w-8 text-mga-green-mid" />
           </div>
           <p className="font-bold text-gray-900 text-lg">Request Sent!</p>
           <p className="text-gray-500 text-sm max-w-xs">
@@ -149,7 +149,7 @@ export function EnrollmentRequestModal({ isOpen, onClose, classId, className }: 
                   value={studentName}
                   onChange={e => setStudentName(e.target.value)}
                   placeholder="e.g. Kwame Agyeman"
-                  className="w-full min-h-[48px] border-2 border-gray-200 rounded-xl px-4 py-2.5 text-base outline-none focus:border-morning-green-500 transition"
+                  className="w-full min-h-[48px] border-2 border-gray-200 rounded-xl px-4 py-2.5 text-base outline-none focus:border-mga-green-mid transition"
                 />
               </div>
               <div>
@@ -161,10 +161,10 @@ export function EnrollmentRequestModal({ isOpen, onClose, classId, className }: 
                   value={parentPhone}
                   onChange={e => setParentPhone(e.target.value)}
                   placeholder="e.g. 0241234567"
-                  className="w-full min-h-[48px] border-2 border-gray-200 rounded-xl px-4 py-2.5 text-base outline-none focus:border-morning-green-500 transition"
+                  className="w-full min-h-[48px] border-2 border-gray-200 rounded-xl px-4 py-2.5 text-base outline-none focus:border-mga-green-mid transition"
                 />
               </div>
-              <p className="text-xs text-gray-400 bg-gray-50 rounded-xl px-3 py-2 leading-relaxed">
+              <p className="text-xs text-gray-400 bg-mga-green-pale rounded-xl px-3 py-2 leading-relaxed">
                 The headmaster will verify and approve before the student is added to the system.
               </p>
             </div>
@@ -182,7 +182,7 @@ export function EnrollmentRequestModal({ isOpen, onClose, classId, className }: 
                   <select
                     value={selectedStudentId}
                     onChange={e => setSelectedStudentId(e.target.value)}
-                    className="w-full min-h-[48px] border-2 border-gray-200 rounded-xl px-4 py-2.5 text-base outline-none focus:border-morning-green-500 transition bg-white"
+                    className="w-full min-h-[48px] border-2 border-gray-200 rounded-xl px-4 py-2.5 text-base outline-none focus:border-mga-green-mid transition bg-white"
                   >
                     <option value="">— Choose student —</option>
                     {students.map(s => (
@@ -229,23 +229,23 @@ function ModeCard({
       onClick={onClick}
       className={cn(
         'flex flex-col items-start gap-1.5 p-3 rounded-2xl border-2 text-left transition-all w-full',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-morning-green-500',
-        active && !danger && 'border-morning-green-500 bg-morning-green-50',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mga-green-light',
+        active && !danger && 'border-mga-green-mid bg-mga-green-pale',
         active && danger  && 'border-red-400 bg-red-50',
-        !active           && 'border-gray-200 bg-white hover:bg-gray-50'
+        !active           && 'border-mga-gold/20 bg-white hover:bg-mga-green-pale/50'
       )}
     >
       <span className={cn(
         'flex items-center justify-center h-9 w-9 rounded-xl',
-        active && !danger && 'bg-morning-green-100 text-morning-green-700',
+        active && !danger && 'bg-mga-green-pale text-mga-green-dark',
         active && danger  && 'bg-red-100 text-red-600',
-        !active           && 'bg-gray-100 text-gray-500'
+        !active           && 'bg-mga-cream-dark text-gray-500'
       )}>
         {icon}
       </span>
       <p className={cn(
         'text-sm font-bold leading-tight',
-        active && !danger && 'text-morning-green-800',
+        active && !danger && 'text-mga-green-dark',
         active && danger  && 'text-red-700',
         !active           && 'text-gray-700'
       )}>

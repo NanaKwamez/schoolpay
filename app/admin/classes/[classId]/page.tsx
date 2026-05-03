@@ -172,7 +172,7 @@ export default function ClassDrilldownPage() {
     .reduce((sum) => sum + 5, 0)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-mga-cream">
       <TopBar
         title={classInfo?.name ?? 'Class'}
         backHref="/admin/dashboard"
@@ -196,9 +196,9 @@ export default function ClassDrilldownPage() {
             { label: 'Paid', value: paidCount, color: 'text-green-700' },
             { label: 'Credit', value: creditCount, color: 'text-orange-600' },
             { label: 'Absent', value: absentCount, color: 'text-gray-500' },
-            { label: 'Collected', value: formatGHS(collectedToday), color: 'text-morning-green-700' },
+            { label: 'Collected', value: formatGHS(collectedToday), color: 'text-mga-green-dark' },
           ].map(stat => (
-            <div key={stat.label} className="bg-white rounded-2xl border border-gray-200 p-3 text-center">
+            <div key={stat.label} className="mga-card p-4 text-center">
               <p className={cn('text-base font-bold', stat.color)}>{stat.value}</p>
               <p className="text-xs text-gray-400 mt-0.5">{stat.label}</p>
             </div>
@@ -206,7 +206,7 @@ export default function ClassDrilldownPage() {
         </div>
 
         {/* Student table */}
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="mga-card overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100">
             <p className="font-bold text-gray-900">{students.length} Students</p>
           </div>
@@ -215,7 +215,7 @@ export default function ClassDrilldownPage() {
               {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14" />)}
             </div>
           ) : (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-mga-green-pale/40">
               {students.map(student => {
                 const statusInfo = student.today_status ? STATUS_BADGE[student.today_status] : null
                 const isOwing = student.total_owed > 0
@@ -280,7 +280,7 @@ export default function ClassDrilldownPage() {
                   className={cn(
                     'min-h-[44px] rounded-xl border-2 text-sm font-bold capitalize transition',
                     overrideStatus === s
-                      ? 'bg-morning-green-600 border-morning-green-600 text-white'
+                      ? 'bg-mga-green-mid border-mga-green-mid text-white'
                       : 'bg-white border-gray-200 text-gray-700'
                   )}
                 >
@@ -296,7 +296,7 @@ export default function ClassDrilldownPage() {
               value={overrideReason}
               onChange={e => setOverrideReason(e.target.value)}
               placeholder="Explain why this status is being overridden..."
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-morning-green-500 transition resize-none"
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-mga-green-mid transition resize-none"
             />
           </div>
         </div>

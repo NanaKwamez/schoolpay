@@ -6,7 +6,7 @@ interface GlassCardProps {
   className?: string
   /** Click handler — adds hover/active affordance */
   onClick?: () => void
-  /** Left accent bar color class e.g. "bg-morning-green-700" */
+  /** Left accent bar color class e.g. "bg-mga-green-mid" */
   accentColor?: string
   /** Use elevated variant (higher opacity, stronger blur) */
   elevated?: boolean

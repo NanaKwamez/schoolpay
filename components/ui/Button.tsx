@@ -14,15 +14,15 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-morning-green-600 text-white hover:bg-morning-green-700 active:bg-morning-green-800 focus-visible:ring-morning-green-500',
+    'mga-btn-primary focus-visible:ring-mga-gold/60',
   secondary:
-    'bg-white text-gray-800 border-2 border-gray-200 hover:bg-gray-50 active:bg-gray-100 focus-visible:ring-gray-300',
+    'bg-mga-cream-dark text-mga-green-dark border-2 border-mga-gold/25 hover:bg-mga-cream focus-visible:ring-mga-gold/40',
   danger:
     'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 focus-visible:ring-red-400',
   ghost:
-    'bg-transparent text-gray-700 hover:bg-gray-100 active:bg-gray-200 focus-visible:ring-gray-300',
+    'bg-transparent text-gray-700 hover:bg-mga-green-pale active:bg-mga-cream-dark focus-visible:ring-mga-gold/40',
   success:
-    'bg-morning-green-800 text-white hover:bg-morning-green-900 active:bg-morning-green-900 focus-visible:ring-morning-green-600',
+    'bg-mga-green-dark text-white hover:bg-mga-green-mid active:bg-mga-green-dark focus-visible:ring-mga-gold/50',
 }
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -55,7 +55,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isDisabled}
         className={cn(
           'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-150',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-mga-cream',
           'touch-manipulation select-none',
           variantClasses[variant],
           sizeClasses[size],

@@ -75,7 +75,7 @@ export function Modal({ isOpen, onClose, title, children, footer, className }: M
               'flex items-center justify-center rounded-xl transition-colors',
               'min-h-[48px] min-w-[48px]',
               'hover:bg-gray-100 active:bg-gray-200',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-morning-green-500'
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mga-green-light'
             )}
           >
             <X className="h-5 w-5 text-gray-500" />

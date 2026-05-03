@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@config "../tailwind.config.ts";
 
 @theme {
   /* ── Liquid Glass Design System (MD3 tokens from Stitch) ─────────── */
@@ -78,6 +79,16 @@
   --color-morning-gold-800: #92400e;
   --color-morning-gold-900: #78350f;
 
+  /* ── MGA premium palette (dark green + gold) ───────────────────────── */
+  --color-mga-green-dark: #0d3b2e;
+  --color-mga-green-mid: #1a5c40;
+  --color-mga-green-light: #2d8a5f;
+  --color-mga-green-pale: #e8f5ee;
+  --color-mga-gold: #c9a84c;
+  --color-mga-gold-light: #e8c96a;
+  --color-mga-cream: #f9f6f0;
+  --color-mga-cream-dark: #f0ebe1;
+
   /* Spacing */
   --spacing-touch-target: 48px;
 
@@ -92,7 +103,10 @@ html {
 }
 
 body {
-  background: #f9fafb;
+  background-color: #f9f6f0;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(26, 92, 64, 0.06) 1px, transparent 0);
+  background-size: 32px 32px;
   color: #111827;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -129,7 +143,7 @@ textarea,
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #16a34a;
+  background-color: #1a5c40;
   border-radius: 9999px;
 }
 
@@ -179,18 +193,120 @@ textarea,
 }
 .glass-input:focus-within {
   background-color: rgba(255, 255, 255, 0.90);
-  border-color: #0f5238; /* ds-primary */
-  box-shadow: 0 0 0 2px rgba(15, 82, 56, 0.15);
+  border-color: #1a5c40;
+  box-shadow: 0 0 0 2px rgba(26, 92, 64, 0.18);
 }
 
 /* Dark glass for admin sidebar backgrounds */
 .glass-dark {
-  background-color: rgba(15, 82, 56, 0.90);
+  background: linear-gradient(180deg, #0d3b2e 0%, #0a2e24 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(255, 255, 255, 0.10);
+  border-right: 1px solid rgba(201, 168, 76, 0.22);
 }
 
 /* Hide scrollbar but keep scroll */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Morning Glory Academy — primary CTA (login) */
+.mga-btn-primary {
+  display: inline-flex;
+  width: 100%;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #ffffff;
+  background: linear-gradient(
+    180deg,
+    var(--color-mga-green-mid) 0%,
+    var(--color-mga-green-dark) 100%
+  );
+  box-shadow: 0 4px 14px rgba(13, 59, 46, 0.35);
+  cursor: pointer;
+  transition:
+    transform 0.1s ease,
+    filter 0.15s ease,
+    opacity 0.15s ease;
+}
+.mga-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+.mga-btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.mga-btn-primary:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px #ffffff,
+    0 0 0 4px var(--color-mga-green-pale);
+}
+.mga-btn-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* ── Morning Glory Academy — premium component layer ───────────────────── */
+
+@layer components {
+  .mga-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow:
+      0 2px 8px rgba(13, 59, 46, 0.08),
+      0 1px 2px rgba(13, 59, 46, 0.06);
+    border: 1px solid rgba(201, 168, 76, 0.15);
+  }
+
+  .mga-card-elevated {
+    background: white;
+    border-radius: 16px;
+    box-shadow:
+      0 8px 24px rgba(13, 59, 46, 0.12),
+      0 2px 6px rgba(13, 59, 46, 0.08);
+    border: 1px solid rgba(201, 168, 76, 0.2);
+  }
+
+  .mga-header {
+    background: linear-gradient(135deg, #0d3b2e 0%, #1a5c40 100%);
+  }
+
+  .mga-btn-primary {
+    background: linear-gradient(135deg, #1a5c40 0%, #2d8a5f 100%);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    color: white;
+    font-weight: 600;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(13, 59, 46, 0.25);
+    transition: all 0.2s;
+  }
+
+  .mga-btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #0d3b2e 0%, #1a5c40 100%);
+    box-shadow: 0 4px 12px rgba(13, 59, 46, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .mga-btn-gold {
+    background: linear-gradient(135deg, #c9a84c 0%, #e8c96a 100%);
+    color: #0d3b2e;
+    font-weight: 700;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(201, 168, 76, 0.35);
+  }
+
+  .mga-gold-badge {
+    background: linear-gradient(135deg, #c9a84c, #e8c96a);
+    color: #0d3b2e;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+}

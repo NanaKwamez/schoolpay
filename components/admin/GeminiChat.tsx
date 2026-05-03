@@ -114,10 +114,10 @@ export function GeminiChat() {
         onClick={() => setIsOpen(o => !o)}
         className={cn(
           'fixed bottom-6 right-6 z-50',
-          'h-16 w-16 rounded-full bg-morning-green-600 hover:bg-morning-green-700',
-          'text-white shadow-lg flex items-center justify-center',
+          'h-16 w-16 rounded-full mga-btn-primary flex items-center justify-center p-0',
+          'border border-mga-gold/40 shadow-xl',
           'transition-all active:scale-95',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-morning-green-400 focus-visible:ring-offset-2'
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mga-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-mga-cream'
         )}
         aria-label={isOpen ? 'Close AI chat' : 'Open AI chat'}
       >
@@ -130,17 +130,16 @@ export function GeminiChat() {
           className={cn(
             'fixed bottom-24 right-6 z-50',
             'w-80 sm:w-96 max-h-[70vh]',
-            'bg-white rounded-2xl shadow-2xl border border-gray-200',
-            'flex flex-col overflow-hidden'
+            'mga-card-elevated flex flex-col overflow-hidden'
           )}
           role="dialog"
           aria-modal="true"
           aria-labelledby="gemini-chat-title"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0 bg-white">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-mga-gold/15 shrink-0 bg-mga-cream-dark/50">
             <div className="flex items-center gap-2 min-w-0">
-              <Building2 className="h-5 w-5 text-morning-green-600 shrink-0" aria-hidden />
+              <Building2 className="h-5 w-5 text-mga-green-mid shrink-0" aria-hidden />
               <h2 id="gemini-chat-title" className="font-bold text-gray-900 text-sm truncate">
                 Morning Glory AI
               </h2>
@@ -148,7 +147,7 @@ export function GeminiChat() {
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="p-2 rounded-xl hover:bg-gray-100 text-gray-400 transition-colors shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="p-2 rounded-xl hover:bg-mga-green-pale text-gray-400 transition-colors shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="Close chat"
             >
               <X className="h-5 w-5" />
@@ -167,8 +166,8 @@ export function GeminiChat() {
                     disabled={isLoading}
                     className={cn(
                       'text-left text-xs font-medium rounded-xl px-3 py-2',
-                      'border-2 border-morning-green-500 text-morning-green-700',
-                      'hover:bg-morning-green-50 transition-colors',
+                      'border-2 border-mga-green-mid text-mga-green-dark',
+                      'hover:bg-mga-green-pale transition-colors',
                       'disabled:opacity-50'
                     )}
                   >
@@ -184,8 +183,8 @@ export function GeminiChat() {
                 className={cn(
                   'rounded-2xl px-4 py-2 text-sm max-w-[80%] whitespace-pre-wrap break-words',
                   msg.role === 'user'
-                    ? 'ml-auto bg-morning-green-600 text-white'
-                    : 'mr-auto bg-gray-100 text-gray-800'
+                    ? 'ml-auto bg-gradient-to-br from-mga-green-mid to-mga-green-light text-white border border-mga-gold/25 shadow-sm'
+                    : 'mr-auto bg-mga-cream-dark text-gray-800 border border-mga-gold/10'
                 )}
               >
                 {msg.content}
@@ -207,7 +206,7 @@ export function GeminiChat() {
           </div>
 
           {/* Input */}
-          <div className="border-t border-gray-100 px-3 py-3 shrink-0 bg-white">
+          <div className="border-t border-mga-gold/15 px-3 py-3 shrink-0 bg-white">
             <div className="flex gap-2 items-center">
               <input
                 ref={inputRef}
@@ -222,8 +221,8 @@ export function GeminiChat() {
                 placeholder="Ask about fees, debt, feeding…"
                 disabled={isLoading}
                 className={cn(
-                  'flex-1 min-h-[48px] rounded-xl border-2 border-gray-200 px-3 text-sm',
-                  'outline-none focus:border-morning-green-500 transition',
+                  'flex-1 min-h-[48px] rounded-xl border-2 border-mga-gold/20 px-3 text-sm',
+                  'outline-none focus:border-mga-green-mid transition',
                   'disabled:opacity-50'
                 )}
               />
@@ -232,10 +231,9 @@ export function GeminiChat() {
                 onClick={() => void send()}
                 disabled={isLoading || !input.trim()}
                 className={cn(
-                  'shrink-0 h-12 w-12 rounded-xl flex items-center justify-center',
-                  'bg-morning-green-600 text-white hover:bg-morning-green-700',
+                  'mga-btn-primary shrink-0 h-12 w-12 rounded-xl flex items-center justify-center p-0',
                   'disabled:opacity-40 disabled:pointer-events-none',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-morning-green-500'
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mga-gold/50 focus-visible:ring-offset-2'
                 )}
                 aria-label="Send message"
               >

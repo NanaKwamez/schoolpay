@@ -58,7 +58,7 @@ export function ExpenseForm({ fundType, onSubmit, onCancel }: ExpenseFormProps) 
           required
           value={form.category}
           onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base focus:ring-2 focus:ring-morning-green-500 focus:border-morning-green-500 outline-none"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base focus:ring-2 focus:ring-mga-green-light focus:border-mga-green-mid outline-none"
         >
           <option value="">Select category</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
@@ -72,7 +72,7 @@ export function ExpenseForm({ fundType, onSubmit, onCancel }: ExpenseFormProps) 
           value={form.description}
           onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
           placeholder="Brief description of expense"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base focus:ring-2 focus:ring-morning-green-500 focus:border-morning-green-500 outline-none"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base focus:ring-2 focus:ring-mga-green-light focus:border-mga-green-mid outline-none"
         />
       </div>
       <div>
@@ -85,7 +85,7 @@ export function ExpenseForm({ fundType, onSubmit, onCancel }: ExpenseFormProps) 
           value={form.amount}
           onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
           placeholder="0.00"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base focus:ring-2 focus:ring-morning-green-500 focus:border-morning-green-500 outline-none"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base focus:ring-2 focus:ring-mga-green-light focus:border-mga-green-mid outline-none"
         />
       </div>
       <div>
@@ -95,7 +95,7 @@ export function ExpenseForm({ fundType, onSubmit, onCancel }: ExpenseFormProps) 
           type="date"
           value={form.date_of_expense}
           onChange={e => setForm(f => ({ ...f, date_of_expense: e.target.value }))}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base focus:ring-2 focus:ring-morning-green-500 focus:border-morning-green-500 outline-none"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base focus:ring-2 focus:ring-mga-green-light focus:border-mga-green-mid outline-none"
         />
       </div>
       <div>
@@ -105,7 +105,7 @@ export function ExpenseForm({ fundType, onSubmit, onCancel }: ExpenseFormProps) 
           value={form.receipt_reference}
           onChange={e => setForm(f => ({ ...f, receipt_reference: e.target.value }))}
           placeholder="e.g. Receipt #1234"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base focus:ring-2 focus:ring-morning-green-500 focus:border-morning-green-500 outline-none"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base focus:ring-2 focus:ring-mga-green-light focus:border-mga-green-mid outline-none"
         />
       </div>
       <div className="flex gap-3 pt-2">

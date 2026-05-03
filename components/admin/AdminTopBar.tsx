@@ -3,6 +3,9 @@
 import { Search, Bell, HelpCircle } from 'lucide-react'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+
+import { MgaLogoMark } from '@/components/branding/mga-logo-mark'
+import { SCHOOL_NAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 interface AdminTopBarProps {
@@ -11,10 +14,7 @@ interface AdminTopBarProps {
 }
 
 /**
- * AdminTopBar — sticky glass header for admin portal pages.
- *
- * Includes page title, search bar, notification + help icon buttons.
- * Sits at the right side of the screen (accounts for 256px sidebar on md+).
+ * AdminTopBar — sticky header for admin portal pages (matches MGA premium theme).
  */
 export function AdminTopBar({ title, className }: AdminTopBarProps) {
   const [query, setQuery] = useState('')
@@ -30,42 +30,49 @@ export function AdminTopBar({ title, className }: AdminTopBarProps) {
   return (
     <header
       className={cn(
-        'sticky top-0 z-40 h-[72px]',
+        'mga-header sticky top-0 z-40 h-[72px] text-white',
         'flex items-center justify-between gap-4 px-6 md:px-8',
-        'glass-elevated border-b border-white/30',
+        'border-b border-mga-gold/20 shadow-md',
         className
       )}
     >
-      {/* Page title */}
-      <h2 className="text-base font-bold text-[var(--color-ds-primary)] tracking-tight shrink-0 hidden sm:block">
-        {title}
-      </h2>
+      <div className="flex items-center gap-3 shrink-0 hidden sm:flex min-w-0">
+        <MgaLogoMark size={32} wrapperClassName="ring-2 ring-mga-gold/40 shadow-sm" />
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold text-white/85 leading-tight truncate max-w-[14rem]">
+            {SCHOOL_NAME}
+          </p>
+          <h2 className="text-base font-bold text-white tracking-tight truncate leading-tight">
+            {title}
+          </h2>
+        </div>
+      </div>
 
-      {/* Search bar */}
       <form
         onSubmit={handleSearch}
-        className="flex-1 max-w-sm hidden sm:flex items-center glass-input rounded-full h-10 px-4 gap-2"
+        className="flex-1 max-w-sm hidden sm:flex items-center rounded-full h-10 px-4 gap-2 bg-white/10 border border-mga-gold/25"
       >
-        <Search className="w-4 h-4 text-[var(--color-ds-outline)] shrink-0" />
+        <Search className="w-4 h-4 text-white/70 shrink-0" />
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="Search..."
-          className="bg-transparent border-none outline-none text-sm text-[var(--color-ds-on-surface)] placeholder:text-[var(--color-ds-outline)] w-full"
+          className="bg-transparent border-none outline-none text-sm text-white placeholder:text-white/50 w-full min-h-0"
         />
       </form>
 
-      {/* Action icons */}
       <div className="flex items-center gap-1 ml-auto">
         <button
+          type="button"
           aria-label="Notifications"
-          className="w-10 h-10 rounded-full flex items-center justify-center text-[var(--color-ds-on-surface-variant)] hover:bg-[var(--color-ds-surface-container)] transition-colors"
+          className="w-10 h-10 rounded-full flex items-center justify-center text-white/80 hover:bg-white/10 transition-colors min-h-0"
         >
           <Bell className="w-5 h-5" />
         </button>
         <button
+          type="button"
           aria-label="Help"
-          className="w-10 h-10 rounded-full flex items-center justify-center text-[var(--color-ds-on-surface-variant)] hover:bg-[var(--color-ds-surface-container)] transition-colors"
+          className="w-10 h-10 rounded-full flex items-center justify-center text-white/80 hover:bg-white/10 transition-colors min-h-0"
         >
           <HelpCircle className="w-5 h-5" />
         </button>

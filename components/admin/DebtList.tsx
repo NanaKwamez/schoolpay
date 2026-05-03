@@ -19,7 +19,7 @@ export function DebtList({ balances }: DebtListProps) {
   }
 
   return (
-    <div className="divide-y divide-gray-50">
+    <div className="divide-y divide-mga-green-pale/40">
       {debtors.map(b => (
         <div key={`${b.student_id}-${b.fee_type_id}`} className="flex items-center gap-3 py-3">
           <div className="h-9 w-9 rounded-full bg-red-100 flex items-center justify-center shrink-0">

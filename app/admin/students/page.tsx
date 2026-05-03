@@ -137,7 +137,7 @@ export default function AdminStudentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-mga-cream">
       <TopBar
         title="Students"
         backHref="/admin/dashboard"
@@ -157,7 +157,7 @@ export default function AdminStudentsPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input type="search" placeholder="Search student..." value={search} onChange={e => setSearch(e.target.value)}
-              className="w-full min-h-[44px] pl-9 pr-4 border border-gray-200 rounded-xl text-sm outline-none focus:border-morning-green-500 bg-white" />
+              className="w-full min-h-[44px] pl-9 pr-4 border border-gray-200 rounded-xl text-sm outline-none focus:border-mga-green-mid bg-white" />
           </div>
           <select value={classFilter} onChange={e => setClassFilter(e.target.value)}
             className="border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none bg-white min-h-[44px]">
@@ -167,7 +167,7 @@ export default function AdminStudentsPage() {
         </div>
 
         {/* Student list */}
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="mga-card overflow-hidden">
           {loading ? (
             <div className="p-4 space-y-3">
               {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14" />)}
@@ -175,7 +175,7 @@ export default function AdminStudentsPage() {
           ) : filtered.length === 0 ? (
             <div className="p-8 text-center text-gray-400 text-sm">No students found</div>
           ) : (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-mga-green-pale/40">
               {filtered.map(student => (
                 <div key={student.id} className="flex items-center gap-3 px-4 py-3">
                   <div className="flex-1 min-w-0">
@@ -253,7 +253,7 @@ export default function AdminStudentsPage() {
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">New Class</label>
           <select value={moveClassId} onChange={e => setMoveClassId(e.target.value)}
-            className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500">
+            className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid">
             {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
@@ -271,7 +271,7 @@ export default function AdminStudentsPage() {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Class *</label>
             <select value={bulkClassId} onChange={e => setBulkClassId(e.target.value)}
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500">
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid">
               <option value="">Select class…</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
@@ -280,7 +280,7 @@ export default function AdminStudentsPage() {
             <label className="block text-sm font-semibold text-gray-700 mb-2">Student Names (one per line)</label>
             <textarea rows={8} value={bulkText} onChange={e => setBulkText(e.target.value)}
               placeholder="Kwame Mensah&#10;Ama Boateng&#10;Kojo Asante&#10;..."
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-morning-green-500 resize-none font-mono" />
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-mga-green-mid resize-none font-mono" />
             <p className="text-xs text-gray-400 mt-1">
               {bulkText.split('\n').filter(n => n.trim()).length} names detected
             </p>

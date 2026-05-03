@@ -114,7 +114,7 @@ export default function AdminClassesPage() {
   useEffect(() => { void fetchClasses() }, [fetchClasses])
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-mga-cream pb-20">
       <TopBar title="Classes" showSync />
 
       <main className="px-4 pt-4 max-w-2xl mx-auto">
@@ -125,7 +125,7 @@ export default function AdminClassesPage() {
               icon={<CheckCircle2 className="w-4 h-4" />}
               label="Submitted"
               count={classes.filter(c => c.submissionStatus === 'submitted').length}
-              color="text-morning-green-700"
+              color="text-mga-green-dark"
             />
             <SummaryChip
               icon={<Clock className="w-4 h-4" />}
@@ -212,7 +212,7 @@ function ClassCard({ cls, onClick }: { cls: ClassRow; onClick: () => void }) {
     : 0
 
   const statusConfig = {
-    submitted: { label: 'Submitted', dot: 'bg-morning-green-500', bar: 'bg-morning-green-500', text: 'text-morning-green-700' },
+    submitted: { label: 'Submitted', dot: 'bg-mga-green-light', bar: 'bg-mga-green-light', text: 'text-mga-green-dark' },
     partial:   { label: 'Partial',   dot: 'bg-amber-400',         bar: 'bg-amber-400',         text: 'text-amber-700' },
     pending:   { label: 'Pending',   dot: 'bg-red-400',           bar: 'bg-red-400',           text: 'text-red-600' },
   }
@@ -236,7 +236,7 @@ function ClassCard({ cls, onClick }: { cls: ClassRow; onClick: () => void }) {
 
         <div className="flex items-center gap-2 shrink-0">
           {status && (
-            <div className={cn('flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-50', status.text)}>
+            <div className={cn('flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-mga-green-pale', status.text)}>
               <span className={cn('w-1.5 h-1.5 rounded-full', status.dot)} />
               {status.label}
             </div>

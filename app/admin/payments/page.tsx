@@ -134,7 +134,7 @@ export default function AdminPaymentsPage() {
   const pageCount = Math.ceil(total / PAGE_SIZE)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-mga-cream">
       <TopBar
         title="Payments"
         backHref="/admin/dashboard"
@@ -155,7 +155,7 @@ export default function AdminPaymentsPage() {
       <main className="px-4 py-4 space-y-4">
         {/* Filters */}
         {showFilters && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3">
+          <div className="mga-card p-4 space-y-3">
             <p className="font-bold text-gray-700 text-sm">Filters</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -191,7 +191,7 @@ export default function AdminPaymentsPage() {
                 {(['', 'full', 'credit', 'weekly_advance'] as const).map(t => (
                   <button key={t} onClick={() => { setTypeFilter(t); setPage(0) }}
                     className={cn('px-3 py-1.5 rounded-xl text-xs font-bold border-2 transition',
-                      typeFilter === t ? 'bg-morning-green-600 border-morning-green-600 text-white' : 'bg-white border-gray-200 text-gray-700')}>
+                      typeFilter === t ? 'bg-mga-green-mid border-mga-green-mid text-white' : 'bg-white border-gray-200 text-gray-700')}>
                     {t === '' ? 'All' : TYPE_LABELS[t as PaymentType]}
                   </button>
                 ))}
@@ -201,13 +201,13 @@ export default function AdminPaymentsPage() {
         )}
 
         {/* Summary */}
-        <div className="bg-morning-green-50 border border-morning-green-200 rounded-2xl px-4 py-3 flex justify-between items-center">
-          <span className="text-sm text-morning-green-700">{total} payment{total !== 1 ? 's' : ''}</span>
-          <span className="font-bold text-morning-green-800">{formatGHS(totalAmount)} total</span>
+        <div className="bg-mga-green-pale border border-mga-gold/25 rounded-2xl px-4 py-3 flex justify-between items-center">
+          <span className="text-sm text-mga-green-dark">{total} payment{total !== 1 ? 's' : ''}</span>
+          <span className="font-bold text-mga-green-dark">{formatGHS(totalAmount)} total</span>
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="mga-card overflow-hidden">
           {loading ? (
             <div className="p-4 space-y-3">
               {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14" />)}
@@ -215,7 +215,7 @@ export default function AdminPaymentsPage() {
           ) : payments.length === 0 ? (
             <div className="p-8 text-center text-gray-400 text-sm">No payments found</div>
           ) : (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-mga-green-pale/40">
               {payments.map(p => (
                 <div key={p.id} className={cn('px-4 py-3 flex items-center gap-3', p.payment_type === 'credit' && 'bg-orange-50/50')}>
                   <div className="flex-1 min-w-0">

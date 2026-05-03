@@ -13,8 +13,8 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const variantClasses: Record<CardVariant, string> = {
-  default: 'bg-white border border-gray-100 shadow-sm',
-  green:   'bg-morning-green-50 border border-morning-green-200',
+  default: 'mga-card',
+  green:   'bg-mga-green-pale border border-mga-gold/20',
   warning: 'bg-orange-50 border border-orange-200',
   danger:  'bg-red-50 border border-red-200',
   ghost:   'bg-transparent border-0 shadow-none',
@@ -39,7 +39,7 @@ export function Card({
       onClick={onClick}
       onKeyDown={isClickable ? e => e.key === 'Enter' && onClick() : undefined}
       className={cn(
-        'rounded-xl p-4',
+        'p-4',
         variantClasses[variant],
         isClickable && 'cursor-pointer hover:shadow-md active:scale-[0.99] transition-all duration-150',
         className

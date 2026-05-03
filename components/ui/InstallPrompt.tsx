@@ -59,8 +59,8 @@ export function InstallPrompt() {
     <div className="fixed bottom-20 left-4 right-4 z-50 sm:left-auto sm:right-4 sm:w-80">
       <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-4">
         <div className="flex items-start gap-3">
-          <div className="h-10 w-10 rounded-xl bg-morning-green-100 flex items-center justify-center shrink-0">
-            <Download className="h-5 w-5 text-morning-green-600" />
+          <div className="h-10 w-10 rounded-xl bg-mga-green-pale flex items-center justify-center shrink-0">
+            <Download className="h-5 w-5 text-mga-green-mid" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-bold text-gray-900 text-sm">Install SchoolPay</p>

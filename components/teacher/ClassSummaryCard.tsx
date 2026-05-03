@@ -22,7 +22,7 @@ export function ClassSummaryCard({
       <h3 className="font-semibold text-gray-900 mb-3">{className}</h3>
       <div className="grid grid-cols-2 gap-3">
         <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-morning-green-600" />
+          <Users className="h-4 w-4 text-mga-green-mid" />
           <div>
             <p className="text-xs text-gray-500">Present</p>
             <p className="font-semibold text-sm">{presentToday}/{totalStudents}</p>

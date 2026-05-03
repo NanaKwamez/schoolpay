@@ -110,7 +110,7 @@ export default function TeacherSummaryPage() {
   const titleText = classData ? `${classData.name} Summary` : 'Class Summary'
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-mga-cream pb-20">
       <TopBar title={titleText} subtitle={today} backHref="/teacher/home" showSync />
 
       <main className="px-4 py-5 space-y-6">
@@ -127,16 +127,16 @@ export default function TeacherSummaryPage() {
             <StatCard label="DID NOT EAT" value={stats.didNotEat} bg="bg-blue-100" text="text-blue-700" />
           </div>
           {stats.coveredWeekly > 0 && (
-            <div className="bg-morning-green-50 rounded-2xl p-4 text-center mt-3">
-              <p className="text-3xl font-extrabold text-morning-green-700">{stats.coveredWeekly}</p>
-              <p className="text-xs font-semibold text-morning-green-600 mt-1">COVERED (Weekly)</p>
+            <div className="bg-mga-green-pale rounded-2xl p-4 text-center mt-3">
+              <p className="text-3xl font-extrabold text-mga-green-dark">{stats.coveredWeekly}</p>
+              <p className="text-xs font-semibold text-mga-green-mid mt-1">COVERED (Weekly)</p>
             </div>
           )}
           <div className="bg-white rounded-2xl px-4 py-3 mt-3 flex items-center justify-between border border-gray-100">
             <span className="text-sm text-gray-600 font-medium">
               {stats.marked} of {stats.total} marked today
             </span>
-            <span className="text-sm font-bold text-morning-green-600">
+            <span className="text-sm font-bold text-mga-green-mid">
               {stats.total > 0 ? Math.round((stats.marked / stats.total) * 100) : 0}%
             </span>
           </div>
@@ -153,7 +153,7 @@ export default function TeacherSummaryPage() {
               <p className="text-gray-600 text-sm font-medium">All students are up to date ✓</p>
             </Card>
           ) : (
-            <Card className="divide-y divide-gray-50">
+            <Card className="divide-y divide-mga-green-pale/40">
               {outstandingDebtors.map(({ studentId, name, balance }) => (
                 <div key={studentId} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                   <div className="min-w-0">
@@ -179,7 +179,7 @@ export default function TeacherSummaryPage() {
               <p className="text-gray-400 text-sm text-center py-3">No payments in the last 7 days</p>
             </Card>
           ) : (
-            <Card className="divide-y divide-gray-50">
+            <Card className="divide-y divide-mga-green-pale/40">
               {recentPayments.map(p => (
                 <div key={p.local_id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                   <div className="min-w-0 flex-1">
@@ -193,7 +193,7 @@ export default function TeacherSummaryPage() {
                       <span className="text-xs text-gray-400">{p.date_paid}</span>
                     </div>
                   </div>
-                  <span className="font-bold text-morning-green-700 text-sm ml-3 shrink-0">
+                  <span className="font-bold text-mga-green-dark text-sm ml-3 shrink-0">
                     {formatGHS(p.amount_paid)}
                   </span>
                 </div>

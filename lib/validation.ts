@@ -23,5 +23,5 @@ export function isRequired(value: string): boolean {
 export function fieldBorder(hasError: boolean): string {
   return hasError
     ? 'border-red-500 focus:border-red-500'
-    : 'border-gray-200 focus:border-morning-green-500'
+    : 'border-gray-200 focus:border-mga-green-mid'
 }

@@ -27,7 +27,7 @@ interface ClassOption { id: string; name: string }
 function daysBadge(days: number): string {
   if (days >= 7) return 'text-red-600 bg-red-50 border-red-200'
   if (days >= 3) return 'text-orange-600 bg-orange-50 border-orange-200'
-  return 'text-gray-600 bg-gray-50 border-gray-200'
+  return 'text-mga-green-dark bg-mga-green-pale border-mga-gold/25'
 }
 
 function exportCSV(rows: DebtRow[]) {
@@ -120,7 +120,7 @@ export default function AdminDebtPage() {
   const totalOwed = debtors.reduce((s, d) => s + d.amount_owed, 0)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-mga-cream">
       <TopBar
         title="Outstanding Balances"
         backHref="/admin/dashboard"
@@ -153,7 +153,7 @@ export default function AdminDebtPage() {
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="mga-card overflow-hidden">
           {loading ? (
             <div className="p-4 space-y-3">
               {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16" />)}
@@ -163,7 +163,7 @@ export default function AdminDebtPage() {
               {classFilter ? 'No outstanding balances for this class' : 'No outstanding balances! 🎉'}
             </div>
           ) : (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-mga-green-pale/40">
               {debtors.map((d, i) => (
                 <div key={`${d.student_id}-${d.fee_name}-${i}`} className="px-4 py-3 flex items-center gap-3">
                   <div className="flex-1 min-w-0">

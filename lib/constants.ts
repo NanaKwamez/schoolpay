@@ -1,4 +1,7 @@
 export const SCHOOL_NAME = process.env.NEXT_PUBLIC_SCHOOL_NAME ?? 'Morning Glory Academy'
+
+/** Public path to school logo under `/public` */
+export const MGA_LOGO_SRC = '/images/mga-logo.png'
 export const CURRENCY = 'GHS'
 export const SYNC_INTERVAL_MS = 60_000 // 60 seconds
 export const MAX_SYNC_ATTEMPTS = 5

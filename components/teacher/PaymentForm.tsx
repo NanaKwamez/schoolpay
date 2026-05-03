@@ -56,7 +56,7 @@ export function PaymentForm({ students, feeTypes, onSubmit }: PaymentFormProps) 
           required
           value={form.student_id}
           onChange={e => setForm(f => ({ ...f, student_id: e.target.value }))}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-morning-green-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-mga-green-light"
         >
           <option value="">Select student</option>
           {students.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
@@ -71,7 +71,7 @@ export function PaymentForm({ students, feeTypes, onSubmit }: PaymentFormProps) 
             const fee = feeTypes.find(f => f.id === e.target.value)
             setForm(f => ({ ...f, fee_type_id: e.target.value, amount_paid: fee ? fee.amount.toString() : '' }))
           }}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-morning-green-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-mga-green-light"
         >
           <option value="">Select fee type</option>
           {feeTypes.filter(f => f.is_active).map(f => (
@@ -84,7 +84,7 @@ export function PaymentForm({ students, feeTypes, onSubmit }: PaymentFormProps) 
         <select
           value={form.payment_type}
           onChange={e => setForm(f => ({ ...f, payment_type: e.target.value as PaymentType }))}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-morning-green-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-mga-green-light"
         >
           <option value="full">Full Payment</option>
           <option value="credit">Credit (Partial)</option>
@@ -103,7 +103,7 @@ export function PaymentForm({ students, feeTypes, onSubmit }: PaymentFormProps) 
           step="0.01"
           value={form.amount_paid}
           onChange={e => setForm(f => ({ ...f, amount_paid: e.target.value }))}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-morning-green-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-mga-green-light"
         />
       </div>
       {form.payment_type === 'weekly_advance' && (
@@ -113,7 +113,7 @@ export function PaymentForm({ students, feeTypes, onSubmit }: PaymentFormProps) 
             type="date"
             value={form.week_covered}
             onChange={e => setForm(f => ({ ...f, week_covered: e.target.value }))}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-morning-green-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-mga-green-light"
           />
         </div>
       )}
@@ -124,7 +124,7 @@ export function PaymentForm({ students, feeTypes, onSubmit }: PaymentFormProps) 
           value={form.notes}
           onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
           placeholder="Any additional notes…"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-morning-green-500 resize-none"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-mga-green-light resize-none"
         />
       </div>
       <Button type="submit" loading={loading} className="w-full">

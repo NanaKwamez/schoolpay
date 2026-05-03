@@ -122,7 +122,7 @@ export default function AdminTeachersPage() {
   if (!isProprietress) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-mga-cream">
       <TopBar
         title="Teachers"
         backHref="/admin/dashboard"
@@ -133,7 +133,7 @@ export default function AdminTeachersPage() {
       />
 
       <main className="px-4 py-4">
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="mga-card overflow-hidden">
           {loading ? (
             <div className="p-4 space-y-3">
               {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16" />)}
@@ -141,7 +141,7 @@ export default function AdminTeachersPage() {
           ) : teachers.length === 0 ? (
             <div className="p-8 text-center text-gray-400 text-sm">No teachers found</div>
           ) : (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-mga-green-pale/40">
               {teachers.map(teacher => {
                 const sync = syncStatus(teacher.last_sync_at)
                 return (
@@ -212,7 +212,7 @@ export default function AdminTeachersPage() {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Class (optional)</label>
             <select value={addClassId} onChange={e => setAddClassId(e.target.value)}
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500">
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid">
               <option value="">No class assigned</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>

@@ -138,7 +138,7 @@ export default function AdminFundsPage() {
   const maxBarValue = Math.max(...funds.flatMap(f => f.monthly.flatMap(m => [m.income, m.expenses])), 1)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-mga-cream">
       <TopBar
         title="Fund Details"
         backHref="/admin/dashboard"
@@ -164,7 +164,7 @@ export default function AdminFundsPage() {
             const isPositive = fund.net_balance >= 0
 
             return (
-              <div key={fund.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              <div key={fund.id} className="mga-card overflow-hidden">
                 {/* Fund header */}
                 <div className={cn('px-4 py-3 border-b border-gray-100', isFeeding ? 'bg-orange-50' : 'bg-blue-50')}>
                   <p className={cn('font-bold text-lg', isFeeding ? 'text-orange-700' : 'text-blue-700')}>{fund.name}</p>
@@ -186,7 +186,7 @@ export default function AdminFundsPage() {
                     )}
                     {showFull && (
                       <div className="text-center">
-                        <p className={cn('text-lg font-bold', isPositive ? 'text-morning-green-700' : 'text-red-600')}>
+                        <p className={cn('text-lg font-bold', isPositive ? 'text-mga-green-dark' : 'text-red-600')}>
                           {formatGHS(fund.net_balance)}
                         </p>
                         <p className="text-xs text-gray-400">Balance</p>
@@ -267,7 +267,7 @@ export default function AdminFundsPage() {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Fund</label>
             <select value={incomeForm.fundId} onChange={e => setIncomeForm(f => ({ ...f, fundId: e.target.value }))}
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500">
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid">
               {funds.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>
           </div>
@@ -275,25 +275,25 @@ export default function AdminFundsPage() {
             <label className="block text-sm font-semibold text-gray-700 mb-2">Source *</label>
             <input value={incomeForm.source} onChange={e => setIncomeForm(f => ({ ...f, source: e.target.value }))}
               placeholder="e.g. PTA donation, government grant"
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500" />
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Amount (GHS) *</label>
               <input type="number" min="0.01" step="0.01" value={incomeForm.amount}
                 onChange={e => setIncomeForm(f => ({ ...f, amount: e.target.value }))}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500" />
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Date</label>
               <input type="date" value={incomeForm.date} onChange={e => setIncomeForm(f => ({ ...f, date: e.target.value }))}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500" />
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid" />
             </div>
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Notes (optional)</label>
             <textarea rows={2} value={incomeForm.notes} onChange={e => setIncomeForm(f => ({ ...f, notes: e.target.value }))}
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500 resize-none" />
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid resize-none" />
           </div>
         </div>
       </Modal>

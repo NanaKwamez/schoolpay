@@ -30,9 +30,9 @@ export function PaymentTable({ payments, studentNames = {} }: PaymentTableProps)
             <th className="px-4 py-3 text-left font-medium text-gray-500">Status</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50">
+        <tbody className="divide-y divide-mga-green-pale/40">
           {payments.map(payment => (
-            <tr key={payment.id} className="hover:bg-gray-50 transition-colors">
+            <tr key={payment.id} className="hover:bg-mga-green-pale/50 transition-colors">
               <td className="px-4 py-3 font-medium text-gray-900">
                 {studentNames[payment.student_id] ?? payment.student_id.slice(0, 8)}
               </td>

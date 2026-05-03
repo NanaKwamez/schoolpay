@@ -19,7 +19,7 @@ export function FundSummaryCard({ fund, isProprietress, isFeeding }: FundSummary
   return (
     <button
       onClick={() => router.push('/admin/funds')}
-      className="w-full text-left bg-white rounded-2xl border border-gray-200 p-4 hover:shadow-md transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-morning-green-500"
+      className="w-full text-left bg-white rounded-2xl border border-gray-200 p-4 hover:shadow-md transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mga-green-light"
       aria-label={`View ${fund.fund_name} details`}
     >
       {/* Header */}
@@ -69,11 +69,11 @@ export function FundSummaryCard({ fund, isProprietress, isFeeding }: FundSummary
       ) : (
         // Headmaster + feeding fund: show total only
         <>
-          <p className="text-2xl font-bold text-morning-green-600 mb-1">
+          <p className="text-2xl font-bold text-mga-green-mid mb-1">
             {formatGHS(fund.total_income)}
           </p>
           <p className="text-xs text-gray-500 mb-2">collected this term</p>
-          <div className="flex items-center gap-1 text-xs text-gray-400 bg-gray-50 rounded-lg px-2 py-1.5">
+          <div className="flex items-center gap-1 text-xs text-gray-400 bg-mga-green-pale rounded-lg px-2 py-1.5">
             <Info className="h-3 w-3 shrink-0" />
             <span>Contact proprietress for full details</span>
           </div>

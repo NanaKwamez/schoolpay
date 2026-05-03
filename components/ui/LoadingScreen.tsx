@@ -12,17 +12,17 @@ export function LoadingScreen({
   progress,
 }: LoadingScreenProps) {
   return (
-    <div className="min-h-screen bg-morning-green-600 flex flex-col items-center justify-center gap-6 p-6">
+    <div className="min-h-screen bg-mga-green-mid flex flex-col items-center justify-center gap-6 p-6">
       {/* Icon + Name */}
       <div className="text-center">
         <div className="inline-flex items-center justify-center h-20 w-20 rounded-3xl bg-white shadow-xl mb-4">
           <Building2
-            className="h-10 w-10 text-morning-green-600"
+            className="h-10 w-10 text-mga-green-mid"
             strokeWidth={1.5}
           />
         </div>
         <h1 className="text-2xl font-bold text-white">{SCHOOL_NAME}</h1>
-        <p className="text-morning-green-100 text-sm mt-1">SchoolPay</p>
+        <p className="text-mga-gold-light text-sm mt-1">SchoolPay</p>
       </div>
 
       {/* Spinner */}

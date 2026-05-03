@@ -31,8 +31,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
       if (this.props.fallback) return this.props.fallback
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-          <div className="bg-white rounded-2xl border border-red-200 p-8 max-w-sm w-full text-center shadow-sm">
+        <div className="min-h-screen flex items-center justify-center bg-mga-cream p-6">
+          <div className="mga-card p-8 max-w-sm w-full text-center border-red-200 border">
             <div className="h-14 w-14 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="h-7 w-7 text-red-500" />
             </div>
@@ -42,7 +42,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="inline-flex items-center gap-2 bg-morning-green-600 hover:bg-morning-green-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors w-full justify-center"
+              className="inline-flex items-center gap-2 mga-btn-primary px-6 py-3 rounded-xl w-full justify-center"
             >
               <RefreshCw className="h-4 w-4" />
               Refresh Page

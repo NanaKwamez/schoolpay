@@ -53,8 +53,8 @@ export function SyncIndicator({
 
   return (
     <div className="flex items-center gap-1.5">
-      <span className="block h-2 w-2 rounded-full bg-morning-green-400 shrink-0" />
-      <span className={cn('text-xs font-medium', inverted ? textBase : 'text-morning-green-600')}>
+      <span className="block h-2 w-2 rounded-full bg-mga-green-light shrink-0" />
+      <span className={cn('text-xs font-medium', inverted ? textBase : 'text-mga-green-mid')}>
         Synced
       </span>
     </div>

@@ -41,7 +41,7 @@ const STATUS_BUTTONS: StatusConfig[] = [
     status: 'absent',
     label: 'ABSENT',
     activeClass: 'bg-gray-500 text-white border-gray-500',
-    inactiveClass: 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50',
+    inactiveClass: 'bg-white text-gray-600 border-gray-300 hover:bg-mga-green-pale/60',
   },
   {
     status: 'did_not_eat',
@@ -81,7 +81,7 @@ function StudentFeedingRowBase({
 
       {/* Weekly advance — no buttons, just badge */}
       {isCoveredWeekly ? (
-        <div className="inline-flex items-center gap-1.5 bg-morning-green-100 text-morning-green-800 px-3 py-2 rounded-xl text-sm font-semibold">
+        <div className="inline-flex items-center gap-1.5 bg-mga-green-pale text-mga-green-dark px-3 py-2 rounded-xl text-sm font-semibold">
           <span>✓</span>
           <span>COVERED (Weekly)</span>
         </div>
@@ -98,7 +98,7 @@ function StudentFeedingRowBase({
                 aria-label={`Mark ${student.full_name} as ${label}`}
                 className={cn(
                   'min-h-[48px] rounded-xl border-2 text-xs font-bold transition-all duration-100',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-morning-green-500',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-mga-green-light',
                   'active:scale-95 touch-manipulation',
                   isSelected
                     ? cn(activeClass, 'scale-[1.03] shadow-md')

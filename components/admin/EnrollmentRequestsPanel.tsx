@@ -76,7 +76,7 @@ export function EnrollmentRequestsPanel() {
   return (
     <>
       {/* ── Panel card ── */}
-      <section className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <section className="mga-card overflow-hidden p-0 shadow-none border">
 
         {/* Header — div + role="button" avoids nested <button> with refresh */}
         <div
@@ -84,7 +84,7 @@ export function EnrollmentRequestsPanel() {
           onKeyDown={handleHeaderKeyDown}
           role="button"
           tabIndex={0}
-          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors cursor-pointer"
+          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-mga-cream-dark/80 transition-colors cursor-pointer"
         >
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-blue-100">
@@ -101,7 +101,7 @@ export function EnrollmentRequestsPanel() {
             <button
               type="button"
               onClick={e => { e.stopPropagation(); refresh() }}
-              className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-mga-green-pale text-gray-400 transition-colors"
               aria-label="Refresh"
             >
               <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
@@ -115,7 +115,7 @@ export function EnrollmentRequestsPanel() {
         </div>
 
         {expanded && (
-          <div className="border-t border-gray-100">
+          <div className="border-t border-mga-gold/15">
             {/* Error */}
             {error && (
               <p className="text-sm text-red-600 px-4 py-3">{error}</p>
@@ -144,7 +144,7 @@ export function EnrollmentRequestsPanel() {
             )}
 
             {!loading && pending.length > 0 && (
-              <div className="divide-y divide-gray-50">
+              <div className="divide-y divide-mga-green-pale/40">
                 {pending.map(req => (
                   <RequestRow
                     key={req.id}
@@ -162,14 +162,14 @@ export function EnrollmentRequestsPanel() {
               <>
                 <button
                   onClick={() => setShowHistory(h => !h)}
-                  className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-400 hover:text-gray-600 border-t border-gray-100 transition-colors"
+                  className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-400 hover:text-gray-600 border-t border-mga-gold/15 transition-colors"
                 >
                   {showHistory ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                   {showHistory ? 'Hide' : 'Show'} {reviewed.length} reviewed request{reviewed.length !== 1 ? 's' : ''}
                 </button>
 
                 {showHistory && (
-                  <div className="divide-y divide-gray-50 border-t border-gray-100">
+                  <div className="divide-y divide-mga-green-pale/40 border-t border-mga-gold/15">
                     {reviewed.map(req => (
                       <RequestRow key={req.id} req={req} readonly />
                     ))}
@@ -208,7 +208,7 @@ export function EnrollmentRequestsPanel() {
       >
         <div className="space-y-4 py-1">
           {rejectTarget && (
-            <div className="bg-gray-50 rounded-xl px-3 py-2.5 text-sm">
+            <div className="bg-mga-green-pale rounded-xl px-3 py-2.5 text-sm">
               <p className="font-semibold text-gray-800">
                 {rejectTarget.type === 'enroll'
                   ? `Enrol "${rejectTarget.student_name}"`
@@ -272,7 +272,7 @@ function RequestRow({
           {/* Type icon */}
           <div className={cn(
             'flex items-center justify-center h-8 w-8 rounded-lg shrink-0 mt-0.5',
-            isEnroll ? 'bg-morning-green-100 text-morning-green-700' : 'bg-red-100 text-red-600'
+            isEnroll ? 'bg-mga-green-pale text-mga-green-dark' : 'bg-red-100 text-red-600'
           )}>
             {isEnroll
               ? <UserPlus className="h-4 w-4" />

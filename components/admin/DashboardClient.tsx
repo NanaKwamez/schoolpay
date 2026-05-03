@@ -247,9 +247,9 @@ export function DashboardClient() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-mga-cream">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-morning-green-600 safe-top shadow-md">
+      <header className="mga-header sticky top-0 z-30 text-white safe-top shadow-md">
         <div className="px-4 py-3">
           <div className="flex items-start justify-between mb-1">
             <div className="min-w-0">
@@ -299,10 +299,10 @@ export function DashboardClient() {
             <div className="grid grid-cols-3 gap-3">
               {[
                 { label: 'Expected', value: termStats.expected, color: 'text-gray-700', icon: <DollarSign className="h-4 w-4 text-gray-400" /> },
-                { label: 'Collected', value: termStats.collected, color: 'text-green-700', icon: <DollarSign className="h-4 w-4 text-green-500" /> },
+                { label: 'Collected', value: termStats.collected, color: 'text-mga-green-mid', icon: <DollarSign className="h-4 w-4 text-mga-green-light" /> },
                 { label: 'Outstanding', value: termStats.outstanding, color: termStats.outstanding > 0 ? 'text-red-600' : 'text-gray-400', icon: <TrendingDown className="h-4 w-4 text-red-400" /> },
               ].map(stat => (
-                <div key={stat.label} className="bg-white rounded-2xl border border-gray-200 p-3 text-center">
+                <div key={stat.label} className="mga-card p-4 text-center">
                   <div className="flex justify-center mb-1">{stat.icon}</div>
                   <p className={cn('text-base font-bold leading-tight', stat.color)}>
                     {formatGHS(stat.value)}

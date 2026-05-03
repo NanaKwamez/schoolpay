@@ -168,7 +168,7 @@ export default function AdminExpensesPage() {
     .reduce((s, e) => s + e.amount, 0)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-mga-cream">
       <TopBar
         title="Expenses"
         backHref="/admin/dashboard"
@@ -183,11 +183,11 @@ export default function AdminExpensesPage() {
       <main className="px-4 py-4 space-y-4">
         {/* Summary bar */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-2xl border border-gray-200 p-3 text-center">
+          <div className="mga-card p-4 text-center">
             <p className="text-sm font-bold text-gray-700">{formatGHS(monthTotal)}</p>
             <p className="text-xs text-gray-400">This Month</p>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-200 p-3 text-center">
+          <div className="mga-card p-4 text-center">
             <p className="text-sm font-bold text-gray-700">{formatGHS(expenses.reduce((s, e) => s + e.amount, 0))}</p>
             <p className="text-xs text-gray-400">This Term</p>
           </div>
@@ -203,7 +203,7 @@ export default function AdminExpensesPage() {
               key={t.key}
               onClick={() => setTab(t.key as typeof tab)}
               className={cn('px-3 py-2.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap',
-                tab === t.key ? 'border-morning-green-500 text-morning-green-600' : 'border-transparent text-gray-500 hover:text-gray-700')}
+                tab === t.key ? 'border-mga-green-mid text-mga-green-mid' : 'border-transparent text-gray-500 hover:text-gray-700')}
             >
               {t.label}
             </button>
@@ -211,7 +211,7 @@ export default function AdminExpensesPage() {
         </div>
 
         {/* Expense list */}
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="mga-card overflow-hidden">
           {loading ? (
             <div className="p-4 space-y-3">
               {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16" />)}
@@ -219,7 +219,7 @@ export default function AdminExpensesPage() {
           ) : filteredExpenses.length === 0 ? (
             <div className="p-8 text-center text-gray-400 text-sm">No expenses found</div>
           ) : (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-mga-green-pale/40">
               {filteredExpenses.map(e => {
                 const badge = APPROVAL_BADGE[e.approval_status]
                 return (
@@ -277,7 +277,7 @@ export default function AdminExpensesPage() {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Fund</label>
             <select value={formFundId} onChange={e => { setFormFundId(e.target.value); setFormCategory('') }}
-              className="w-full border-2 border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-morning-green-500">
+              className="w-full border-2 border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-mga-green-mid">
               {funds.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>
           </div>
@@ -287,7 +287,7 @@ export default function AdminExpensesPage() {
               {categories.map(cat => (
                 <button key={cat} onClick={() => setFormCategory(cat)}
                   className={cn('min-h-[44px] rounded-xl border-2 text-xs font-semibold text-left px-3 transition',
-                    formCategory === cat ? 'bg-morning-green-600 border-morning-green-600 text-white' : 'bg-white border-gray-200 text-gray-700 hover:border-morning-green-300')}>
+                    formCategory === cat ? 'bg-mga-green-mid border-mga-green-mid text-white' : 'bg-white border-gray-200 text-gray-700 hover:border-mga-gold/30')}>
                   {cat}
                 </button>
               ))}
@@ -296,19 +296,19 @@ export default function AdminExpensesPage() {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
             <input value={formDesc} onChange={e => setFormDesc(e.target.value)} placeholder="What was this expense for?"
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500" />
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Amount (GHS)</label>
               <input type="number" min="0.01" step="0.01" value={formAmount} onChange={e => setFormAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-lg font-bold outline-none focus:border-morning-green-500" />
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-lg font-bold outline-none focus:border-mga-green-mid" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Date</label>
               <input type="date" value={formDate} onChange={e => setFormDate(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500" />
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid" />
             </div>
           </div>
           {!isProprietress && formAmount && parseFloat(formAmount) > 500 && (
@@ -322,12 +322,12 @@ export default function AdminExpensesPage() {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Receipt Ref (optional)</label>
             <input value={formRef} onChange={e => setFormRef(e.target.value)} placeholder="Receipt number"
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500" />
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Notes (optional)</label>
             <textarea rows={2} value={formNotes} onChange={e => setFormNotes(e.target.value)} placeholder="Additional notes"
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-morning-green-500 resize-none" />
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-mga-green-mid resize-none" />
           </div>
         </div>
       </Modal>
@@ -351,7 +351,7 @@ export default function AdminExpensesPage() {
             <label className="block text-sm font-semibold text-gray-700 mb-2">Rejection Reason</label>
             <textarea rows={3} value={rejectReason} onChange={e => setRejectReason(e.target.value)}
               placeholder="Explain why this expense is being rejected..."
-              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-morning-green-500 resize-none" />
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-mga-green-mid resize-none" />
           </div>
         </div>
       </Modal>

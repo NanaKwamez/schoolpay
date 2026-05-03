@@ -34,13 +34,13 @@ export const ClassCard = React.memo(function ClassCard({
       className={cn(
         'w-full text-left rounded-2xl p-4 border-2 transition-all duration-200',
         'hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2',
-        'focus-visible:ring-morning-green-500',
+        'focus-visible:ring-mga-green-light',
         isSubmitted
           ? 'bg-green-50 border-green-300 shadow-green-100 shadow-sm'
           : isPastDeadline
           ? 'bg-orange-50 border-orange-300'
           : 'bg-white border-gray-200',
-        justUpdated && 'ring-2 ring-morning-green-400'
+        justUpdated && 'ring-2 ring-mga-gold/50'
       )}
       aria-label={`View ${classData.name} feeding details`}
     >
@@ -75,7 +75,7 @@ export const ClassCard = React.memo(function ClassCard({
           <div
             className={cn(
               'h-full rounded-full transition-all duration-500',
-              isSubmitted ? 'bg-green-500' : 'bg-morning-green-500'
+              isSubmitted ? 'bg-green-500' : 'bg-mga-green-light'
             )}
             style={{ width: `${progressPct}%` }}
           />
@@ -98,13 +98,13 @@ export const ClassCard = React.memo(function ClassCard({
       {/* Row 4: Collected today */}
       <div className="flex items-center justify-between">
         <span className="text-xs text-gray-500">Collected today</span>
-        <span className="text-sm font-bold text-morning-green-700">
+        <span className="text-sm font-bold text-mga-green-dark">
           {formatGHS(classData.collected_today)}
         </span>
       </div>
 
       {justUpdated && (
-        <p className="text-xs text-morning-green-600 mt-1 font-medium">Updated just now</p>
+        <p className="text-xs text-mga-green-mid mt-1 font-medium">Updated just now</p>
       )}
     </button>
   )

@@ -88,7 +88,7 @@ function TeacherFeedingContent() {
   const isLoading = loading || studentsLoading
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-mga-cream">
       <TopBar
         title="Mark Feeding"
         subtitle={todayStr}
@@ -107,7 +107,7 @@ function TeacherFeedingContent() {
           </div>
           <button
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-1 text-morning-green-600 text-sm font-semibold min-h-[48px] px-2"
+            className="flex items-center gap-1 text-mga-green-mid text-sm font-semibold min-h-[48px] px-2"
           >
             <Edit2 className="h-4 w-4" />
             Edit

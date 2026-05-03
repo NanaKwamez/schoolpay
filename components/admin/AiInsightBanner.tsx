@@ -76,7 +76,7 @@ export function AiInsightsGrid({ insights, loading }: { insights: AiInsightCache
 
   if (!insights.length) {
     return (
-      <div className="bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-4 text-center">
+      <div className="bg-mga-green-pale rounded-2xl border border-dashed border-mga-gold/30 p-4 text-center">
         <p className="text-sm text-gray-400">No AI insights yet. Insights are generated at 6am on school days.</p>
       </div>
     )
