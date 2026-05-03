@@ -1,26 +1,24 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
-interface OnlineStatus {
-  isOnline: boolean
-}
-
-export function useOnline(): OnlineStatus {
-  const [isOnline, setIsOnline] = useState<boolean>(
-    // SSR-safe: default true on server, real value on client
-    typeof navigator !== 'undefined' ? navigator.onLine : true
-  )
+export function useOnlineStatus() {
+  // Default to TRUE — server always renders as online
+  // Client corrects this after mount via useEffect
+  const [isOnline, setIsOnline] = useState(true)
 
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true)
+    // Now we are on the client — read the real value
+    setIsOnline(navigator.onLine)
+
+    const handleOnline  = () => setIsOnline(true)
     const handleOffline = () => setIsOnline(false)
 
-    window.addEventListener('online', handleOnline)
+    window.addEventListener('online',  handleOnline)
     window.addEventListener('offline', handleOffline)
 
     return () => {
-      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('online',  handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
   }, [])

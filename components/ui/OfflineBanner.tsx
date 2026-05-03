@@ -1,17 +1,19 @@
+// components/ui/OfflineBanner.tsx
 'use client'
 
-import { useOnline } from '@/hooks/useOnline'
+import { useOnlineStatus } from '@/hooks/useOnline'
 
 export function OfflineBanner() {
-  const { isOnline } = useOnline()
+  const { isOnline } = useOnlineStatus()
 
+  // Nothing renders on first paint — avoids flash
   if (isOnline) return null
 
   return (
     <div
+      className="w-full bg-orange-500 text-white text-center py-2.5 px-4 text-sm font-semibold"
       role="status"
       aria-live="polite"
-      className="w-full bg-orange-500 text-white text-center py-2.5 px-4 text-sm font-semibold z-50 sticky top-0 shadow-md"
     >
       📴 Offline mode — changes will sync when you reconnect
     </div>
