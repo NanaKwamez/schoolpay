@@ -12,7 +12,7 @@ import { GeminiChat } from './GeminiChat'
 import { SyncIndicator } from '@/components/ui/SyncIndicator'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useSync } from '@/hooks/useSync'
-import { useOnline } from '@/hooks/useOnline'
+import { useOnlineStatus } from '@/hooks/useOnline'
 import { SCHOOL_NAME } from '@/lib/constants'
 import { EnrollmentRequestsPanel } from './EnrollmentRequestsPanel'
 import { formatGHS } from '@/lib/utils'
@@ -44,7 +44,7 @@ export function DashboardClient() {
   const router = useRouter()
   const { profile, role, isProprietress } = useAuth()
   const { pendingCount, isSyncing } = useSync()
-  const { isOnline } = useOnline()
+  const { isOnline } = useOnlineStatus()
 
   const [termStats, setTermStats] = useState<TermStats>({ expected: 0, collected: 0, outstanding: 0 })
   const [classStats, setClassStats] = useState<ClassWithStats[]>([])

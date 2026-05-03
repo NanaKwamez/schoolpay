@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 import { SyncIndicator } from './SyncIndicator'
 import { useSync } from '@/hooks/useSync'
-import { useOnline } from '@/hooks/useOnline'
+import { useOnlineStatus } from '@/hooks/useOnline'
 
 interface TopBarProps {
   title: string
@@ -26,7 +26,7 @@ export function TopBar({
   showSync = false,
 }: TopBarProps) {
   const { pendingCount, isSyncing } = useSync()
-  const { isOnline } = useOnline()
+  const { isOnline } = useOnlineStatus()
 
   return (
     <header className="sticky top-0 z-30 bg-morning-green-600 safe-top shadow-md">
