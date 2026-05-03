@@ -38,7 +38,7 @@ export function PaymentRow({ payment, onClick }: PaymentRowProps) {
     <div
       onClick={() => onClick?.(payment.id)}
       className={cn(
-        'glass rounded-xl px-4 sm:px-6 min-h-[60px] py-3',
+        'glass rounded-2xl px-4 sm:px-6 min-h-[60px] py-3',
         'grid grid-cols-1 md:grid-cols-[100px_1fr_80px_120px_110px_110px_130px] gap-2 md:gap-4 items-center',
         'hover:bg-[var(--color-ds-surface-container-low)]/60 transition-colors',
         onClick && 'cursor-pointer',

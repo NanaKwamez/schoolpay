@@ -39,7 +39,7 @@ export function Card({
       onClick={onClick}
       onKeyDown={isClickable ? e => e.key === 'Enter' && onClick() : undefined}
       className={cn(
-        'p-4',
+        'p-4 rounded-2xl',
         variantClasses[variant],
         isClickable && 'cursor-pointer hover:shadow-md active:scale-[0.99] transition-all duration-150',
         className

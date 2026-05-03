@@ -32,14 +32,15 @@ export const ClassCard = React.memo(function ClassCard({
     <button
       onClick={onClick}
       className={cn(
-        'w-full text-left rounded-2xl p-4 border-2 transition-all duration-200',
+        'w-full text-left bg-white rounded-2xl shadow-sm border p-4 overflow-hidden',
+        'transition-all duration-200',
         'hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2',
         'focus-visible:ring-mga-green-light',
         isSubmitted
-          ? 'bg-green-50 border-green-300 shadow-green-100 shadow-sm'
+          ? 'border-green-300 bg-green-50 shadow-green-100'
           : isPastDeadline
-          ? 'bg-orange-50 border-orange-300'
-          : 'bg-white border-gray-200',
+          ? 'border-orange-300 bg-orange-50'
+          : 'border-gray-100',
         justUpdated && 'ring-2 ring-mga-gold/50'
       )}
       aria-label={`View ${classData.name} feeding details`}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { X, AlertTriangle, DollarSign, TrendingDown, Clock } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
@@ -13,7 +14,6 @@ import { SyncIndicator } from '@/components/ui/SyncIndicator'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useSync } from '@/hooks/useSync'
 import { useOnlineStatus } from '@/hooks/useOnline'
-import { SCHOOL_NAME } from '@/lib/constants'
 import { EnrollmentRequestsPanel } from './EnrollmentRequestsPanel'
 import { formatGHS } from '@/lib/utils'
 import { cn } from '@/lib/utils'
@@ -56,6 +56,7 @@ export function DashboardClient() {
   const [pendingExpenses, setPendingExpenses] = useState(0)
   const [updatedClasses, setUpdatedClasses] = useState<Set<string>>(new Set())
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [headerLogoFailed, setHeaderLogoFailed] = useState(false)
   const supabase = useMemo(() => createSupabaseBrowserClient(), [])
 
   // Live clock
@@ -249,34 +250,55 @@ export function DashboardClient() {
   return (
     <div className="min-h-screen bg-mga-cream">
       {/* Header */}
-      <header className="mga-header sticky top-0 z-30 text-white safe-top shadow-md">
-        <div className="px-4 py-3">
-          <div className="flex items-start justify-between mb-1">
-            <div className="min-w-0">
-              <h1 className="text-lg font-bold text-white leading-tight">{SCHOOL_NAME}</h1>
-              <p className="text-sm text-white/80 mt-0.5">
-                {greeting}, {profile?.full_name?.split(' ')[0] ?? 'Admin'}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0 ml-3">
-              <SyncIndicator
-                isOnline={isOnline}
-                isSyncing={isSyncing}
-                pendingCount={pendingCount}
-                inverted
+      <header className="mga-header relative px-4 pb-3 safe-top shadow-md sticky top-0 z-30 text-white">
+        <div className="absolute top-3 right-4 flex items-center gap-2 z-10">
+          <SyncIndicator
+            isOnline={isOnline}
+            isSyncing={isSyncing}
+            pendingCount={pendingCount}
+            inverted
+          />
+          <span className={cn(
+            'shrink-0 text-xs font-bold px-2.5 py-1 rounded-full',
+            role === 'proprietress'
+              ? 'bg-purple-100 text-purple-700'
+              : 'bg-blue-100 text-blue-700'
+          )}>
+            {role === 'proprietress' ? 'Proprietress' : 'Headmaster'}
+          </span>
+        </div>
+
+        <div className="flex justify-center pt-3 pb-1">
+          {!headerLogoFailed ? (
+            <div className="w-14 h-14 rounded-full border-2 border-mga-gold/60 shadow-md overflow-hidden bg-white flex items-center justify-center">
+              <Image
+                src="/images/mga-logo.png"
+                alt="Morning Glory Academy"
+                width={56}
+                height={56}
+                className="object-cover w-full h-full"
+                onError={() => setHeaderLogoFailed(true)}
               />
-              <span className={cn(
-                'shrink-0 text-xs font-bold px-2.5 py-1 rounded-full',
-                role === 'proprietress'
-                  ? 'bg-purple-100 text-purple-700'
-                  : 'bg-blue-100 text-blue-700'
-              )}>
-                {role === 'proprietress' ? 'Proprietress' : 'Headmaster'}
-              </span>
             </div>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-white/70">
-            <Clock className="h-3 w-3" />
+          ) : (
+            <div className="w-14 h-14 rounded-full border-2 border-mga-gold/60 bg-white/20 flex items-center justify-center">
+              <span className="text-white font-bold text-lg">MG</span>
+            </div>
+          )}
+        </div>
+
+        <div className="text-center pb-1 px-8">
+          <h1 className="text-white font-bold text-lg leading-tight">
+            Morning Glory Academy
+          </h1>
+        </div>
+
+        <div className="relative pt-1 pr-20">
+          <p className="text-sm text-white/90">
+            {greeting}, {profile?.full_name?.split(' ')[0] ?? 'Admin'}
+          </p>
+          <div className="flex items-center gap-2 text-xs text-white/70 mt-1">
+            <Clock className="h-3 w-3 shrink-0" />
             <span>
               {currentTime.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
               {' · '}
@@ -302,7 +324,7 @@ export function DashboardClient() {
                 { label: 'Collected', value: termStats.collected, color: 'text-mga-green-mid', icon: <DollarSign className="h-4 w-4 text-mga-green-light" /> },
                 { label: 'Outstanding', value: termStats.outstanding, color: termStats.outstanding > 0 ? 'text-red-600' : 'text-gray-400', icon: <TrendingDown className="h-4 w-4 text-red-400" /> },
               ].map(stat => (
-                <div key={stat.label} className="mga-card p-4 text-center">
+                <div key={stat.label} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center">
                   <div className="flex justify-center mb-1">{stat.icon}</div>
                   <p className={cn('text-base font-bold leading-tight', stat.color)}>
                     {formatGHS(stat.value)}

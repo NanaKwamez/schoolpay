@@ -76,7 +76,7 @@ export function EnrollmentRequestsPanel() {
   return (
     <>
       {/* ── Panel card ── */}
-      <section className="mga-card overflow-hidden p-0 shadow-none border">
+      <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden p-0">
 
         {/* Header — div + role="button" avoids nested <button> with refresh */}
         <div
@@ -123,7 +123,7 @@ export function EnrollmentRequestsPanel() {
 
             {/* Action error */}
             {actionError && (
-              <div className="mx-4 my-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-sm text-red-700">
+              <div className="mx-4 my-2 bg-red-50 border border-red-200 rounded-2xl px-3 py-2 text-sm text-red-700">
                 {actionError}
               </div>
             )}
@@ -131,7 +131,7 @@ export function EnrollmentRequestsPanel() {
             {/* Loading skeletons */}
             {loading && (
               <div className="px-4 py-3 space-y-3">
-                {[0, 1].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}
+                {[0, 1].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)}
               </div>
             )}
 
@@ -208,7 +208,7 @@ export function EnrollmentRequestsPanel() {
       >
         <div className="space-y-4 py-1">
           {rejectTarget && (
-            <div className="bg-mga-green-pale rounded-xl px-3 py-2.5 text-sm">
+            <div className="bg-mga-green-pale rounded-2xl px-3 py-2.5 text-sm">
               <p className="font-semibold text-gray-800">
                 {rejectTarget.type === 'enroll'
                   ? `Enrol "${rejectTarget.student_name}"`

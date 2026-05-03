@@ -27,7 +27,7 @@ export function ReportCard({
       <CardHeader>
         <CardTitle className="text-sm text-gray-500 font-medium">{title}</CardTitle>
         <div className={cn(
-          'h-9 w-9 rounded-lg flex items-center justify-center',
+          'h-9 w-9 rounded-2xl flex items-center justify-center',
           trend === 'up' ? 'bg-green-100' : trend === 'down' ? 'bg-red-100' : 'bg-gray-100'
         )}>
           <Icon className={cn(

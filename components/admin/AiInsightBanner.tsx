@@ -47,7 +47,7 @@ export function AiInsightBanner({ insightType, content, generatedAt }: AiInsight
 
   return (
     <div className={cn(
-      'bg-white rounded-2xl border border-gray-200 border-l-4 p-4',
+      'bg-white rounded-2xl shadow-sm border border-gray-100 border-l-4 p-4',
       borderColor(insightType)
     )}>
       <div className="flex items-start gap-3">

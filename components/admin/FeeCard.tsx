@@ -35,7 +35,7 @@ export function FeeCard({ fee, onEdit, onDelete, className }: FeeCardProps) {
   return (
     <div
       className={cn(
-        'glass rounded-3xl p-5 md:p-6 flex items-start justify-between gap-4',
+        'glass rounded-2xl p-5 md:p-6 flex items-start justify-between gap-4',
         'border-l-4 border-l-[var(--color-ds-primary)]',
         'hover:shadow-lg transition-shadow relative overflow-hidden',
         className

@@ -44,7 +44,7 @@ export function AlertBannerList({ alerts, className }: AlertBannerListProps) {
         <div
           key={alert.id}
           className={cn(
-            'flex items-start gap-4 rounded-xl p-4 min-h-[60px] shadow-sm border',
+            'flex items-start gap-4 rounded-2xl p-4 min-h-[60px] shadow-sm border',
             severityStyles[alert.severity]
           )}
         >

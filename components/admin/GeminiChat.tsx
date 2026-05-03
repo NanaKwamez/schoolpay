@@ -113,22 +113,22 @@ export function GeminiChat() {
         type="button"
         onClick={() => setIsOpen(o => !o)}
         className={cn(
-          'fixed bottom-6 right-6 z-50',
-          'h-16 w-16 rounded-full mga-btn-primary flex items-center justify-center p-0',
-          'border border-mga-gold/40 shadow-xl',
-          'transition-all active:scale-95',
+          'fixed bottom-6 right-5 z-50 w-11 h-11 rounded-full',
+          'bg-mga-green-dark shadow-lg border border-mga-gold/30',
+          'flex items-center justify-center',
+          'hover:bg-mga-green-mid hover:shadow-xl transition-all',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mga-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-mga-cream'
         )}
         aria-label={isOpen ? 'Close AI chat' : 'Open AI chat'}
       >
-        <MessageCircle className="h-8 w-8" aria-hidden />
+        <MessageCircle size={18} className="text-white" aria-hidden />
       </button>
 
       {/* ── Chat panel ─────────────────────────────────────────────────── */}
       {isOpen && (
         <div
           className={cn(
-            'fixed bottom-24 right-6 z-50',
+            'fixed bottom-20 right-5 z-50',
             'w-80 sm:w-96 max-h-[70vh]',
             'mga-card-elevated flex flex-col overflow-hidden'
           )}

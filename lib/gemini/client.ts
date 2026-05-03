@@ -4,7 +4,7 @@ import { SCHOOL_NAME } from '@/lib/constants'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? '')
 
-export function getGeminiModel(modelName = 'gemini-1.5-flash') {
+export function getGeminiModel(modelName = 'gemini-2.5-flash') {
   return genAI.getGenerativeModel({ model: modelName })
 }
 
