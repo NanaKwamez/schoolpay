@@ -66,7 +66,7 @@ function StudentFeedingRowBase({
   )
 
   return (
-    <div className="px-4 py-3 border-b border-gray-100 last:border-0 bg-white">
+    <div className="px-4 py-3 border-b border-mga-green-pale/40 last:border-0 bg-white">
       {/* Student name + debt label */}
       <div className="mb-2.5">
         <p className="text-[18px] font-bold text-gray-900 leading-tight">
