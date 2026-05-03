@@ -105,6 +105,24 @@ interface UseAdminRequestsReturn {
   refresh: () => void
 }
 
+/** Row from enrollment_requests select with embedded classes/students only. */
+interface EnrollmentJoinRow {
+  id: string
+  type: EnrollmentRequest['type']
+  status: EnrollmentRequest['status']
+  student_class_id: string
+  student_id: string | null
+  student_name: string | null
+  parent_phone: string | null
+  requested_by: string
+  reviewed_by: string | null
+  review_note: string | null
+  created_at: string
+  reviewed_at: string | null
+  classes: { name: string } | null
+  students: { full_name: string | null } | null
+}
+
 export function useAdminEnrollmentRequests(): UseAdminRequestsReturn {
   const supabase = createSupabaseBrowserClient()
   const [requests, setRequests] = useState<EnrollmentRequest[]>([])
@@ -126,8 +144,7 @@ export function useAdminEnrollmentRequests(): UseAdminRequestsReturn {
         .select(`
           *,
           classes ( name ),
-          students ( full_name ),
-          user_profiles!enrollment_requests_requested_by_fkey ( full_name )
+          students ( full_name )
         `)
         .order('created_at', { ascending: false })
         .limit(50)
@@ -140,8 +157,34 @@ export function useAdminEnrollmentRequests(): UseAdminRequestsReturn {
         return
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mapped: EnrollmentRequest[] = (data ?? []).map((row: any) => ({
+      // requested_by → auth.users; teacher display names live on user_profiles.id
+      const rows = (data ?? []) as unknown as EnrollmentJoinRow[]
+      const requestedByIds = [...new Set(rows.map(r => r.requested_by))]
+
+      const nameByUserId = new Map<string, string>()
+      if (requestedByIds.length > 0) {
+        const { data: profiles, error: profilesErr } = await supabase
+          .from('user_profiles')
+          .select('id, full_name')
+          .in('id', requestedByIds)
+
+        if (cancelled) return
+
+        if (profilesErr) {
+          setError(profilesErr.message)
+        } else {
+          for (const p of profiles ?? []) {
+            const label = typeof p.full_name === 'string' && p.full_name.length > 0
+              ? p.full_name
+              : '—'
+            nameByUserId.set(p.id, label)
+          }
+        }
+      }
+
+      if (cancelled) return
+
+      const mapped: EnrollmentRequest[] = rows.map(row => ({
         id: row.id,
         type: row.type,
         status: row.status,
@@ -155,8 +198,8 @@ export function useAdminEnrollmentRequests(): UseAdminRequestsReturn {
         created_at: row.created_at,
         reviewed_at: row.reviewed_at ?? null,
         class_name: row.classes?.name ?? '—',
-        requester_name: row.user_profiles?.full_name ?? '—',
-        existing_student_name: row.students?.full_name ?? null,
+        requester_name: nameByUserId.get(row.requested_by) ?? '—',
+        existing_student_name: row.students?.full_name ?? undefined,
       }))
 
       setRequests(mapped)

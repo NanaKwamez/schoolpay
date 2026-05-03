@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { MessageCircle, X, AlertTriangle, DollarSign, TrendingDown, Clock } from 'lucide-react'
+import { X, AlertTriangle, DollarSign, TrendingDown, Clock } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { ClassCard } from './ClassCard'
@@ -54,7 +54,6 @@ export function DashboardClient() {
   const [loading, setLoading] = useState(true)
   const [alertDismissed, setAlertDismissed] = useState(false)
   const [pendingExpenses, setPendingExpenses] = useState(0)
-  const [chatOpen, setChatOpen] = useState(false)
   const [updatedClasses, setUpdatedClasses] = useState<Set<string>>(new Set())
   const [currentTime, setCurrentTime] = useState(new Date())
   const supabase = useMemo(() => createSupabaseBrowserClient(), [])
@@ -411,17 +410,7 @@ export function DashboardClient() {
         )}
       </main>
 
-      {/* Floating chat button */}
-      <button
-        onClick={() => setChatOpen(true)}
-        className="fixed bottom-6 right-4 z-40 h-16 w-16 bg-morning-green-600 hover:bg-morning-green-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-morning-green-400"
-        aria-label="Open AI chat"
-      >
-        <MessageCircle className="h-7 w-7" />
-      </button>
-
-      {/* Chat modal */}
-      <GeminiChat isOpen={chatOpen} onClose={() => setChatOpen(false)} />
+      <GeminiChat />
     </div>
   )
 }

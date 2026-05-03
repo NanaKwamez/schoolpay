@@ -292,7 +292,10 @@ function RequestRow({
               <p className="text-xs text-gray-400">📞 {req.parent_phone}</p>
             )}
             {req.review_note && (
-              <p className="text-xs text-gray-400 italic mt-0.5">"{req.review_note}"</p>
+              <p className="text-xs text-gray-400 italic mt-0.5">
+                <span className="not-italic text-gray-500">Note: </span>
+                {req.review_note}
+              </p>
             )}
           </div>
         </div>

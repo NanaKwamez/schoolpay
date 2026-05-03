@@ -1,3 +1,4 @@
+/** System prompts for Gemini school finance chat and insights */
 import { SCHOOL_NAME } from '@/lib/constants'
 
 export function buildSystemPrompt(schoolData: {
@@ -7,11 +8,10 @@ export function buildSystemPrompt(schoolData: {
   classNames: string[]
   currentTerm: string
   currentYear: number
-  recentPayments: { feeType: string; total: number }[]
 }): string {
-  return `You are a school finance assistant for ${SCHOOL_NAME},
-a school in Ghana with Nursery 1 to JHS 3 classes.
-You are speaking with the headmistress/proprietress.
+  return `You are a school finance assistant for ${SCHOOL_NAME}, a school
+in Ghana with classes from Nursery 1 to Basic 9.
+You are speaking with the headmistress or proprietress.
 
 CURRENT TERM: Term ${schoolData.currentTerm}, ${schoolData.currentYear}
 
@@ -26,18 +26,20 @@ TODAY'S FEEDING (${new Date().toLocaleDateString('en-GB')}):
 - On Credit: ${schoolData.todayFeeding.credit}
 - Absent: ${schoolData.todayFeeding.absent}
 
-TOP 5 STUDENTS IN DEBT:
-${schoolData.topDebtors.map(d => `- ${d.name} (${d.class}): GHS ${d.amount.toFixed(2)}`).join('\n')}
+TOP STUDENTS IN DEBT:
+${schoolData.topDebtors.length > 0
+  ? schoolData.topDebtors.map(d => `- ${d.name} (${d.class}): GHS ${d.amount.toFixed(2)}`).join('\n')
+  : '- (no debt data available)'}
 
-CLASSES: ${schoolData.classNames.join(', ')}
+CLASSES: ${schoolData.classNames.length > 0 ? schoolData.classNames.join(', ') : '—'}
 
 RULES:
-- Answer in simple, clear English
+- Answer in simple clear English
 - Be concise and helpful
-- Use GHS for all currency amounts
+- Use GHS for all currency
 - The headmistress is not very technical — avoid jargon
-- If you don't have enough data to answer accurately, say so
-- Do not make up numbers — only use the data provided above`
+- If you do not have enough data, say so honestly
+- Never make up numbers — only use the data provided above`
 }
 
 export function buildFinanceInsightPrompt(data: {
