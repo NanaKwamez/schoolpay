@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, type KeyboardEvent } from 'react'
 import {
   UserPlus, UserMinus, CheckCircle2, XCircle,
   Clock, ChevronDown, ChevronUp, RefreshCw,
@@ -58,6 +58,18 @@ export function EnrollmentRequestsPanel() {
     }
   }, [rejectTarget, rejectReason, reject])
 
+  const toggleExpanded = useCallback(() => setExpanded(e => !e), [])
+
+  const handleHeaderKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        toggleExpanded()
+      }
+    },
+    [toggleExpanded]
+  )
+
   // Don't render the panel at all if there's nothing
   if (!loading && requests.length === 0 && !error) return null
 
@@ -66,10 +78,13 @@ export function EnrollmentRequestsPanel() {
       {/* ── Panel card ── */}
       <section className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
 
-        {/* Header */}
-        <button
-          onClick={() => setExpanded(e => !e)}
-          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+        {/* Header — div + role="button" avoids nested <button> with refresh */}
+        <div
+          onClick={toggleExpanded}
+          onKeyDown={handleHeaderKeyDown}
+          role="button"
+          tabIndex={0}
+          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors cursor-pointer"
         >
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-blue-100">
@@ -84,6 +99,7 @@ export function EnrollmentRequestsPanel() {
           </div>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={e => { e.stopPropagation(); refresh() }}
               className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
               aria-label="Refresh"
@@ -96,7 +112,7 @@ export function EnrollmentRequestsPanel() {
               <ChevronDown className="h-4 w-4 text-gray-400" />
             )}
           </div>
-        </button>
+        </div>
 
         {expanded && (
           <div className="border-t border-gray-100">
