@@ -1,4 +1,6 @@
 export type UserRole = 'proprietress' | 'headmaster' | 'teacher'
+export type EnrollmentRequestType = 'enroll' | 'withdraw'
+export type EnrollmentRequestStatus = 'pending' | 'approved' | 'rejected'
 export type ClassLevel = 'nursery' | 'kg' | 'primary' | 'jhs'
 export type FeeFrequency = 'daily' | 'weekly' | 'termly' | 'once'
 export type PaymentType = 'full' | 'credit' | 'weekly_advance' | 'daily'
@@ -226,6 +228,27 @@ export interface AiInsightCache {
   content: string
   generated_at: string
   valid_until: string
+}
+
+export interface EnrollmentRequest {
+  id: string
+  type: EnrollmentRequestType
+  status: EnrollmentRequestStatus
+  student_class_id: string
+  /** Populated for 'withdraw' requests */
+  student_id: string | null
+  /** Populated for 'enroll' requests */
+  student_name: string | null
+  parent_phone: string | null
+  requested_by: string
+  reviewed_by: string | null
+  review_note: string | null
+  created_at: string
+  reviewed_at: string | null
+  /** Joined fields — not in DB columns, populated by query */
+  class_name?: string
+  requester_name?: string
+  existing_student_name?: string
 }
 
 export interface SyncQueueItem {

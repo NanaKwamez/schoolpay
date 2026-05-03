@@ -3,7 +3,7 @@
 import { useMemo, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Utensils, CreditCard, CheckCircle, AlertTriangle } from 'lucide-react'
+import { Utensils, CreditCard, CheckCircle, AlertTriangle, Users } from 'lucide-react'
 import { TopBar } from '@/components/ui/TopBar'
 import { BottomNav } from '@/components/ui/BottomNav'
 import { Card } from '@/components/ui/Card'
@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useFeeding } from '@/hooks/useFeeding'
 import { db } from '@/lib/dexie/schema'
 import { cn } from '@/lib/utils'
+import { EnrollmentRequestModal } from '@/components/teacher/EnrollmentRequestModal'
 
 // ─── Greeting ─────────────────────────────────────────────────────────────────
 
@@ -38,6 +39,7 @@ export default function TeacherHomePage() {
   const classId = profile?.class_id ?? null
   const { feedingLog, stats, isSubmitted, loading } = useFeeding()
   const [greeting, setGreeting] = useState(getGreeting())
+  const [showEnrollModal, setShowEnrollModal] = useState(false)
 
   // Update greeting if the hour changes (edge case)
   useEffect(() => {
@@ -177,6 +179,27 @@ export default function TeacherHomePage() {
               </div>
             </button>
           </Link>
+
+          {/* Enrol / withdraw students — requires headmaster approval */}
+          {classId && (
+            <button
+              onClick={() => setShowEnrollModal(true)}
+              className={cn(
+                'w-full min-h-[80px] rounded-2xl bg-white text-gray-900 border-2 border-dashed border-gray-200',
+                'flex items-center gap-4 px-5',
+                'hover:bg-gray-50 active:scale-[0.98] transition-all duration-150',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-morning-green-500'
+              )}
+            >
+              <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                <Users className="h-6 w-6 text-blue-500" />
+              </div>
+              <div className="text-left">
+                <p className="text-xl font-bold">Manage Students</p>
+                <p className="text-gray-500 text-sm">Request to enrol or withdraw a student</p>
+              </div>
+            </button>
+          )}
         </div>
 
         {/* Recent Activity */}
@@ -204,6 +227,15 @@ export default function TeacherHomePage() {
       </main>
 
       <BottomNav />
+
+      {/* Enrollment request modal */}
+      {classId && (
+        <EnrollmentRequestModal
+          isOpen={showEnrollModal}
+          onClose={() => setShowEnrollModal(false)}
+          classId={classId}
+        />
+      )}
     </div>
   )
 }

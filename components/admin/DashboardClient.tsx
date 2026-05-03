@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { useSync } from '@/hooks/useSync'
 import { useOnline } from '@/hooks/useOnline'
 import { SCHOOL_NAME } from '@/lib/constants'
+import { EnrollmentRequestsPanel } from './EnrollmentRequestsPanel'
 import { formatGHS } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import type { ClassWithStats, FundSummary, AiInsightCache } from '@/types'
@@ -359,6 +360,9 @@ export function DashboardClient() {
             <span className="text-xs font-bold text-orange-600">View →</span>
           </button>
         )}
+
+        {/* ── Enrollment Requests (headmaster & proprietress) ──────────────── */}
+        <EnrollmentRequestsPanel />
 
         {/* ── AI Insights ──────────────────────────────────────────────────── */}
         <section>
