@@ -308,17 +308,17 @@ export function DashboardClient() {
         </div>
       </header>
 
-      <main className="px-4 md:px-8 lg:px-12 py-4 space-y-5 pb-8">
+      <main className="px-3 tablet:px-6 lg:px-12 py-4 space-y-5 pb-8">
 
         {/* ── Term Summary Bar ───────────────────────────────────────────── */}
         <section>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Term Overview</p>
           {loading ? (
-            <div className="grid grid-cols-3 md:grid-cols-3 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 tablet:grid-cols-3 gap-3 tablet:gap-4">
               {[0, 1, 2].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)}
             </div>
           ) : (
-            <div className="grid grid-cols-3 md:grid-cols-3 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 tablet:grid-cols-3 gap-3 tablet:gap-4">
               {[
                 { label: 'Expected', value: termStats.expected, color: 'text-gray-700', icon: <DollarSign className="h-4 w-4 text-gray-400" /> },
                 { label: 'Collected', value: termStats.collected, color: 'text-mga-green-mid', icon: <DollarSign className="h-4 w-4 text-mga-green-light" /> },
@@ -397,11 +397,11 @@ export function DashboardClient() {
             Today&apos;s Feeding by Class
           </p>
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 tablet:grid-cols-2 xl:grid-cols-3 gap-4">
               {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-2xl" />)}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 tablet:grid-cols-2 xl:grid-cols-3 gap-4">
               {classStats.map(cls => (
                 <ClassCard
                   key={cls.id}
@@ -418,7 +418,7 @@ export function DashboardClient() {
         {fundSummaries.length > 0 && (
           <section>
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Fund Summary</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 tablet:grid-cols-2 gap-4">
               {fundSummaries.map(fund => (
                 <FundSummaryCard
                   key={fund.fund_id}

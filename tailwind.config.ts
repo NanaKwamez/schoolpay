@@ -11,6 +11,10 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        // CCIT 10.1" Android tablet — portrait ~800px CSS width
+        tablet: '820px',
+      },
       colors: {
         mga: {
           'green-dark': '#0D3B2E',

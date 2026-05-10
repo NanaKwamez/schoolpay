@@ -92,8 +92,8 @@
   /* Spacing */
   --spacing-touch-target: 48px;
 
-  /* Screens */
-  --breakpoint-tablet: 768px;
+  /* Screens — 820px targets the CCIT 10.1" Android tablet (portrait ~800px) */
+  --breakpoint-tablet: 820px;
 }
 
 /* Base styles */

@@ -125,7 +125,7 @@ function TeacherFeedingContent() {
             <p className="text-gray-300 text-sm mt-1">Students will appear after syncing.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2">
+          <div className="grid grid-cols-1 tablet:grid-cols-2">
             {students.map(student => (
               <StudentFeedingRow
                 key={student.id}

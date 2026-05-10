@@ -134,10 +134,10 @@ export default function LoginPage() {
         aria-hidden
       />
 
-      <div className="relative flex flex-1 flex-col items-center justify-center px-6 md:px-12 lg:px-0 py-8">
+      <div className="relative flex flex-1 flex-col items-center justify-center px-6 tablet:px-12 lg:px-0 py-8">
         <div
           className={cn(
-            'w-full max-w-sm md:max-w-md rounded-3xl border border-mga-gold/20 bg-white/95 p-8 shadow-2xl',
+            'w-full max-w-sm tablet:max-w-md rounded-3xl border border-mga-gold/20 bg-white/95 p-8 shadow-2xl',
             'backdrop-blur-md backdrop-saturate-150'
           )}
         >

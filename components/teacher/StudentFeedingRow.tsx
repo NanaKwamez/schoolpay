@@ -66,7 +66,7 @@ function StudentFeedingRowBase({
   )
 
   return (
-    <div className="px-4 py-3 border-b border-mga-green-pale/40 last:border-0 bg-white">
+    <div className="px-4 tablet:px-6 py-3 tablet:py-4 border-b border-mga-green-pale/40 last:border-0 bg-white">
       {/* Student name + debt label */}
       <div className="mb-2.5">
         <p className="text-[18px] font-bold text-gray-900 leading-tight">
@@ -97,7 +97,7 @@ function StudentFeedingRowBase({
                 aria-pressed={isSelected}
                 aria-label={`Mark ${student.full_name} as ${label}`}
                 className={cn(
-                  'min-h-[48px] rounded-xl border-2 text-xs font-bold transition-all duration-100',
+                  'min-h-[48px] tablet:min-h-16 rounded-xl border-2 text-xs font-bold transition-all duration-100',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-mga-green-light',
                   'active:scale-95 touch-manipulation',
                   isSelected

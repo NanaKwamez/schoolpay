@@ -53,7 +53,7 @@ export function Modal({ isOpen, onClose, title, children, footer, className }: M
       {/* Panel — slides up on mobile, centered on sm+ */}
       <div
         className={cn(
-          'relative bg-white w-full sm:max-w-lg',
+          'relative bg-white w-full sm:max-w-lg tablet:max-w-md',
           'rounded-t-3xl sm:rounded-2xl shadow-2xl',
           'max-h-[92vh] flex flex-col',
           'animate-slide-up sm:animate-none',

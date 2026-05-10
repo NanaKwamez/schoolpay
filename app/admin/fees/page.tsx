@@ -104,7 +104,7 @@ export default function AdminFeesPage() {
       />
 
       <main className="px-4 py-4">
-        <div className="mga-card overflow-hidden">
+        <div className="mga-card overflow-hidden overflow-x-auto">
           {loading ? (
             <div className="p-4 space-y-3">
               {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14" />)}
