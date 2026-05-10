@@ -262,10 +262,13 @@ function TeacherPaymentContent() {
     <div className="min-h-screen bg-mga-cream">
       <TopBar title="Record Payment" backHref="/teacher/home" showSync />
 
-      <main className="pb-24 space-y-0">
+      <main className="pb-24 md:pb-8">
+        <div className="md:grid md:grid-cols-2 md:gap-6 md:px-6 md:pt-4 md:items-start">
+        {/* Left column: form steps */}
+        <div>
 
         {/* ── Step 1: Select student ─────────────────────────────────────── */}
-        <section className="bg-white border-b border-mga-gold/15 px-4 pt-4 pb-3">
+        <section className="bg-white border-b border-mga-gold/15 px-4 pt-4 pb-3 md:rounded-2xl md:shadow-sm md:border md:border-mga-gold/15 md:mb-4">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Step 1 — Student</p>
 
           {selectedStudent ? (
@@ -435,8 +438,8 @@ function TeacherPaymentContent() {
               />
             </div>
 
-            {/* Receipt preview */}
-            <Card variant="green" className="text-sm">
+            {/* Receipt preview — hidden on tablet (shown in right column instead) */}
+            <Card variant="green" className="text-sm md:hidden">
               <p className="text-xs font-bold text-mga-green-dark uppercase tracking-wide mb-2">Receipt Preview</p>
               <div className="space-y-1 font-mono text-mga-green-dark">
                 <p>{SCHOOL_NAME}</p>
@@ -449,11 +452,44 @@ function TeacherPaymentContent() {
             </Card>
           </section>
         )}
+        </div>{/* end left column */}
+
+        {/* Right column — receipt preview, visible md+ only */}
+        {selectedStudent && selectedFeeType && (
+          <div className="hidden md:block sticky top-4 self-start px-4 pt-4 pb-4">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Receipt Preview</p>
+            <Card variant="green" className="text-sm">
+              <div className="space-y-1 font-mono text-mga-green-dark">
+                <p className="font-bold">{SCHOOL_NAME}</p>
+                <p>Student: {selectedStudent.full_name} — {classData?.name}</p>
+                <p>Fee: {selectedFeeType.name}</p>
+                <p>Amount: {formatGHS(parseFloat(resolvedAmount) || 0)}</p>
+                <p>Type: {paymentTypeLabel(paymentType)}</p>
+                <p>Date: {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+              </div>
+            </Card>
+
+            {/* Save button in right column on tablet */}
+            <div className="mt-4">
+              <Button
+                variant="primary"
+                fullWidth
+                size="lg"
+                loading={saving}
+                disabled={!resolvedAmount || parseFloat(resolvedAmount) <= 0}
+                onClick={handleSave}
+              >
+                Save Payment
+              </Button>
+            </div>
+          </div>
+        )}
+        </div>{/* end md grid */}
       </main>
 
-      {/* Sticky save button */}
+      {/* Sticky save button — mobile only (tablet uses right column button) */}
       {selectedStudent && selectedFeeType && (
-        <div className="fixed bottom-16 left-0 right-0 z-20 bg-white border-t border-mga-gold/15 px-4 py-3">
+        <div className="fixed bottom-16 left-0 right-0 z-20 bg-white border-t border-mga-gold/15 px-4 py-3 md:hidden">
           <Button
             variant="primary"
             fullWidth

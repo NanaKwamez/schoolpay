@@ -157,8 +157,8 @@ export default function AdminPaymentsPage() {
         {showFilters && (
           <div className="mga-card p-4 space-y-3">
             <p className="font-bold text-gray-700 text-sm">Filters</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
+            <div className="flex flex-col md:flex-row md:flex-wrap gap-3">
+              <div className="md:flex-1 md:min-w-[160px]">
                 <label className="block text-xs font-semibold text-gray-500 mb-1">Class</label>
                 <select value={classFilter} onChange={e => { setClassFilter(e.target.value); setPage(0) }}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none">
@@ -166,7 +166,7 @@ export default function AdminPaymentsPage() {
                   {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
-              <div>
+              <div className="md:flex-1 md:min-w-[160px]">
                 <label className="block text-xs font-semibold text-gray-500 mb-1">Fee Type</label>
                 <select value={feeFilter} onChange={e => { setFeeFilter(e.target.value); setPage(0) }}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none">
@@ -174,12 +174,12 @@ export default function AdminPaymentsPage() {
                   {fees.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                 </select>
               </div>
-              <div>
+              <div className="md:flex-1 md:min-w-[140px]">
                 <label className="block text-xs font-semibold text-gray-500 mb-1">From</label>
                 <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(0) }}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none" />
               </div>
-              <div>
+              <div className="md:flex-1 md:min-w-[140px]">
                 <label className="block text-xs font-semibold text-gray-500 mb-1">To</label>
                 <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(0) }}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none" />

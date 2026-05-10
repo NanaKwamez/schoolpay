@@ -194,7 +194,7 @@ export default function AdminExpensesPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-200 gap-1">
+        <div className="flex w-full border-b border-gray-200">
           {(isProprietress
             ? [{ key: 'general', label: 'General Fund' }, { key: 'feeding', label: 'Feeding Fund' }, { key: 'pending', label: `Pending (${pendingCount})` }]
             : [{ key: 'general', label: 'General Fund' }]
@@ -202,7 +202,7 @@ export default function AdminExpensesPage() {
             <button
               key={t.key}
               onClick={() => setTab(t.key as typeof tab)}
-              className={cn('px-3 py-2.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap',
+              className={cn('flex-1 px-3 py-2.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap text-center',
                 tab === t.key ? 'border-mga-green-mid text-mga-green-mid' : 'border-transparent text-gray-500 hover:text-gray-700')}
             >
               {t.label}

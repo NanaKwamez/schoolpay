@@ -25,7 +25,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Teacher navigation"
-      className="fixed bottom-0 left-0 right-0 z-30 bg-mga-cream-dark/95 border-t border-mga-gold/20 backdrop-blur-sm safe-bottom"
+      className="fixed bottom-0 left-0 right-0 z-30 md:hidden bg-mga-cream-dark/95 border-t border-mga-gold/20 backdrop-blur-sm safe-bottom"
     >
       <div className="flex items-stretch h-16">
         {teacherNavItems.map(({ href, label, icon: Icon }) => {

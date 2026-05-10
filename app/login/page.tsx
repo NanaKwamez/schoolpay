@@ -125,7 +125,7 @@ export default function LoginPage() {
   return (
     <div
       className={cn(
-        'relative flex min-h-screen flex-col',
+        'relative flex min-h-screen flex-col overflow-y-auto',
         'bg-[linear-gradient(160deg,#0D3B2E_0%,#1A5C40_50%,#0D3B2E_100%)]'
       )}
     >
@@ -134,10 +134,10 @@ export default function LoginPage() {
         aria-hidden
       />
 
-      <div className="relative flex flex-1 flex-col items-center justify-center px-4 py-10">
+      <div className="relative flex flex-1 flex-col items-center justify-center px-6 md:px-12 lg:px-0 py-8">
         <div
           className={cn(
-            'w-full max-w-sm rounded-3xl border border-mga-gold/20 bg-white/95 p-8 shadow-2xl',
+            'w-full max-w-sm md:max-w-md rounded-3xl border border-mga-gold/20 bg-white/95 p-8 shadow-2xl',
             'backdrop-blur-md backdrop-saturate-150'
           )}
         >
@@ -148,7 +148,7 @@ export default function LoginPage() {
               wrapperClassName="border-4 border-mga-gold shadow-lg"
             />
           </div>
-          <h1 className="text-center text-xl font-bold text-mga-green-dark">
+          <h1 className="text-center text-xl md:text-2xl font-bold text-mga-green-dark">
             Morning Glory Academy
           </h1>
           <p className="mt-1 text-center text-sm italic text-mga-gold">

@@ -113,7 +113,7 @@ export function GeminiChat() {
         type="button"
         onClick={() => setIsOpen(o => !o)}
         className={cn(
-          'fixed bottom-6 right-5 z-50 w-11 h-11 rounded-full',
+          'fixed bottom-6 right-5 md:bottom-6 md:right-6 z-50 w-11 h-11 rounded-full',
           'bg-mga-green-dark shadow-lg border border-mga-gold/30',
           'flex items-center justify-center',
           'hover:bg-mga-green-mid hover:shadow-xl transition-all',
@@ -128,8 +128,8 @@ export function GeminiChat() {
       {isOpen && (
         <div
           className={cn(
-            'fixed bottom-20 right-5 z-50',
-            'w-80 sm:w-96 max-h-[70vh]',
+            'fixed bottom-20 right-5 md:bottom-20 md:right-6 z-50',
+            'w-80 md:w-96 max-h-[70vh]',
             'mga-card-elevated flex flex-col overflow-hidden'
           )}
           role="dialog"

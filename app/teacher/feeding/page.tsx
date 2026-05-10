@@ -116,7 +116,7 @@ function TeacherFeedingContent() {
       )}
 
       {/* Student list — extra bottom padding for sticky bar + bottom nav */}
-      <div className="pb-44">
+      <div className="pb-44 md:pb-4">
         {isLoading ? (
           Array.from({ length: 10 }).map((_, i) => <StudentRowSkeleton key={i} />)
         ) : students.length === 0 ? (
@@ -125,21 +125,23 @@ function TeacherFeedingContent() {
             <p className="text-gray-300 text-sm mt-1">Students will appear after syncing.</p>
           </div>
         ) : (
-          students.map(student => (
-            <StudentFeedingRow
-              key={student.id}
-              student={student}
-              currentStatus={feedingLog.get(student.id)?.status ?? null}
-              isCoveredWeekly={coveredIds.has(student.id)}
-              creditBalance={(creditBalanceMap.get(student.id) ?? 0) * FEEDING_FEE_AMOUNT}
-              onMark={handleMark}
-            />
-          ))
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            {students.map(student => (
+              <StudentFeedingRow
+                key={student.id}
+                student={student}
+                currentStatus={feedingLog.get(student.id)?.status ?? null}
+                isCoveredWeekly={coveredIds.has(student.id)}
+                creditBalance={(creditBalanceMap.get(student.id) ?? 0) * FEEDING_FEE_AMOUNT}
+                onMark={handleMark}
+              />
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Sticky bottom bar — sits above bottom nav (h-16) */}
-      <div className="fixed bottom-16 left-0 right-0 z-20 bg-white border-t border-gray-100 px-4 pt-3 pb-2">
+      {/* Sticky bottom bar — fixed on mobile above bottom nav; relative on tablet (no bottom nav) */}
+      <div className="fixed bottom-16 left-0 right-0 z-20 bg-white border-t border-gray-100 px-4 pt-3 pb-2 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto md:px-6 md:py-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-gray-600 font-medium">
             {stats.marked} of {stats.total} students marked
