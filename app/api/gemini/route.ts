@@ -109,10 +109,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Gemini route error:', error)
     return NextResponse.json(
-      {
-        error: 'Could not get AI response',
-        detail: error instanceof Error ? error.message : String(error),
-      },
+      { error: 'Could not get AI response', code: 'GEMINI_FAILED' },
       { status: 500 }
     )
   }
