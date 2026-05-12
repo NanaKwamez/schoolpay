@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useEffect, useState } from 'react'
+import { useMemo, useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Utensils, CreditCard, CheckCircle, AlertTriangle, Users } from 'lucide-react'
@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { useAuth } from '@/hooks/useAuth'
 import { useFeeding } from '@/hooks/useFeeding'
+import { useSync } from '@/hooks/useSync'
 import { db } from '@/lib/dexie/schema'
 import { MgaLogoMark } from '@/components/branding/mga-logo-mark'
 import { SCHOOL_NAME } from '@/lib/constants'
@@ -27,6 +28,7 @@ function getGreeting(): string {
 
 function formatTodayLong(): string {
   return new Date().toLocaleDateString('en-GB', {
+    timeZone: 'Africa/Accra',
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -40,6 +42,7 @@ export default function TeacherHomePage() {
   const { profile } = useAuth()
   const classId = profile?.class_id ?? null
   const { feedingLog, stats, isSubmitted, loading } = useFeeding()
+  const { syncNow } = useSync()
   const [greeting, setGreeting] = useState(getGreeting())
   const [showEnrollModal, setShowEnrollModal] = useState(false)
 
@@ -48,6 +51,18 @@ export default function TeacherHomePage() {
     const interval = setInterval(() => setGreeting(getGreeting()), 60_000)
     return () => clearInterval(interval)
   }, [])
+
+  // Re-sync Dexie data when the user navigates back to this page
+  const triggerSync = useCallback(() => { syncNow().catch(() => null) }, [syncNow])
+  useEffect(() => {
+    const handleVisibility = () => { if (document.visibilityState === 'visible') triggerSync() }
+    document.addEventListener('visibilitychange', handleVisibility)
+    window.addEventListener('focus', triggerSync)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      window.removeEventListener('focus', triggerSync)
+    }
+  }, [triggerSync])
 
   // Fetch class name from local DB
   const classData = useLiveQuery(
@@ -89,48 +104,50 @@ export default function TeacherHomePage() {
 
       <main className="px-4 py-5 space-y-5">
         {/* Greeting */}
-        <div className="flex gap-3 items-start">
-          <MgaLogoMark
-            size={32}
-            wrapperClassName="ring-2 ring-mga-gold/40 shadow-sm mt-0.5"
-          />
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-mga-green-dark">{SCHOOL_NAME}</p>
-            <p className="text-base text-mga-green-mid/80 mt-0.5">{formatTodayLong()}</p>
-            <h1 className="text-2xl font-bold text-mga-green-dark mt-1">
-              {greeting}, {profile?.full_name?.split(' ')[0] ?? 'Teacher'}
-            </h1>
-            {classData && (
-              <p className="text-[32px] font-extrabold text-mga-green-mid leading-tight mt-1">
-                {classData.name}
-              </p>
-            )}
+        <div className="rounded-2xl p-4 mb-2" style={{ background: 'linear-gradient(135deg, #0A1628, #0D3B2E)' }}>
+          <div className="flex gap-3 items-start">
+            <MgaLogoMark
+              size={32}
+              wrapperClassName="ring-2 ring-mga-gold/40 shadow-sm mt-0.5"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-yellow-400 text-xs font-semibold">{SCHOOL_NAME}</p>
+              <p className="text-white/70 mt-0.5">{formatTodayLong()}</p>
+              <h1 className="text-2xl font-bold text-white mt-1">
+                {greeting}, {profile?.full_name?.split(' ')[0] ?? 'Teacher'}
+              </h1>
+              {classData && (
+                <p className="text-[32px] font-extrabold text-yellow-300 leading-tight mt-1">
+                  {classData.name}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Status Summary Card */}
-        <Card variant="green" className="p-4">
+        <Card className="p-4 border-0" style={{ background: '#0A1628' }}>
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-3xl font-extrabold text-mga-green-dark">
+              <p className="text-3xl font-extrabold text-yellow-400">
                 {loading ? '—' : stats.marked}
-                <span className="text-base font-medium text-mga-green-mid ml-1">
+                <span className="text-base font-medium text-white/70 ml-1">
                   marked today
                 </span>
               </p>
               {!loading && stats.total > 0 && (
-                <p className="text-sm text-mga-green-mid mt-0.5">
+                <p className="text-sm text-white/60 mt-0.5">
                   {stats.total - stats.marked} remaining
                 </p>
               )}
             </div>
             {isSubmitted ? (
-              <div className="flex items-center gap-1.5 text-mga-green-mid">
+              <div className="flex items-center gap-1.5 text-yellow-300">
                 <CheckCircle className="h-5 w-5" />
                 <span className="text-sm font-semibold">Submitted</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 text-orange-600">
+              <div className="flex items-center gap-1.5 text-orange-400">
                 <AlertTriangle className="h-5 w-5" />
                 <span className="text-sm font-semibold">Not submitted</span>
               </div>
@@ -138,13 +155,13 @@ export default function TeacherHomePage() {
           </div>
 
           {/* Progress bar */}
-          <div className="h-2.5 bg-mga-green-pale rounded-full overflow-hidden">
+          <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
             <div
-              className="h-full bg-mga-green-mid rounded-full transition-all duration-500"
-              style={{ width: `${progressPct}%` }}
+              className="h-full rounded-full transition-all duration-500"
+              style={{ background: `linear-gradient(90deg, #C9A84C, #16a34a)`, width: `${progressPct}%` }}
             />
           </div>
-          <p className="text-xs text-mga-green-mid mt-1 text-right font-medium">
+          <p className="text-xs text-white/50 mt-1 text-right font-medium">
             {progressPct}% complete
           </p>
         </Card>
@@ -153,19 +170,20 @@ export default function TeacherHomePage() {
         <div className="space-y-3">
           <Link href="/teacher/feeding" className="block">
             <button
+              style={{ background: '#C9A84C' }}
               className={cn(
-                'mga-btn-primary w-full min-h-[80px] rounded-2xl',
+                'w-full min-h-[80px] rounded-2xl text-[#0A1628] font-bold',
                 'flex items-center gap-4 px-6 py-3 shadow-md',
                 'active:scale-[0.98] transition-all duration-150',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mga-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-mga-cream'
               )}
             >
-              <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                <Utensils className="h-6 w-6 text-white" />
+              <div className="h-12 w-12 rounded-xl bg-black/10 flex items-center justify-center shrink-0">
+                <Utensils className="h-6 w-6 text-[#0A1628]" />
               </div>
               <div className="text-left">
                 <p className="text-xl font-bold">Mark Feeding</p>
-                <p className="text-white/75 text-sm">Record today&apos;s feeding status</p>
+                <p className="text-[#0A1628]/75 text-sm">Record today&apos;s feeding status</p>
               </div>
             </button>
           </Link>
@@ -173,18 +191,18 @@ export default function TeacherHomePage() {
           <Link href="/teacher/payment" className="block">
             <button
               className={cn(
-                'w-full min-h-[80px] rounded-2xl text-gray-900 mga-card',
-                'border border-mga-gold/25 flex items-center gap-4 px-5 shadow-sm',
-                'hover:bg-mga-green-pale/50 active:scale-[0.98] transition-all duration-150',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mga-green-light'
+                'w-full min-h-[80px] rounded-2xl bg-[#0A1628] text-yellow-400',
+                'border-2 border-yellow-500 flex items-center gap-4 px-5 shadow-sm',
+                'hover:bg-mga-navy-mid active:scale-[0.98] transition-all duration-150',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400'
               )}
             >
-              <div className="h-12 w-12 rounded-xl bg-mga-green-pale flex items-center justify-center shrink-0">
-                <CreditCard className="h-6 w-6 text-mga-green-mid" />
+              <div className="h-12 w-12 rounded-xl bg-yellow-500/10 flex items-center justify-center shrink-0">
+                <CreditCard className="h-6 w-6 text-yellow-400" />
               </div>
               <div className="text-left">
                 <p className="text-xl font-bold">Record Payment</p>
-                <p className="text-gray-500 text-sm">Log a student fee payment</p>
+                <p className="text-yellow-400/70 text-sm">Log a student fee payment</p>
               </div>
             </button>
           </Link>
@@ -213,7 +231,7 @@ export default function TeacherHomePage() {
 
         {/* Recent Activity */}
         <div>
-            <h2 className="text-base font-semibold text-mga-green-dark mb-3">Today&apos;s Activity</h2>
+            <h2 className="text-base font-semibold text-[#0A1628] mb-3">Today&apos;s Activity</h2>
           {recentLogs.length === 0 ? (
             <Card>
               <p className="text-gray-400 text-sm text-center py-4">No marks yet today</p>

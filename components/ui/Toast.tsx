@@ -36,27 +36,31 @@ export function useToast(): ToastContextValue {
 
 const toastConfig: Record<
   ToastType,
-  { icon: ReactNode; border: string; bg: string }
+  { icon: ReactNode; border: string; bg: string; msgClass: string }
 > = {
   success: {
-    icon: <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />,
-    border: 'border-green-200',
-    bg: 'bg-green-50',
+    icon: <CheckCircle className="h-5 w-5 text-yellow-400 shrink-0" />,
+    border: 'border-[#1a5c40]',
+    bg: 'toast-success',
+    msgClass: 'text-white/90',
   },
   error: {
-    icon: <XCircle className="h-5 w-5 text-red-600 shrink-0" />,
-    border: 'border-red-200',
-    bg: 'bg-red-50',
+    icon: <XCircle className="h-5 w-5 text-red-400 shrink-0" />,
+    border: 'border-red-900',
+    bg: 'toast-error',
+    msgClass: 'text-white/90',
   },
   warning: {
     icon: <AlertCircle className="h-5 w-5 text-yellow-600 shrink-0" />,
     border: 'border-yellow-200',
     bg: 'bg-yellow-50',
+    msgClass: 'text-gray-800',
   },
   info: {
     icon: <Info className="h-5 w-5 text-blue-600 shrink-0" />,
     border: 'border-blue-200',
     bg: 'bg-blue-50',
+    msgClass: 'text-gray-800',
   },
 }
 
@@ -121,7 +125,7 @@ function Toaster({ toasts, onDismiss }: ToasterProps) {
             )}
           >
             {config.icon}
-            <p className="flex-1 text-sm font-medium text-gray-800 leading-snug">
+            <p className={cn('flex-1 text-sm font-medium leading-snug', config.msgClass)}>
               {toast.message}
             </p>
             <button

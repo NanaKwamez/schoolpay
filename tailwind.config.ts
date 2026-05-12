@@ -25,7 +25,13 @@ export default {
           'gold-light': '#E8C96A',
           cream: '#F9F6F0',
           'cream-dark': '#F0EBE1',
+          navy: '#0A1628',
+          'navy-mid': '#112240',
+          'accent-blue': '#1E90FF',
         },
+      },
+      boxShadow: {
+        'gold-glow': '0 4px 24px rgba(201,168,76,0.18)',
       },
     },
   },

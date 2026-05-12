@@ -34,7 +34,7 @@ export const ClassCard = React.memo(function ClassCard({
       className={cn(
         'w-full text-left bg-white rounded-2xl shadow-sm border p-4 overflow-hidden',
         'transition-all duration-200',
-        'hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2',
+        'hover:shadow-md hover:border-t-yellow-400 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2',
         'focus-visible:ring-mga-green-light',
         isSubmitted
           ? 'border-green-300 bg-green-50 shadow-green-100'
@@ -48,7 +48,7 @@ export const ClassCard = React.memo(function ClassCard({
       {/* Row 1: Class name + submission badge */}
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="min-w-0">
-          <p className="text-lg font-bold text-gray-900 leading-tight truncate">{classData.name}</p>
+          <p className="text-lg font-bold text-mga-navy leading-tight truncate">{classData.name}</p>
           <p className="text-xs text-gray-500 truncate">{classData.teacher_name}</p>
         </div>
         {isSubmitted ? (
@@ -74,11 +74,11 @@ export const ClassCard = React.memo(function ClassCard({
         </div>
         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
-            className={cn(
-              'h-full rounded-full transition-all duration-500',
-              isSubmitted ? 'bg-green-500' : 'bg-mga-green-light'
-            )}
-            style={{ width: `${progressPct}%` }}
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${progressPct}%`,
+              background: isSubmitted ? '#16a34a' : 'linear-gradient(90deg, #0D3B2E, #C9A84C)',
+            }}
           />
         </div>
       </div>

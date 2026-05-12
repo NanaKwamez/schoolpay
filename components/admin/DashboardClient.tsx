@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { X, AlertTriangle, DollarSign, TrendingDown, Clock } from 'lucide-react'
+import { X, AlertTriangle, DollarSign, TrendingDown, Clock, LogOut } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { ClassCard } from './ClassCard'
@@ -11,10 +11,11 @@ import { FundSummaryCard } from './FundSummaryCard'
 import { AiInsightsGrid } from './AiInsightBanner'
 import { GeminiChat } from './GeminiChat'
 import { SyncIndicator } from '@/components/ui/SyncIndicator'
-import { Skeleton } from '@/components/ui/Skeleton'
+import { DashboardSkeleton, Skeleton } from '@/components/ui/Skeleton'
 import { useSync } from '@/hooks/useSync'
 import { useOnlineStatus } from '@/hooks/useOnline'
 import { EnrollmentRequestsPanel } from './EnrollmentRequestsPanel'
+import { Modal } from '@/components/ui/Modal'
 import { formatGHS } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import type { ClassWithStats, FundSummary, AiInsightCache } from '@/types'
@@ -42,7 +43,7 @@ interface RawPayment {
 
 export function DashboardClient() {
   const router = useRouter()
-  const { profile, role, isProprietress } = useAuth()
+  const { profile, role, isProprietress, loading: authLoading, signOut } = useAuth()
   const { pendingCount, isSyncing } = useSync()
   const { isOnline } = useOnlineStatus()
 
@@ -57,6 +58,7 @@ export function DashboardClient() {
   const [updatedClasses, setUpdatedClasses] = useState<Set<string>>(new Set())
   const [currentTime, setCurrentTime] = useState(new Date())
   const [headerLogoFailed, setHeaderLogoFailed] = useState(false)
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
   const supabase = useMemo(() => createSupabaseBrowserClient(), [])
 
   // Live clock
@@ -73,6 +75,9 @@ export function DashboardClient() {
   // ── Data fetching ─────────────────────────────────────────────────────────
 
   const fetchDashboardData = useCallback(async () => {
+    // Don't fetch until auth has resolved — otherwise isProprietress is wrong
+    // and the callback would fire twice (loading → false), causing a role flash.
+    if (authLoading) return
     const today = new Date().toISOString().split('T')[0]
 
     // 1. Current term
@@ -179,7 +184,7 @@ export function DashboardClient() {
     }
 
     setLoading(false)
-  }, [supabase, isProprietress])
+  }, [supabase, isProprietress, authLoading])
 
   const fetchInsights = useCallback(async () => {
     setInsightsLoading(true)
@@ -197,6 +202,26 @@ export function DashboardClient() {
   useEffect(() => {
     fetchDashboardData()
     fetchInsights()
+  }, [fetchDashboardData, fetchInsights])
+
+  // ── Refetch when the tab/window regains focus (SPA back-navigation fix) ──
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchDashboardData()
+        fetchInsights()
+      }
+    }
+    const handleFocus = () => {
+      fetchDashboardData()
+      fetchInsights()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    window.addEventListener('focus', handleFocus)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [fetchDashboardData, fetchInsights])
 
   // ── Realtime subscriptions ────────────────────────────────────────────────
@@ -247,10 +272,23 @@ export function DashboardClient() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
+  // Gate on auth: prevents the role badge from flashing 'Headmaster' while
+  // useAuth() resolves from its initial loading state after SPA navigation.
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-mga-cream bg-dot-pattern">
+        <DashboardSkeleton />
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-mga-cream">
+    <div className="min-h-screen bg-mga-cream bg-dot-pattern">
       {/* Header */}
-      <header className="mga-header relative px-4 pb-3 safe-top shadow-md sticky top-0 z-30 text-white">
+      <header
+        className="relative px-4 pb-3 safe-top shadow-md sticky top-0 z-30 text-white border-b-2 border-yellow-600/40"
+        style={{ background: 'linear-gradient(135deg, #0A1628 0%, #0D3B2E 50%, #112240 100%)' }}
+      >
         <div className="absolute top-3 right-4 flex items-center gap-2 z-10">
           <SyncIndicator
             isOnline={isOnline}
@@ -261,11 +299,18 @@ export function DashboardClient() {
           <span className={cn(
             'shrink-0 text-xs font-bold px-2.5 py-1 rounded-full',
             role === 'proprietress'
-              ? 'bg-purple-100 text-purple-700'
-              : 'bg-blue-100 text-blue-700'
+              ? 'bg-yellow-900/40 text-yellow-300 border border-yellow-600/40'
+              : 'bg-blue-900/40 text-blue-300 border border-blue-400/30'
           )}>
             {role === 'proprietress' ? 'Proprietress' : 'Headmaster'}
           </span>
+          <button
+            onClick={() => setShowSignOutConfirm(true)}
+            aria-label="Sign out"
+            className="flex items-center justify-center h-9 w-9 rounded-xl hover:bg-white/20 active:bg-white/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+          >
+            <LogOut className="h-4 w-4 text-white" />
+          </button>
         </div>
 
         <div className="flex justify-center pt-3 pb-1">
@@ -312,7 +357,7 @@ export function DashboardClient() {
 
         {/* ── Term Summary Bar ───────────────────────────────────────────── */}
         <section>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Term Overview</p>
+          <p className="text-xs font-bold text-[#0A1628] uppercase tracking-wide mb-3">Term Overview</p>
           {loading ? (
             <div className="grid grid-cols-2 tablet:grid-cols-3 gap-3 tablet:gap-4">
               {[0, 1, 2].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)}
@@ -320,16 +365,20 @@ export function DashboardClient() {
           ) : (
             <div className="grid grid-cols-2 tablet:grid-cols-3 gap-3 tablet:gap-4">
               {[
-                { label: 'Expected', value: termStats.expected, color: 'text-gray-700', icon: <DollarSign className="h-4 w-4 text-gray-400" /> },
-                { label: 'Collected', value: termStats.collected, color: 'text-mga-green-mid', icon: <DollarSign className="h-4 w-4 text-mga-green-light" /> },
-                { label: 'Outstanding', value: termStats.outstanding, color: termStats.outstanding > 0 ? 'text-red-600' : 'text-gray-400', icon: <TrendingDown className="h-4 w-4 text-red-400" /> },
+                { label: 'Expected', value: termStats.expected, icon: <DollarSign className="h-4 w-4 text-yellow-500/60" /> },
+                { label: 'Collected', value: termStats.collected, icon: <DollarSign className="h-4 w-4 text-yellow-500/60" /> },
+                { label: 'Outstanding', value: termStats.outstanding, icon: <TrendingDown className="h-4 w-4 text-yellow-500/60" /> },
               ].map(stat => (
-                <div key={stat.label} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 text-center">
+                <div
+                  key={stat.label}
+                  className="rounded-2xl p-5 border-l-4 border-yellow-500 shadow-gold-glow text-center"
+                  style={{ background: '#0A1628' }}
+                >
                   <div className="flex justify-center mb-1">{stat.icon}</div>
-                  <p className={cn('text-base font-bold leading-tight', stat.color)}>
+                  <p className="text-yellow-400 font-bold text-base leading-tight">
                     {formatGHS(stat.value)}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">{stat.label}</p>
+                  <p className="text-white/70 text-xs mt-0.5">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -387,18 +436,23 @@ export function DashboardClient() {
 
         {/* ── AI Insights ──────────────────────────────────────────────────── */}
         <section>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">AI Insights</p>
+          <p className="text-xs font-bold text-[#0A1628] uppercase tracking-wide mb-3">AI Insights</p>
           <AiInsightsGrid insights={insights} loading={insightsLoading} />
         </section>
 
         {/* ── Today's Feeding by Class ──────────────────────────────────────── */}
         <section>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">
+          <p className="text-xs font-bold text-[#0A1628] uppercase tracking-wide mb-3">
             Today&apos;s Feeding by Class
           </p>
           {loading ? (
             <div className="grid grid-cols-1 tablet:grid-cols-2 xl:grid-cols-3 gap-4">
               {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-2xl" />)}
+            </div>
+          ) : classStats.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <p className="font-medium">No class data yet</p>
+              <p className="text-sm mt-1">Teachers need to mark feeding first</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 tablet:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -417,7 +471,7 @@ export function DashboardClient() {
         {/* ── Fund Summary ─────────────────────────────────────────────────── */}
         {fundSummaries.length > 0 && (
           <section>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Fund Summary</p>
+            <p className="text-xs font-bold text-[#0A1628] uppercase tracking-wide mb-3">Fund Summary</p>
             <div className="grid grid-cols-1 tablet:grid-cols-2 gap-4">
               {fundSummaries.map(fund => (
                 <FundSummaryCard
@@ -433,6 +487,35 @@ export function DashboardClient() {
       </main>
 
       <GeminiChat />
+
+      <Modal
+        isOpen={showSignOutConfirm}
+        onClose={() => setShowSignOutConfirm(false)}
+        title="Sign out"
+        footer={
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowSignOutConfirm(false)}
+              className="flex-1 min-h-[48px] rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                Object.keys(localStorage)
+                  .filter(k => k.startsWith('schoolpay-') || k.startsWith('mga-'))
+                  .forEach(k => localStorage.removeItem(k))
+                await signOut()
+              }}
+              className="flex-1 min-h-[48px] rounded-xl bg-red-600 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
+        }
+      >
+        <p className="text-sm text-gray-600">Sign out of SchoolPay?</p>
+      </Modal>
     </div>
   )
 }

@@ -125,19 +125,35 @@ export default function LoginPage() {
   return (
     <div
       className={cn(
-        'relative flex min-h-screen flex-col overflow-y-auto',
+        'relative flex min-h-screen w-screen flex-col overflow-x-hidden overflow-y-auto',
         'bg-[linear-gradient(160deg,#0D3B2E_0%,#1A5C40_50%,#0D3B2E_100%)]'
       )}
     >
+      {/* Animated background blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
+        <div
+          className="absolute w-[400px] h-[400px] rounded-full opacity-60 blur-3xl"
+          style={{ background: '#0D3B2E', top: '-100px', left: '-100px', animation: 'drift 8s ease-in-out infinite' }}
+        />
+        <div
+          className="absolute w-[300px] h-[300px] rounded-full opacity-50 blur-3xl"
+          style={{ background: '#0A1628', bottom: '-80px', right: '-80px', animation: 'drift 12s ease-in-out infinite reverse' }}
+        />
+        <div
+          className="absolute w-[350px] h-[350px] rounded-full opacity-30 blur-3xl"
+          style={{ background: 'rgba(201,168,76,0.3)', top: '40%', left: '40%', transform: 'translate(-50%, -50%)', animation: 'drift 10s ease-in-out infinite 2s' }}
+        />
+      </div>
+
       <div
         className="pointer-events-none absolute left-1/2 top-[12%] h-[min(88vw,22rem)] w-[min(88vw,22rem)] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(201,168,76,0.15)_0%,transparent_70%)]"
         aria-hidden
       />
 
-      <div className="relative flex flex-1 flex-col items-center justify-center px-6 tablet:px-12 lg:px-0 py-8">
+      <div className="relative flex flex-1 flex-col items-center justify-center px-4 sm:px-6 py-8">
         <div
           className={cn(
-            'w-full max-w-sm tablet:max-w-md rounded-3xl border border-mga-gold/20 bg-white/95 p-8 shadow-2xl',
+            'w-full max-w-sm sm:max-w-md rounded-3xl border border-mga-gold/20 bg-white/95 p-8 shadow-2xl',
             'backdrop-blur-md backdrop-saturate-150'
           )}
         >

@@ -1,8 +1,10 @@
 'use client'
 
 import { memo, useCallback } from 'react'
+import { Check, X, Utensils } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatGHS } from '@/lib/utils'
+import { StudentAvatar } from '@/components/ui/StudentAvatar'
 import type { Student, FeedingStatus } from '@/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -14,42 +16,6 @@ interface StudentFeedingRowProps {
   creditBalance: number
   onMark: (studentId: string, status: FeedingStatus) => void
 }
-
-// ─── Status button config ─────────────────────────────────────────────────────
-
-interface StatusConfig {
-  status: FeedingStatus
-  label: string
-  activeClass: string
-  inactiveClass: string
-}
-
-const STATUS_BUTTONS: StatusConfig[] = [
-  {
-    status: 'paid',
-    label: 'PAID',
-    activeClass: 'bg-green-600 text-white border-green-600',
-    inactiveClass: 'bg-white text-green-700 border-green-300 hover:bg-green-50',
-  },
-  {
-    status: 'credit',
-    label: 'CREDIT',
-    activeClass: 'bg-orange-500 text-white border-orange-500',
-    inactiveClass: 'bg-white text-orange-700 border-orange-300 hover:bg-orange-50',
-  },
-  {
-    status: 'absent',
-    label: 'ABSENT',
-    activeClass: 'bg-gray-500 text-white border-gray-500',
-    inactiveClass: 'bg-white text-gray-600 border-gray-300 hover:bg-mga-green-pale/60',
-  },
-  {
-    status: 'did_not_eat',
-    label: 'NO EAT',
-    activeClass: 'bg-blue-500 text-white border-blue-500',
-    inactiveClass: 'bg-white text-blue-700 border-blue-300 hover:bg-blue-50',
-  },
-]
 
 // ─── Component (memoised — renders 40+ times on screen) ───────────────────────
 
@@ -66,9 +32,11 @@ function StudentFeedingRowBase({
   )
 
   return (
-    <div className="px-4 tablet:px-6 py-3 tablet:py-4 border-b border-mga-green-pale/40 last:border-0 bg-white">
-      {/* Student name + debt label */}
-      <div className="mb-2.5">
+    <div className="px-4 tablet:px-6 border-b border-mga-green-pale/40 last:border-0 bg-white min-h-[64px] flex items-center gap-3">
+      <StudentAvatar photoUrl={student.photo_url} name={student.full_name} size={40} />
+
+      {/* Name + debt */}
+      <div className="flex-1 min-w-0 py-3">
         <p className="text-[18px] font-bold text-gray-900 leading-tight">
           {student.full_name}
         </p>
@@ -79,36 +47,90 @@ function StudentFeedingRowBase({
         )}
       </div>
 
-      {/* Weekly advance — no buttons, just badge */}
+      {/* Weekly advance badge OR circular status buttons */}
       {isCoveredWeekly ? (
-        <div className="inline-flex items-center gap-1.5 bg-mga-green-pale text-mga-green-dark px-3 py-2 rounded-xl text-sm font-semibold">
-          <span>✓</span>
-          <span>COVERED (Weekly)</span>
-        </div>
+        <span className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-bold border border-yellow-400">
+          Weekly
+        </span>
       ) : (
-        /* 4 status buttons */
-        <div className="grid grid-cols-4 gap-1.5">
-          {STATUS_BUTTONS.map(({ status, label, activeClass, inactiveClass }) => {
-            const isSelected = currentStatus === status
-            return (
-              <button
-                key={status}
-                onClick={() => handleMark(status)}
-                aria-pressed={isSelected}
-                aria-label={`Mark ${student.full_name} as ${label}`}
-                className={cn(
-                  'min-h-[48px] tablet:min-h-16 rounded-xl border-2 text-xs font-bold transition-all duration-100',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-mga-green-light',
-                  'active:scale-95 touch-manipulation',
-                  isSelected
-                    ? cn(activeClass, 'scale-[1.03] shadow-md')
-                    : inactiveClass
-                )}
-              >
-                {label}
-              </button>
-            )
-          })}
+        <div className="flex gap-2 shrink-0">
+          {/* PAID */}
+          <button
+            onClick={() => handleMark('paid')}
+            aria-pressed={currentStatus === 'paid'}
+            aria-label={`Mark ${student.full_name} as Paid`}
+            className={cn(
+              'w-10 h-10 rounded-full flex items-center justify-center',
+              'border-2 transition-all duration-200',
+              'hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-green-400',
+              'touch-manipulation',
+              currentStatus === 'paid'
+                ? 'bg-green-500 border-green-500 shadow-lg shadow-green-500/40 scale-105'
+                : 'bg-white border-gray-300 hover:border-green-400'
+            )}
+            title="Mark as Paid"
+          >
+            <Check size={18} className={currentStatus === 'paid' ? 'text-white' : 'text-gray-400'} />
+          </button>
+
+          {/* CREDIT */}
+          <button
+            onClick={() => handleMark('credit')}
+            aria-pressed={currentStatus === 'credit'}
+            aria-label={`Mark ${student.full_name} as Credit`}
+            className={cn(
+              'w-10 h-10 rounded-full flex items-center justify-center',
+              'border-2 transition-all duration-200',
+              'hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-orange-400',
+              'touch-manipulation',
+              currentStatus === 'credit'
+                ? 'bg-orange-500 border-orange-500 shadow-lg shadow-orange-500/40 scale-105'
+                : 'bg-white border-gray-300 hover:border-orange-400'
+            )}
+            title="Mark as Credit"
+          >
+            <span className={cn('text-sm font-bold', currentStatus === 'credit' ? 'text-white' : 'text-gray-400')}>
+              ₵
+            </span>
+          </button>
+
+          {/* ABSENT */}
+          <button
+            onClick={() => handleMark('absent')}
+            aria-pressed={currentStatus === 'absent'}
+            aria-label={`Mark ${student.full_name} as Absent`}
+            className={cn(
+              'w-10 h-10 rounded-full flex items-center justify-center',
+              'border-2 transition-all duration-200',
+              'hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400',
+              'touch-manipulation',
+              currentStatus === 'absent'
+                ? 'bg-gray-500 border-gray-500 shadow-lg shadow-gray-500/40 scale-105'
+                : 'bg-white border-gray-300 hover:border-gray-400'
+            )}
+            title="Mark as Absent"
+          >
+            <X size={18} className={currentStatus === 'absent' ? 'text-white' : 'text-gray-400'} />
+          </button>
+
+          {/* DID NOT EAT */}
+          <button
+            onClick={() => handleMark('did_not_eat')}
+            aria-pressed={currentStatus === 'did_not_eat'}
+            aria-label={`Mark ${student.full_name} as Did Not Eat`}
+            className={cn(
+              'w-10 h-10 rounded-full flex items-center justify-center',
+              'border-2 transition-all duration-200',
+              'hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-400',
+              'touch-manipulation',
+              currentStatus === 'did_not_eat'
+                ? 'bg-blue-500 border-blue-500 shadow-lg shadow-blue-500/40 scale-105'
+                : 'bg-white border-gray-300 hover:border-blue-400'
+            )}
+            title="Did Not Eat"
+          >
+            <Utensils size={16} className={currentStatus === 'did_not_eat' ? 'text-white' : 'text-gray-400'} />
+          </button>
         </div>
       )}
     </div>
