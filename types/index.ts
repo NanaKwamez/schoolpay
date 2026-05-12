@@ -53,6 +53,7 @@ export interface Student {
   class_id: string
   parent_phone: string | null
   is_active: boolean
+  photo_url?: string | null
 }
 
 export interface FeeType {

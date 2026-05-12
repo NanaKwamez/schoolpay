@@ -5,7 +5,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/dexie/schema'
 import { saveFeedingMarkLocal } from '@/lib/dexie/helpers'
 import { addToQueue } from '@/lib/sync/queue'
-import { generateLocalId } from '@/lib/utils'
+import { generateLocalId, getTodayGhana } from '@/lib/utils'
 import { FEEDING_FEE_AMOUNT } from '@/lib/constants'
 import { useAuth } from './useAuth'
 import type { LocalFeedingLog, FeedingStatus } from '@/types'
@@ -32,7 +32,7 @@ interface UseFeedingReturn {
 export function useFeeding(date?: string): UseFeedingReturn {
   const { profile } = useAuth()
   const classId = profile?.class_id ?? null
-  const today = date ?? new Date().toISOString().split('T')[0]
+  const today = date ?? getTodayGhana()
   const [isSubmitted, setIsSubmitted] = useState(false)
 
   // Live students for this class

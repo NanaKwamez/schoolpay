@@ -5,6 +5,7 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { DashboardSkeleton } from '@/components/ui/Skeleton'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 export const metadata = { title: `Dashboard — ${SCHOOL_NAME}` }
 
 export default function AdminDashboardPage() {

@@ -27,3 +27,32 @@ export function getWeekStart(date: Date = new Date()): Date {
 export function generateLocalId(): string {
   return `local_${Date.now()}_${Math.random().toString(36).slice(2)}`
 }
+
+/** Returns today's date as YYYY-MM-DD in the Africa/Accra (GMT+0) timezone. */
+export function getTodayGhana(): string {
+  // en-CA locale produces YYYY-MM-DD format, which is what Supabase date columns expect.
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Accra' })
+}
+
+export async function compressImage(file: File, maxSizeKB = 200): Promise<Blob> {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    if (!ctx) { resolve(file); return }
+    const img = new window.Image()
+    img.onload = () => {
+      const size = Math.min(img.width, img.height, 400)
+      canvas.width = size
+      canvas.height = size
+      const x = (img.width - size) / 2
+      const y = (img.height - size) / 2
+      ctx.drawImage(img, x, y, size, size, 0, 0, size, size)
+      canvas.toBlob(
+        (blob) => { if (blob) resolve(blob); else resolve(file) },
+        'image/jpeg',
+        maxSizeKB / 400
+      )
+    }
+    img.src = URL.createObjectURL(file)
+  })
+}

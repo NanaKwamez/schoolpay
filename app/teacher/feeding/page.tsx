@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { CheckCircle, Edit2 } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
@@ -9,12 +9,14 @@ import { BottomNav } from '@/components/ui/BottomNav'
 import { Button } from '@/components/ui/Button'
 import { StudentFeedingRow } from '@/components/teacher/StudentFeedingRow'
 import { StudentRowSkeleton } from '@/components/ui/Skeleton'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
 import { useFeeding } from '@/hooks/useFeeding'
 import { useStudents } from '@/hooks/useStudents'
 import { db } from '@/lib/dexie/schema'
 import { getWeekStart } from '@/lib/utils'
 import { FEEDING_FEE_AMOUNT } from '@/lib/constants'
-import type { FeedingStatus } from '@/types'
+import type { FeedingStatus, Student } from '@/types'
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -27,21 +29,43 @@ export default function TeacherFeedingPage() {
 }
 
 function TeacherFeedingContent() {
-  const today = new Date()
-  const todayStr = today.toLocaleDateString('en-GB', {
-    weekday: 'long', day: 'numeric', month: 'long',
+  const todayStr = new Date().toLocaleDateString('en-GB', {
+    timeZone: 'Africa/Accra',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
   })
 
+  const { profile } = useAuth()
   const { feedingLog, markStudent, submitToAdmin, stats, loading, isSubmitted } = useFeeding()
   const { students, loading: studentsLoading } = useStudents()
   const [isEditing, setIsEditing] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
+  // One-time seed: if Dexie students is empty after loading, pull from Supabase
+  const seededRef = useRef(false)
+  useEffect(() => {
+    const classId = profile?.class_id
+    if (studentsLoading || seededRef.current || !classId || students.length > 0) return
+    seededRef.current = true
+    const supabase = createSupabaseBrowserClient()
+    void supabase
+      .from('students')
+      .select('id, full_name, class_id, parent_phone, is_active')
+      .eq('class_id', classId)
+      .eq('is_active', true)
+      .then(({ data }) => {
+        if (data?.length) {
+          void db.students.bulkPut(data as Student[])
+        }
+      })
+  }, [profile?.class_id, students.length, studentsLoading])
+
   const isLocked = isSubmitted && !isEditing
 
   // ── Weekly advances for current week ────────────────────────────────────────
   const weekStart = useMemo(
-    () => getWeekStart(today).toISOString().split('T')[0] ?? '',
+    () => getWeekStart(new Date()).toISOString().split('T')[0] ?? '',
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
@@ -123,6 +147,9 @@ function TeacherFeedingContent() {
           <div className="flex flex-col items-center justify-center py-20 text-center px-8">
             <p className="text-gray-400 text-base">No students in your class yet.</p>
             <p className="text-gray-300 text-sm mt-1">Students will appear after syncing.</p>
+            <p className="text-xs text-gray-400 mt-1">
+              class_id: {profile?.class_id ?? 'not set'}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 tablet:grid-cols-2">

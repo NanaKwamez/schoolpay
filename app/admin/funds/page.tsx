@@ -9,7 +9,8 @@ import { TopBar } from '@/components/ui/TopBar'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { formatGHS } from '@/lib/utils'
+import { useToast } from '@/components/ui/Toast'
+import { formatGHS, getTodayGhana } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
 interface FundDetail {
@@ -34,11 +35,12 @@ interface OtherIncomeForm {
 export default function AdminFundsPage() {
   const supabase = createSupabaseBrowserClient()
   const { isProprietress } = useAuth()
+  const { showToast } = useToast()
   const [funds, setFunds] = useState<FundDetail[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddIncome, setShowAddIncome] = useState(false)
   const [incomeForm, setIncomeForm] = useState<OtherIncomeForm>({
-    fundId: '', source: '', amount: '', date: new Date().toISOString().split('T')[0] ?? '', notes: '',
+    fundId: '', source: '', amount: '', date: getTodayGhana(), notes: '',
   })
   const [saving, setSaving] = useState(false)
 
@@ -124,15 +126,24 @@ export default function AdminFundsPage() {
   const handleAddIncome = async () => {
     if (!incomeForm.fundId || !incomeForm.source.trim() || !incomeForm.amount) return
     setSaving(true)
-    await supabase.from('other_income').insert({
-      fund_id: incomeForm.fundId,
-      source: incomeForm.source.trim(),
-      amount: parseFloat(incomeForm.amount),
-      date_received: incomeForm.date,
-      notes: incomeForm.notes.trim() || null,
-    })
-    setShowAddIncome(false)
-    await fetchData(); setSaving(false)
+    try {
+      const { error } = await supabase.from('other_income').insert({
+        fund_id: incomeForm.fundId,
+        source: incomeForm.source.trim(),
+        amount: parseFloat(incomeForm.amount),
+        date_received: incomeForm.date,
+        notes: incomeForm.notes.trim() || null,
+      })
+      if (error) {
+        showToast(error.message, 'error')
+        return
+      }
+      setShowAddIncome(false)
+      showToast('Income added successfully', 'success')
+      await fetchData()
+    } finally {
+      setSaving(false)
+    }
   }
 
   const maxBarValue = Math.max(...funds.flatMap(f => f.monthly.flatMap(m => [m.income, m.expenses])), 1)

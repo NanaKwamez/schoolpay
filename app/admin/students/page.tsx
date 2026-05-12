@@ -2,16 +2,17 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { Plus, Search, Users } from 'lucide-react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { Camera, Plus, Search, Users } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { TopBar } from '@/components/ui/TopBar'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
+import { StudentAvatar } from '@/components/ui/StudentAvatar'
 import { isValidGhanaPhone, fieldBorder } from '@/lib/validation'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { cn } from '@/lib/utils'
+import { cn, compressImage } from '@/lib/utils'
 
 interface StudentRow {
   id: string
@@ -20,12 +21,13 @@ interface StudentRow {
   class_name: string
   parent_phone: string | null
   is_active: boolean
+  photo_url: string | null
 }
 
 interface ClassOption { id: string; name: string; count: number }
 
 export default function AdminStudentsPage() {
-  const supabase = createSupabaseBrowserClient()
+  const supabase = useMemo(() => createSupabaseBrowserClient(), [])
   const [students, setStudents] = useState<StudentRow[]>([])
   const [classes, setClasses] = useState<ClassOption[]>([])
   const [loading, setLoading] = useState(true)
@@ -34,6 +36,10 @@ export default function AdminStudentsPage() {
   const [showAdd, setShowAdd] = useState(false)
   const [showBulk, setShowBulk] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [uploadingId, setUploadingId] = useState<string | null>(null)
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const pendingUploadId = useRef<string | null>(null)
 
   // Add form
   const [addName, setAddName] = useState('')
@@ -51,7 +57,7 @@ export default function AdminStudentsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     const [stuRes, clsRes] = await Promise.all([
-      supabase.from('students').select('id, full_name, class_id, parent_phone, is_active, classes(name)').order('full_name'),
+      supabase.from('students').select('id, full_name, class_id, parent_phone, is_active, photo_url, classes(name)').order('full_name'),
       supabase.from('classes').select('id, name').order('sort_order'),
     ])
 
@@ -65,6 +71,7 @@ export default function AdminStudentsPage() {
       class_name: (s.classes as { name: string } | null)?.name ?? '—',
       parent_phone: s.parent_phone as string | null,
       is_active: s.is_active as boolean,
+      photo_url: s.photo_url as string | null,
     }))
 
     setStudents(rows)
@@ -136,6 +143,50 @@ export default function AdminStudentsPage() {
     await fetchData(); setSaving(false)
   }
 
+  const handleCameraClick = (studentId: string) => {
+    pendingUploadId.current = studentId
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    const studentId = pendingUploadId.current
+    if (!file || !studentId) return
+
+    const student = students.find(s => s.id === studentId)
+    if (!student) return
+
+    setUploadingId(studentId)
+    try {
+      const blob = await compressImage(file)
+      const path = `${student.class_id}/${studentId}.jpg`
+
+      const { error: uploadError } = await supabase.storage
+        .from('student-photos')
+        .upload(path, blob, { upsert: true, contentType: 'image/jpeg' })
+
+      if (uploadError) throw new Error(uploadError.message)
+
+      const { data: urlData } = supabase.storage
+        .from('student-photos')
+        .getPublicUrl(path)
+
+      const publicUrl = urlData.publicUrl
+
+      await supabase.from('students').update({ photo_url: publicUrl }).eq('id', studentId)
+
+      setStudents(prev =>
+        prev.map(s => s.id === studentId ? { ...s, photo_url: publicUrl } : s)
+      )
+    } catch (err) {
+      console.error('Photo upload failed:', err instanceof Error ? err.message : err)
+    } finally {
+      setUploadingId(null)
+      pendingUploadId.current = null
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   return (
     <div className="min-h-screen bg-mga-cream">
       <TopBar
@@ -149,6 +200,16 @@ export default function AdminStudentsPage() {
               onClick={() => setShowAdd(true)} icon={<Plus className="h-4 w-4" />}>Add</Button>
           </div>
         }
+      />
+
+      {/* Hidden shared file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="sr-only"
+        onChange={handleFileChange}
       />
 
       <main className="px-4 py-4 space-y-4">
@@ -178,6 +239,24 @@ export default function AdminStudentsPage() {
             <div className="divide-y divide-mga-green-pale/40">
               {filtered.map(student => (
                 <div key={student.id} className="flex items-center gap-3 px-4 py-3">
+                  {/* Avatar + camera button */}
+                  <div className="relative shrink-0">
+                    {uploadingId === student.id ? (
+                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                        <div className="w-4 h-4 border-2 border-mga-green-mid border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : (
+                      <StudentAvatar photoUrl={student.photo_url} name={student.full_name} size={40} />
+                    )}
+                    <button
+                      onClick={() => handleCameraClick(student.id)}
+                      className="absolute -bottom-1 -right-1 w-5 h-5 bg-mga-green-mid text-white rounded-full flex items-center justify-center hover:bg-mga-green-dark transition-colors"
+                      aria-label={`Upload photo for ${student.full_name}`}
+                    >
+                      <Camera className="h-2.5 w-2.5" />
+                    </button>
+                  </div>
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className={cn('font-semibold text-sm', student.is_active ? 'text-gray-900' : 'text-gray-400 line-through')}>
