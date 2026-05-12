@@ -66,7 +66,6 @@ function TeacherFeedingContent() {
   // ── Weekly advances for current week ────────────────────────────────────────
   const weekStart = useMemo(
     () => getWeekStart(new Date()).toISOString().split('T')[0] ?? '',
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
   const weeklyAdvances = useLiveQuery(

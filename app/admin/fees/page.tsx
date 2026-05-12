@@ -11,6 +11,8 @@ import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { formatGHS } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/components/ui/Toast'
+import { validateAmount } from '@/lib/validation'
 import type { FundType, FeeFrequency } from '@/types'
 
 interface FeeRow {
@@ -30,6 +32,7 @@ const FREQ_LABELS: Record<FeeFrequency, string> = {
 
 export default function AdminFeesPage() {
   const supabase = createSupabaseBrowserClient()
+  const { showToast } = useToast()
   const [fees, setFees] = useState<FeeRow[]>([])
   const [loading, setLoading] = useState(true)
   const [editFee, setEditFee] = useState<FeeRow | null>(null)
@@ -59,36 +62,61 @@ export default function AdminFeesPage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true)
-    const { data } = await supabase.from('fee_types').select('*').order('name')
+    const { data, error } = await supabase
+      .from('fee_types')
+      .select('id, name, amount, fund_type, frequency, applies_to_term, is_active, description')
+      .order('name')
+    if (error) {
+      showToast(error.message, 'error')
+      setLoading(false)
+      return
+    }
     setFees(data ?? [])
     setLoading(false)
-  }, [supabase])
+  }, [supabase, showToast])
 
   useEffect(() => { fetchData() }, [fetchData])
 
   const handleSave = async () => {
     if (!formName.trim() || !formAmount) return
+
+    const amountCheck = validateAmount(formAmount)
+    if (!amountCheck.ok) {
+      showToast(amountCheck.error, 'error')
+      return
+    }
+
     setSaving(true)
-    const payload = {
-      name: formName.trim(),
-      amount: parseFloat(formAmount),
-      fund_type: formFund,
-      frequency: formFreq,
-      applies_to_term: formTerm || null,
-      description: formDesc.trim() || null,
-      is_active: true,
+    try {
+      const payload = {
+        name: formName.trim(),
+        amount: amountCheck.value,
+        fund_type: formFund,
+        frequency: formFreq,
+        applies_to_term: formTerm || null,
+        description: formDesc.trim() || null,
+        is_active: true,
+      }
+      const { error } = editFee
+        ? await supabase.from('fee_types').update(payload).eq('id', editFee.id)
+        : await supabase.from('fee_types').insert(payload)
+      if (error) {
+        showToast(error.message, 'error')
+        return
+      }
+      setShowForm(false)
+      await fetchData()
+    } finally {
+      setSaving(false)
     }
-    if (editFee) {
-      await supabase.from('fee_types').update(payload).eq('id', editFee.id)
-    } else {
-      await supabase.from('fee_types').insert(payload)
-    }
-    setShowForm(false)
-    await fetchData(); setSaving(false)
   }
 
   const handleToggle = async (fee: FeeRow) => {
-    await supabase.from('fee_types').update({ is_active: !fee.is_active }).eq('id', fee.id)
+    const { error } = await supabase.from('fee_types').update({ is_active: !fee.is_active }).eq('id', fee.id)
+    if (error) {
+      showToast(error.message, 'error')
+      return
+    }
     await fetchData()
   }
 

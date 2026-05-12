@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { useToast } from '@/components/ui/Toast'
 import { formatGHS, getTodayGhana } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { validateAmount } from '@/lib/validation'
 
 interface FundDetail {
   id: string
@@ -125,12 +126,19 @@ export default function AdminFundsPage() {
 
   const handleAddIncome = async () => {
     if (!incomeForm.fundId || !incomeForm.source.trim() || !incomeForm.amount) return
+
+    const amountCheck = validateAmount(incomeForm.amount)
+    if (!amountCheck.ok) {
+      showToast(amountCheck.error, 'error')
+      return
+    }
+
     setSaving(true)
     try {
       const { error } = await supabase.from('other_income').insert({
         fund_id: incomeForm.fundId,
         source: incomeForm.source.trim(),
-        amount: parseFloat(incomeForm.amount),
+        amount: amountCheck.value,
         date_received: incomeForm.date,
         notes: incomeForm.notes.trim() || null,
       })

@@ -5,6 +5,7 @@ import type { Config } from 'tailwindcss'
  * Core tokens also live in `app/globals.css` @theme for Tailwind v4.
  */
 export default {
+  darkMode: 'class',
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',

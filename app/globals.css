@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @config "../tailwind.config.ts";
 
+/* Tailwind v4 class-based dark mode variant — pairs with `darkMode: 'class'`
+   in tailwind.config.ts so utilities like `dark:bg-*` work as expected. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* ── Liquid Glass Design System (MD3 tokens from Stitch) ─────────── */
   --color-ds-primary: #0f5238;
@@ -357,4 +361,30 @@ textarea,
   33%  { transform: translate(30px, -20px) scale(1.05); }
   66%  { transform: translate(-20px, 10px) scale(0.95); }
   100% { transform: translate(0, 0) scale(1); }
+}
+
+/* ── Dark mode — foundation only (the most visible surfaces) ─────────────── */
+/* Iterative: add per-screen dark variants over time. */
+
+.dark body {
+  background-color: #0A1628;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(201, 168, 76, 0.08) 1px, transparent 0);
+  color: #f1f5f9;
+}
+
+.dark .bg-mga-cream,
+.dark .bg-mga-cream-dark {
+  background-color: #0A1628;
+  color: #f1f5f9;
+}
+
+.dark .mga-card,
+.dark .mga-card-elevated {
+  background: #112240;
+  border-color: rgba(201, 168, 76, 0.20);
+  color: #f1f5f9;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.30),
+    0 1px 2px rgba(0, 0, 0, 0.20);
 }

@@ -7,6 +7,7 @@ import { ChevronLeft, LogOut } from 'lucide-react'
 import { MgaLogoMark } from '@/components/branding/mga-logo-mark'
 import { Modal } from './Modal'
 import { SyncIndicator } from './SyncIndicator'
+import { ThemeToggle } from './ThemeToggle'
 import { useAuth } from '@/hooks/useAuth'
 import { useSync } from '@/hooks/useSync'
 import { useOnlineStatus } from '@/hooks/useOnline'
@@ -102,6 +103,7 @@ export function TopBar({
               />
             )}
             {rightAction}
+            <ThemeToggle inverted />
             <button
               onClick={() => setShowSignOutConfirm(true)}
               aria-label="Sign out"

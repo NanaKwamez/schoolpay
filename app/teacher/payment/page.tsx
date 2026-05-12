@@ -14,6 +14,8 @@ import { db } from '@/lib/dexie/schema'
 import { formatGHS, getWeekStart } from '@/lib/utils'
 import { WEEKLY_FEEDING_AMOUNT, SCHOOL_NAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/components/ui/Toast'
+import { validateAmount } from '@/lib/validation'
 import { generateReceiptText, getWhatsAppReceiptUrl } from '@/lib/receipt'
 import type { Student, FeeType, PaymentType } from '@/types'
 
@@ -62,6 +64,7 @@ export default function TeacherPaymentPage() {
 function TeacherPaymentContent() {
   const { profile } = useAuth()
   const { savePayment, loading: saving } = usePayments()
+  const { showToast } = useToast()
 
   const classId = profile?.class_id ?? null
 
@@ -139,43 +142,57 @@ function TeacherPaymentContent() {
   const handleSave = useCallback(async () => {
     if (!selectedStudent || !selectedFeeType || !profile || !currentTerm) return
 
-    const amountNum = parseFloat(resolvedAmount)
-    if (isNaN(amountNum) || amountNum <= 0) return
+    const amountCheck = validateAmount(resolvedAmount)
+    if (!amountCheck.ok) {
+      showToast(amountCheck.error, 'error')
+      return
+    }
 
+    if (paymentType === 'credit' && amountCheck.value > selectedFeeType.amount) {
+      showToast('Part payment cannot exceed the fee amount', 'error')
+      return
+    }
+
+    const amountNum = amountCheck.value
     const today = new Date().toISOString().split('T')[0] ?? ''
 
-    const receiptNumber = await savePayment({
-      student_id: selectedStudent.id,
-      fee_type_id: selectedFeeType.id,
-      term_id: currentTerm.id,
-      amount_paid: amountNum,
-      payment_type: paymentType,
-      week_covered: paymentType === 'weekly_advance' ? weekCoveredStr : null,
-      date_paid: today,
-      marked_by: profile.id,
-      notes: notes.trim() || null,
-    })
+    try {
+      const receiptNumber = await savePayment({
+        student_id: selectedStudent.id,
+        fee_type_id: selectedFeeType.id,
+        term_id: currentTerm.id,
+        amount_paid: amountNum,
+        payment_type: paymentType,
+        week_covered: paymentType === 'weekly_advance' ? weekCoveredStr : null,
+        date_paid: today,
+        marked_by: profile.id,
+        notes: notes.trim() || null,
+      })
 
-    const remainingBalance = paymentType === 'credit'
-      ? Math.max(0, selectedFeeType.amount - amountNum)
-      : undefined
+      const remainingBalance = paymentType === 'credit'
+        ? Math.max(0, selectedFeeType.amount - amountNum)
+        : undefined
 
-    setSavedReceipt({
-      receiptNumber,
-      studentName: selectedStudent.full_name,
-      className: classData?.name ?? '',
-      feeName: selectedFeeType.name,
-      amount: amountNum,
-      paymentType,
-      date: today ?? '',
-      parentPhone: selectedStudent.parent_phone ?? null,
-      markedByName: profile.full_name ?? profile.id,
-      weekCovered: paymentType === 'weekly_advance' ? weekCoveredStr : undefined,
-      remainingBalance,
-    })
+      setSavedReceipt({
+        receiptNumber,
+        studentName: selectedStudent.full_name,
+        className: classData?.name ?? '',
+        feeName: selectedFeeType.name,
+        amount: amountNum,
+        paymentType,
+        date: today ?? '',
+        parentPhone: selectedStudent.parent_phone ?? null,
+        markedByName: profile.full_name ?? profile.id,
+        weekCovered: paymentType === 'weekly_advance' ? weekCoveredStr : undefined,
+        remainingBalance,
+      })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save payment'
+      showToast(message, 'error')
+    }
   }, [
     selectedStudent, selectedFeeType, profile, currentTerm,
-    resolvedAmount, paymentType, weekCoveredStr, notes, savePayment, classData,
+    resolvedAmount, paymentType, weekCoveredStr, notes, savePayment, classData, showToast,
   ])
 
   const handleReset = () => {

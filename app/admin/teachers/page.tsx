@@ -13,7 +13,28 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useToast } from '@/components/ui/Toast'
 import { cn } from '@/lib/utils'
+
+async function postJSON(url: string, method: 'POST' | 'PATCH', body: unknown): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    if (!res.ok) {
+      const data: unknown = await res.json().catch(() => ({}))
+      const error = (data && typeof data === 'object' && 'error' in data && typeof (data as { error: unknown }).error === 'string')
+        ? (data as { error: string }).error
+        : `Request failed (${res.status})`
+      return { ok: false, error }
+    }
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : 'Network error' }
+  }
+}
 
 interface TeacherRow {
   id: string
@@ -39,6 +60,7 @@ export default function AdminTeachersPage() {
   const router = useRouter()
   const { isProprietress, role } = useAuth()
   const supabase = createSupabaseBrowserClient()
+  const { showToast } = useToast()
 
   // Redirect non-proprietress
   useEffect(() => {
@@ -70,6 +92,9 @@ export default function AdminTeachersPage() {
       supabase.from('classes').select('id, name').order('sort_order'),
     ])
 
+    if (teachRes.error) showToast(teachRes.error.message, 'error')
+    if (clsRes.error) showToast(clsRes.error.message, 'error')
+
     setTeachers((teachRes.data ?? []).map((t: Record<string, unknown>) => ({
       id: t.id as string,
       full_name: t.full_name as string,
@@ -82,7 +107,7 @@ export default function AdminTeachersPage() {
 
     setClasses(clsRes.data ?? [])
     setLoading(false)
-  }, [supabase])
+  }, [supabase, showToast])
 
   useEffect(() => { fetchData() }, [fetchData])
 
@@ -93,29 +118,36 @@ export default function AdminTeachersPage() {
     if (!isValidPin(addPin)) errs.pin = 'PIN must be exactly 4 digits'
     setAddErrors(errs)
     if (Object.keys(errs).length > 0) return
+
     setSaving(true)
-    // Create auth user + profile
-    const { data: authData } = await supabase.auth.admin?.createUser({
-      email: addEmail.trim(),
-      password: addPin.trim(),
-      email_confirm: true,
-    }) ?? { data: null }
-    if (authData?.user) {
-      await supabase.from('user_profiles').insert({
-        id: authData.user.id,
-        full_name: addName.trim(),
-        role: 'teacher',
-        class_id: addClassId || null,
-        phone: null,
-        is_active: true,
+    try {
+      const result = await postJSON('/api/admin/teachers', 'POST', {
+        fullName: addName.trim(),
+        email: addEmail.trim(),
+        pin: addPin.trim(),
+        classId: addClassId || null,
       })
+      if (!result.ok) {
+        showToast(result.error, 'error')
+        return
+      }
+      showToast('Teacher added', 'success')
+      setShowAdd(false); setAddName(''); setAddEmail(''); setAddClassId(''); setAddPin(''); setAddErrors({})
+      await fetchData()
+    } finally {
+      setSaving(false)
     }
-    setShowAdd(false); setAddName(''); setAddEmail(''); setAddClassId(''); setAddPin(''); setAddErrors({})
-    await fetchData(); setSaving(false)
   }
 
   const handleToggleActive = async (teacher: TeacherRow) => {
-    await supabase.from('user_profiles').update({ is_active: !teacher.is_active }).eq('id', teacher.id)
+    const result = await postJSON(`/api/admin/teachers/${teacher.id}`, 'PATCH', {
+      isActive: !teacher.is_active,
+    })
+    if (!result.ok) {
+      showToast(result.error, 'error')
+      return
+    }
+    showToast(teacher.is_active ? 'Teacher deactivated' : 'Teacher activated', 'success')
     await fetchData()
   }
 
@@ -230,9 +262,17 @@ export default function AdminTeachersPage() {
                 if (!pinTarget) return
                 if (!isValidPin(newPin)) { setPinError('PIN must be exactly 4 digits'); return }
                 setSaving(true)
-                await supabase.auth.admin?.updateUserById(pinTarget.id, { password: newPin })
-                setPinTarget(null); setNewPin(''); setPinError('')
-                setSaving(false)
+                try {
+                  const result = await postJSON(`/api/admin/teachers/${pinTarget.id}`, 'PATCH', { pin: newPin })
+                  if (!result.ok) {
+                    setPinError(result.error)
+                    return
+                  }
+                  showToast('PIN updated', 'success')
+                  setPinTarget(null); setNewPin(''); setPinError('')
+                } finally {
+                  setSaving(false)
+                }
               }}>
               Update PIN
             </Button>

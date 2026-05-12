@@ -11,6 +11,7 @@ import { FundSummaryCard } from './FundSummaryCard'
 import { AiInsightsGrid } from './AiInsightBanner'
 import { GeminiChat } from './GeminiChat'
 import { SyncIndicator } from '@/components/ui/SyncIndicator'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { DashboardSkeleton, Skeleton } from '@/components/ui/Skeleton'
 import { useSync } from '@/hooks/useSync'
 import { useOnlineStatus } from '@/hooks/useOnline'
@@ -304,6 +305,7 @@ export function DashboardClient() {
           )}>
             {role === 'proprietress' ? 'Proprietress' : 'Headmaster'}
           </span>
+          <ThemeToggle inverted className="h-9 w-9" />
           <button
             onClick={() => setShowSignOutConfirm(true)}
             aria-label="Sign out"

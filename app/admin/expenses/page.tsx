@@ -12,6 +12,8 @@ import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { formatGHS, formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/components/ui/Toast'
+import { validateAmount } from '@/lib/validation'
 import {
   EXPENSE_CATEGORIES_GENERAL,
   EXPENSE_CATEGORIES_FEEDING,
@@ -43,6 +45,7 @@ const APPROVAL_BADGE: Record<ApprovalStatus, { variant: 'green' | 'orange' | 're
 
 export default function AdminExpensesPage() {
   const supabase = createSupabaseBrowserClient()
+  const { showToast } = useToast()
   const { profile, isProprietress } = useAuth()
 
   const [expenses, setExpenses] = useState<ExpenseRow[]>([])
@@ -120,23 +123,36 @@ export default function AdminExpensesPage() {
 
   const handleSave = async () => {
     if (!profile || !formFundId || !formCategory || !formDesc.trim() || !formAmount) return
+
+    const amountCheck = validateAmount(formAmount)
+    if (!amountCheck.ok) {
+      showToast(amountCheck.error, 'error')
+      return
+    }
+
     setSaving(true)
-    const amount = parseFloat(formAmount)
-    await supabase.from('expenses').insert({
-      fund_id: formFundId,
-      category: formCategory,
-      description: formDesc.trim(),
-      amount,
-      date_of_expense: formDate,
-      recorded_by: profile.id,
-      receipt_reference: formRef.trim() || null,
-      notes: formNotes.trim() || null,
-      approval_status: isProprietress ? 'auto_approved' : 'pending',
-    })
-    setShowForm(false)
-    setFormCategory(''); setFormDesc(''); setFormAmount(''); setFormRef(''); setFormNotes('')
-    await fetchData()
-    setSaving(false)
+    try {
+      const { error } = await supabase.from('expenses').insert({
+        fund_id: formFundId,
+        category: formCategory,
+        description: formDesc.trim(),
+        amount: amountCheck.value,
+        date_of_expense: formDate,
+        recorded_by: profile.id,
+        receipt_reference: formRef.trim() || null,
+        notes: formNotes.trim() || null,
+        approval_status: isProprietress ? 'auto_approved' : 'pending',
+      })
+      if (error) {
+        showToast(error.message, 'error')
+        return
+      }
+      setShowForm(false)
+      setFormCategory(''); setFormDesc(''); setFormAmount(''); setFormRef(''); setFormNotes('')
+      await fetchData()
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleApprove = async (expenseId: string) => {

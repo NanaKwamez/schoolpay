@@ -38,6 +38,10 @@ export const viewport: Viewport = {
   themeColor: '#16a34a',
 }
 
+// Runs synchronously in <head> before hydration to avoid a flash of the wrong theme.
+// Keep keys in sync with hooks/useTheme.ts.
+const themeBootstrapScript = `(function(){try{var k="schoolpay-theme";var m=localStorage.getItem(k);var s=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;var d=m==="dark"||((m==="system"||!m)&&s);document.documentElement.classList.toggle("dark",d);}catch(e){}})();`
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -45,6 +49,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geist.variable} h-full`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
+      </head>
       <body className="min-h-full antialiased">
         <ToastProvider>
           <EnvCheck />
