@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo, useEffect, useState, useCallback } from 'react'
+import { useMemo, useEffect, useState, useCallback, useRef } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Utensils, CreditCard, CheckCircle, AlertTriangle, Users } from 'lucide-react'
@@ -8,13 +9,14 @@ import { TopBar } from '@/components/ui/TopBar'
 import { BottomNav } from '@/components/ui/BottomNav'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import { useToast } from '@/components/ui/Toast'
 import { useAuth } from '@/hooks/useAuth'
 import { useFeeding } from '@/hooks/useFeeding'
 import { useSync } from '@/hooks/useSync'
-import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { db } from '@/lib/dexie/schema'
+import { type InitialSyncPhase, syncEngine } from '@/lib/sync/engine'
 import { MgaLogoMark } from '@/components/branding/mga-logo-mark'
-import { SCHOOL_NAME } from '@/lib/constants'
+import { MGA_LOGO_SRC, SCHOOL_NAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { EnrollmentRequestModal } from '@/components/teacher/EnrollmentRequestModal'
 
@@ -37,6 +39,26 @@ function formatTodayLong(): string {
   })
 }
 
+const INITIAL_SYNC_PHASE_LABEL: Record<InitialSyncPhase, string> = {
+  classes: 'Syncing classes…',
+  students: 'Syncing students…',
+  fee_types: 'Syncing fee types…',
+  terms: 'Syncing term…',
+  assignments: 'Syncing fee assignments…',
+  feeding_log: 'Loading recent feeding…',
+  payments: 'Loading recent payments…',
+  done: 'Done',
+}
+
+function formatLastSyncLine(iso: string | null | undefined): string {
+  if (!iso) return 'never'
+  return new Date(iso).toLocaleString('en-GB', {
+    timeZone: 'Africa/Accra',
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  })
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TeacherHomePage() {
@@ -44,9 +66,12 @@ export default function TeacherHomePage() {
   const classId = profile?.class_id ?? null
   const { feedingLog, stats, isSubmitted, loading } = useFeeding()
   const { syncNow } = useSync()
+  const { showToast } = useToast()
   const [greeting, setGreeting] = useState(getGreeting())
   const [showEnrollModal, setShowEnrollModal] = useState(false)
-  const [resolvedClassName, setResolvedClassName] = useState<string | null>(null)
+  const [showInitialSync, setShowInitialSync] = useState(false)
+  const [initialSyncPhase, setInitialSyncPhase] = useState<InitialSyncPhase | null>(null)
+  const initialSyncInFlightRef = useRef(false)
 
   // Update greeting if the hour changes (edge case)
   useEffect(() => {
@@ -66,28 +91,58 @@ export default function TeacherHomePage() {
     }
   }, [triggerSync])
 
-  useEffect(() => {
-    if (!classId) {
-      setResolvedClassName(null)
-      return
-    }
-    let cancelled = false
-    const supabase = createSupabaseBrowserClient()
-    void supabase
-      .from('classes')
-      .select('name')
-      .eq('id', classId)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (cancelled || error) return
-        setResolvedClassName(data?.name ?? null)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [classId])
+  const classRow = useLiveQuery(
+    () => (classId ? db.classes.get(classId) : undefined),
+    [classId],
+    undefined
+  )
+  const classDisplayName = classRow?.name ?? 'Your Class'
 
-  const classDisplayName = resolvedClassName ?? 'Your Class'
+  const savedStudentCount = useLiveQuery(
+    () =>
+      classId
+        ? db.students.where('class_id').equals(classId).count()
+        : Promise.resolve(0),
+    [classId],
+    0
+  ) ?? 0
+
+  const cachedProfile = useLiveQuery(
+    () => (profile?.id ? db.userProfile.get(profile.id) : undefined),
+    [profile?.id],
+    undefined
+  )
+  const lastSyncIso = cachedProfile?.last_sync_at ?? profile?.last_sync_at
+
+  useEffect(() => {
+    if (!profile || profile.role !== 'teacher' || !profile.class_id) return
+    if (initialSyncInFlightRef.current) return
+
+    void (async () => {
+      const cid = profile.class_id
+      if (!cid) return
+      const count = await db.students.where('class_id').equals(cid).count()
+      if (count > 0) return
+
+      initialSyncInFlightRef.current = true
+      setShowInitialSync(true)
+      setInitialSyncPhase('classes')
+      try {
+        await syncEngine.initialSync(profile, {
+          onPhase: (phase) => { setInitialSyncPhase(phase) },
+        })
+      } catch {
+        showToast(
+          'Could not download class data for offline use. Try the sync button when you are online.',
+          'error'
+        )
+      } finally {
+        setShowInitialSync(false)
+        setInitialSyncPhase(null)
+        initialSyncInFlightRef.current = false
+      }
+    })()
+  }, [profile, showToast])
 
   // Recent feeding marks for today (last 5 in log)
   const recentLogs = useMemo(() => {
@@ -138,6 +193,11 @@ export default function TeacherHomePage() {
               <p className="text-[32px] font-extrabold text-yellow-300 leading-tight mt-1">
                 {classDisplayName}
               </p>
+              {classId && (
+                <p className="text-white/55 text-xs mt-1.5 font-medium">
+                  {savedStudentCount} students saved • Last sync {formatLastSyncLine(lastSyncIso)}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -279,6 +339,35 @@ export default function TeacherHomePage() {
           onClose={() => setShowEnrollModal(false)}
           classId={classId}
         />
+      )}
+
+      {showInitialSync && (
+        <div
+          className={cn(
+            'fixed inset-0 z-[100] flex flex-col items-center justify-center gap-6 px-6',
+            'bg-[#0A1628]/95 text-white'
+          )}
+          role="status"
+          aria-live="polite"
+        >
+          <div className="rounded-full border-2 border-mga-gold/50 p-3 shadow-lg ring-4 ring-mga-gold/15">
+            <Image
+              src={MGA_LOGO_SRC}
+              alt={SCHOOL_NAME}
+              width={72}
+              height={72}
+              className="rounded-full"
+              priority
+            />
+          </div>
+          <div className="text-center max-w-sm space-y-2">
+            <p className="text-lg font-bold text-yellow-300">Preparing offline access</p>
+            <p className="text-sm text-white/75">
+              {initialSyncPhase ? INITIAL_SYNC_PHASE_LABEL[initialSyncPhase] : 'Starting…'}
+            </p>
+          </div>
+          <div className="h-9 w-9 border-2 border-mga-gold border-t-transparent rounded-full animate-spin" />
+        </div>
       )}
     </div>
   )

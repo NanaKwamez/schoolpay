@@ -5,6 +5,12 @@ export const MGA_LOGO_SRC = '/images/mga-logo.png'
 export const CURRENCY = 'GHS'
 export const SYNC_INTERVAL_MS = 60_000 // 60 seconds
 export const MAX_SYNC_ATTEMPTS = 5
+
+/**
+ * If `students` has no `updated_at` in Supabase, keep `false` and pull uses a
+ * full active roster per sync for the teacher's class (see migrations).
+ */
+export const STUDENTS_TABLE_SUPPORTS_UPDATED_AT_FILTER = false
 export const FEEDING_FEE_AMOUNT = 5.00 // GHS
 export const WEEKLY_FEEDING_AMOUNT = 25.00 // GHS
 

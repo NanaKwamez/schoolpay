@@ -2,14 +2,38 @@
 
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { db } from '@/lib/dexie/schema'
+import { STUDENTS_TABLE_SUPPORTS_UPDATED_AT_FILTER, SYNC_INTERVAL_MS } from '@/lib/constants'
+import { getGhanaDateMinusDays } from '@/lib/utils'
 import { getPendingItems, markSynced, incrementAttempts } from './queue'
-import { SYNC_INTERVAL_MS } from '@/lib/constants'
-import type { UserProfile, Student, FeeType, Term, StudentFeeAssignment } from '@/types'
+import type {
+  UserProfile,
+  Student,
+  FeeType,
+  Term,
+  StudentFeeAssignment,
+  LocalFeedingLog,
+  LocalPayment,
+  PaymentType,
+} from '@/types'
 
 interface SyncResult {
   pushed: number
   pulled: number
   errors: number
+}
+
+export type InitialSyncPhase =
+  | 'classes'
+  | 'students'
+  | 'fee_types'
+  | 'terms'
+  | 'assignments'
+  | 'feeding_log'
+  | 'payments'
+  | 'done'
+
+export interface InitialSyncOptions {
+  onPhase?: (phase: InitialSyncPhase) => void
 }
 
 export class SyncEngine {
@@ -117,13 +141,18 @@ export class SyncEngine {
     const classId = profile.class_id
     let pulled = 0
 
-    // Pull students for this teacher's class
     if (classId) {
-      const { data: students } = await supabase
+      let studentsQuery = supabase
         .from('students')
-        .select('id, full_name, class_id, parent_phone, is_active')
+        .select('id, full_name, class_id, parent_phone, is_active, photo_url')
         .eq('class_id', classId)
-        .gt('updated_at', lastSyncAt)
+        .eq('is_active', true)
+
+      if (STUDENTS_TABLE_SUPPORTS_UPDATED_AT_FILTER) {
+        studentsQuery = studentsQuery.gt('updated_at', lastSyncAt)
+      }
+
+      const { data: students } = await studentsQuery
 
       if (students?.length) {
         await db.students.bulkPut(students as Student[])
@@ -131,7 +160,6 @@ export class SyncEngine {
       }
     }
 
-    // Pull active fee types
     const { data: feeTypes } = await supabase
       .from('fee_types')
       .select('id, name, amount, fund_type, frequency, applies_to_term, is_active, description')
@@ -143,7 +171,6 @@ export class SyncEngine {
       pulled += feeTypes.length
     }
 
-    // Pull current term only
     const { data: terms } = await supabase
       .from('terms')
       .select('id, term, year, start_date, end_date, is_current')
@@ -154,7 +181,6 @@ export class SyncEngine {
       pulled += terms.length
     }
 
-    // Pull student fee assignments for this class
     if (classId) {
       const { data: assignments } = await supabase
         .from('student_fee_assignments')
@@ -168,37 +194,35 @@ export class SyncEngine {
       }
     }
 
-    // Update last_sync_at
-    await db.userProfile.update(profile.id, {
-      last_sync_at: new Date().toISOString(),
-    })
+    await this.persistLastSyncAt(supabase, profile.id)
 
     return { pulled }
   }
 
-  // ─── INITIAL SYNC ──────────────────────────────────────────────────────────
+  private async persistLastSyncAt(supabase: ReturnType<typeof createSupabaseBrowserClient>, userId: string): Promise<void> {
+    const now = new Date().toISOString()
+    const dexieRow = await db.userProfile.get(userId)
+    if (dexieRow) {
+      await db.userProfile.update(userId, { last_sync_at: now })
+    }
+    await supabase.from('user_profiles').update({ last_sync_at: now }).eq('id', userId)
+  }
 
-  /** On first login: pull ALL data for this user's class. */
-  async initialSync(): Promise<void> {
+  // ─── INITIAL SYNC (teacher + class, first offline bootstrap) ───────────────
+
+  /** Pull class scope + recent history into Dexie; no-op unless teacher with `class_id`. */
+  async initialSync(profile: UserProfile, options?: InitialSyncOptions): Promise<void> {
+    const onPhase = options?.onPhase
+
+    if (profile.role !== 'teacher' || !profile.class_id) return
+
     const supabase = createSupabaseBrowserClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    // Fetch and store user profile
-    const { data: profileData } = await supabase
-      .from('user_profiles')
-      .select('id, full_name, role, class_id, phone, is_active, last_sync_at')
-      .eq('id', user.id)
-      .single()
-
-    if (!profileData) return
-
-    const profile = profileData as UserProfile
-    await db.userProfile.put(profile)
-
     const classId = profile.class_id
+    const startDate = getGhanaDateMinusDays(30)
 
-    // Fetch all classes (for admin/report use)
+    await db.userProfile.put(profile)
+    onPhase?.('classes')
+
     const { data: classes } = await supabase
       .from('classes')
       .select('id, name, level, sort_order')
@@ -208,30 +232,22 @@ export class SyncEngine {
       await db.classes.bulkPut(classes)
     }
 
-    if (classId) {
-      // All students in this class
-      const { data: students } = await supabase
-        .from('students')
-        .select('id, full_name, class_id, parent_phone, is_active')
-        .eq('class_id', classId)
-        .eq('is_active', true)
+    onPhase?.('students')
 
-      if (students?.length) {
-        await db.students.bulkPut(students as Student[])
-      }
+    const { data: students } = await supabase
+      .from('students')
+      .select('id, full_name, class_id, parent_phone, is_active, photo_url')
+      .eq('class_id', classId)
+      .eq('is_active', true)
 
-      // Student fee assignments
-      const { data: assignments } = await supabase
-        .from('student_fee_assignments')
-        .select('id, student_id, fee_type_id, term_id, is_active')
-        .eq('class_id', classId)
-
-      if (assignments?.length) {
-        await db.studentFeeAssignments.bulkPut(assignments as StudentFeeAssignment[])
-      }
+    if (students?.length) {
+      await db.students.bulkPut(students as Student[])
     }
 
-    // All active fee types
+    const studentIds = (students ?? []).map(s => s.id)
+
+    onPhase?.('fee_types')
+
     const { data: feeTypes } = await supabase
       .from('fee_types')
       .select('id, name, amount, fund_type, frequency, applies_to_term, is_active, description')
@@ -241,20 +257,90 @@ export class SyncEngine {
       await db.feeTypes.bulkPut(feeTypes as FeeType[])
     }
 
-    // Current term
+    onPhase?.('terms')
+
     const { data: terms } = await supabase
       .from('terms')
       .select('id, term, year, start_date, end_date, is_current')
       .eq('is_current', true)
 
+    const currentTermId = terms?.[0]?.id
+
     if (terms?.length) {
       await db.terms.bulkPut(terms as Term[])
     }
 
-    // Mark as synced now
-    await db.userProfile.update(user.id, {
-      last_sync_at: new Date().toISOString(),
-    })
+    onPhase?.('assignments')
+
+    if (currentTermId && studentIds.length > 0) {
+      const { data: assignments } = await supabase
+        .from('student_fee_assignments')
+        .select('id, student_id, fee_type_id, term_id, is_active')
+        .eq('term_id', currentTermId)
+        .in('student_id', studentIds)
+
+      if (assignments?.length) {
+        await db.studentFeeAssignments.bulkPut(assignments as StudentFeeAssignment[])
+      }
+    }
+
+    onPhase?.('feeding_log')
+
+    if (studentIds.length > 0) {
+      const { data: feedingRows } = await supabase
+        .from('feeding_daily_log')
+        .select('id, student_id, date, status, amount, marked_by')
+        .gte('date', startDate)
+        .in('student_id', studentIds)
+
+      if (feedingRows?.length) {
+        const localRows: LocalFeedingLog[] = feedingRows.map(row => ({
+          local_id: row.id,
+          id: row.id,
+          student_id: row.student_id,
+          date: row.date,
+          status: row.status,
+          amount: row.amount,
+          marked_by: row.marked_by,
+          synced: true,
+        }))
+        await db.feedingLog.bulkPut(localRows)
+      }
+    }
+
+    onPhase?.('payments')
+
+    if (studentIds.length > 0) {
+      const { data: paymentRows } = await supabase
+        .from('payments')
+        .select(
+          'id, student_id, fee_type_id, term_id, amount_paid, payment_type, week_covered, date_paid, marked_by, receipt_number, notes'
+        )
+        .gte('date_paid', startDate)
+        .in('student_id', studentIds)
+
+      if (paymentRows?.length) {
+        const localPayments: LocalPayment[] = paymentRows.map(row => ({
+          local_id: row.id,
+          id: row.id,
+          student_id: row.student_id,
+          fee_type_id: row.fee_type_id,
+          term_id: row.term_id,
+          amount_paid: row.amount_paid,
+          payment_type: row.payment_type as PaymentType,
+          week_covered: row.week_covered ?? null,
+          date_paid: row.date_paid,
+          marked_by: row.marked_by,
+          receipt_number: row.receipt_number ?? null,
+          notes: row.notes ?? null,
+          synced: true,
+        }))
+        await db.payments.bulkPut(localPayments)
+      }
+    }
+
+    await this.persistLastSyncAt(supabase, profile.id)
+    onPhase?.('done')
   }
 }
 

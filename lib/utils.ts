@@ -34,6 +34,24 @@ export function getTodayGhana(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Accra' })
 }
 
+/**
+ * Calendar date N days before today, as YYYY-MM-DD, anchored to the same Ghana
+ * "today" as {@link getTodayGhana} (not UTC midnight).
+ */
+export function getGhanaDateMinusDays(days: number): string {
+  const today = getTodayGhana()
+  const parts = today.split('-').map(Number)
+  const y = parts[0] ?? 1970
+  const m = parts[1] ?? 1
+  const d = parts[2] ?? 1
+  const base = new Date(y, m - 1, d)
+  base.setDate(base.getDate() - days)
+  const yy = base.getFullYear()
+  const mm = String(base.getMonth() + 1).padStart(2, '0')
+  const dd = String(base.getDate()).padStart(2, '0')
+  return `${yy}-${mm}-${dd}`
+}
+
 export async function compressImage(file: File, maxSizeKB = 200): Promise<Blob> {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas')
