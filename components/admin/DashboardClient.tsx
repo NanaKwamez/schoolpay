@@ -32,6 +32,7 @@ import { Modal } from '@/components/ui/Modal'
 import {
   ADMIN_DASHBOARD_FETCH_TIMEOUT_MS,
   ADMIN_DASHBOARD_FUND_SUMMARY_ORDER,
+  FUND_SUMMARY_VIEW_SELECT_COLUMNS,
   feedingPaidAmountFromLogOrTier,
   getFeedingFeeForClass,
 } from '@/lib/constants'
@@ -70,11 +71,15 @@ interface FeedingTodayByClassRow {
 }
 
 interface FundSummaryViewRow {
-  id: string
-  name: string
+  fund_id: unknown
+  fund_name: unknown
   fund_type: unknown
+  details_access: unknown
   payment_income: unknown
+  other_income: unknown
   total_income: unknown
+  total_expenses: unknown
+  net_balance: unknown
 }
 
 const EMPTY_SCHOOL_ATTENDANCE_TODAY: SchoolAttendanceTodayRow = {
@@ -343,20 +348,18 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
             studentRes,
             subRes,
             feedingTodayLogsRes,
-            expensesRes,
             fundsMetaRes,
             attendanceTodayRes,
             termCumulativeRes,
           ] = await Promise.all([
             supabase.from('feeding_today_by_class').select('*'),
-            supabase.from('fund_summary').select('id, name, fund_type, payment_income, total_income'),
+            supabase.from('fund_summary').select(FUND_SUMMARY_VIEW_SELECT_COLUMNS),
             supabase.from('terms').select('*').eq('is_current', true).single(),
             supabase.from('classes').select('id, name, level, sort_order').order('sort_order'),
             supabase.from('user_profiles').select('id, full_name, class_id').eq('role', 'teacher').eq('is_active', true),
             supabase.from('students').select('id, class_id').eq('is_active', true),
             supabase.from('class_daily_submissions').select('class_id, submitted_at').eq('date', today),
             supabase.from('feeding_daily_log').select('student_id, amount, status').eq('date', today),
-            supabase.from('expenses').select('fund_id, amount'),
             supabase.from('funds').select('id, fund_type'),
             supabase.from('school_attendance_today').select('*').maybeSingle(),
             supabase.from('term_cumulative_summary').select('*').maybeSingle(),
@@ -372,7 +375,6 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
           throwIfSupabaseError(studentRes, 'students')
           throwIfSupabaseError(subRes, 'class_daily_submissions')
           throwIfSupabaseError(feedingTodayLogsRes, 'feeding_daily_log today')
-          throwIfSupabaseError(expensesRes, 'expenses')
           throwIfSupabaseError(fundsMetaRes, 'funds')
           throwIfSupabaseError(termCumulativeRes, 'term_cumulative_summary')
 
@@ -470,13 +472,6 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
             feedingRows.map((row: FeedingTodayByClassRow) => [row.class_id, row])
           )
 
-          const expenseByFund = new Map<string, number>()
-          for (const row of expensesRes.data ?? []) {
-            const fid = row.fund_id
-            if (fid == null) continue
-            expenseByFund.set(fid, (expenseByFund.get(fid) ?? 0) + parseNumeric(row.amount))
-          }
-
           const fundTypeMap = new Map(
             (fundsMetaRes.data ?? []).map((f: { id: string; fund_type: FundType }) => [f.id, f.fund_type])
           )
@@ -511,19 +506,26 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
 
           const fundRows = fundSummaryViewRes.data ?? []
           const summaries: FundSummary[] = fundRows.map((row: FundSummaryViewRow) => {
-            const fid = typeof row.id === 'string' ? row.id : String(row.id)
+            const fid = typeof row.fund_id === 'string' ? row.fund_id : String(row.fund_id)
             const ft = fundTypeFromDbValue(row.fund_type, fundTypeMap, fid)
-            const expensesTotal = expenseByFund.get(fid) ?? 0
+            const detailsRaw = row.details_access
+            const details_access =
+              typeof detailsRaw === 'string' ? detailsRaw : String(detailsRaw ?? '')
+            const expensesTotal = parseNumeric(row.total_expenses)
             const totalIncome =
               fid === feedingFundId && recomputedFeedingFundTotalIncome != null
                 ? recomputedFeedingFundTotalIncome
                 : parseNumeric(row.total_income)
             return {
               fund_id: fid,
-              fund_name: row.name,
+              fund_name:
+                typeof row.fund_name === 'string'
+                  ? row.fund_name
+                  : String(row.fund_name ?? ''),
               fund_type: ft,
+              details_access,
               payment_income: parseNumeric(row.payment_income),
-              other_income: 0,
+              other_income: parseNumeric(row.other_income),
               total_income: totalIncome,
               total_expenses: expensesTotal,
               net_balance: totalIncome - expensesTotal,

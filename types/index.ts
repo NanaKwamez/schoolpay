@@ -196,6 +196,8 @@ export interface FundSummary {
   fund_id: string
   fund_name: string
   fund_type: FundType
+  /** Same semantics as `funds.details_access` — surfaced on the summary view */
+  details_access: string
   payment_income: number
   other_income: number
   total_income: number

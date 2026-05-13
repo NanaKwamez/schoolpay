@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { FUND_SUMMARY_VIEW_SELECT_COLUMNS } from '@/lib/constants'
 import { generateText } from '@/lib/gemini/client'
 import { buildSystemPrompt } from '@/lib/gemini/prompts'
+import { logError } from '@/lib/logger'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 type ChatHistoryItem = { role: 'user' | 'model'; parts: string }
 
@@ -33,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     const [fundResult, feedingResult, debtResult, classResult, termResult] =
       await Promise.all([
-        supabase.from('fund_summary').select('*'),
+        supabase.from('fund_summary').select(FUND_SUMMARY_VIEW_SELECT_COLUMNS),
         supabase.from('feeding_today_by_class').select('*'),
         supabase
           .from('students_in_debt')
@@ -45,13 +47,13 @@ export async function POST(request: NextRequest) {
       ])
 
     if (fundResult.error) {
-      console.error('fund_summary', fundResult.error)
+      logError('api-gemini-fund-summary', fundResult.error)
     }
     if (feedingResult.error) {
-      console.error('feeding_today_by_class', feedingResult.error)
+      logError('api-gemini-feeding-today', feedingResult.error)
     }
     if (debtResult.error) {
-      console.error('students_in_debt', debtResult.error)
+      logError('api-gemini-students-in-debt', debtResult.error)
     }
 
     const funds = fundResult.data ?? []
@@ -107,7 +109,7 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error('Gemini route error:', error)
+    logError('api-gemini-route', error)
     return NextResponse.json(
       { error: 'Could not get AI response', code: 'GEMINI_FAILED' },
       { status: 500 }

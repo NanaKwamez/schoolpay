@@ -11,6 +11,10 @@ export const ADMIN_DASHBOARD_FETCH_TIMEOUT_MS = 10_000
 
 /** Fund summary section: at most one card per `fund_type`, in this order. */
 export const ADMIN_DASHBOARD_FUND_SUMMARY_ORDER: readonly FundType[] = ['feeding', 'general']
+
+/** Columns on `fund_summary` view (`fund_id` PK, not `id`). */
+export const FUND_SUMMARY_VIEW_SELECT_COLUMNS =
+  'fund_id, fund_name, fund_type, details_access, payment_income, other_income, total_income, total_expenses, net_balance'
 export const MAX_SYNC_ATTEMPTS = 5
 
 /**
