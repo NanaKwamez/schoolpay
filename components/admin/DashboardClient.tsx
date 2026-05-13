@@ -20,6 +20,7 @@ import { EnrollmentRequestsPanel } from './EnrollmentRequestsPanel'
 import { Modal } from '@/components/ui/Modal'
 import { ADMIN_DASHBOARD_FETCH_TIMEOUT_MS, feedingPaidAmountFromLogOrTier } from '@/lib/constants'
 import { logError } from '@/lib/logger'
+import { fundTypeFromFeeTypesEmbed } from '@/lib/postgrest-fee-type-embed'
 import { cn, formatGHS, getTodayGhana } from '@/lib/utils'
 import type { ClassLevel, ClassWithStats, FundSummary, FundType, AiInsightCache } from '@/types'
 
@@ -223,9 +224,8 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
                   .eq('is_waived', false),
                 supabase
                   .from('payments')
-                  .select('amount_paid')
-                  .eq('term_id', termId)
-                  .eq('fund_id', feedingFundId),
+                  .select('amount_paid, fee_types(fund_type)')
+                  .eq('term_id', termId),
                 supabase
                   .from('feeding_daily_log')
                   .select('student_id, amount, status')
@@ -250,7 +250,10 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
               }, 0)
 
               const feedingPaySum = (feedingFundPayRes.data ?? []).reduce(
-                (s: number, p: { amount_paid: number }) => s + parseNumeric(p.amount_paid),
+                (s: number, p: { amount_paid: number; fee_types: unknown }) => {
+                  if (fundTypeFromFeeTypesEmbed(p.fee_types) !== 'feeding') return s
+                  return s + parseNumeric(p.amount_paid)
+                },
                 0
               )
               let feedingLogSum = 0

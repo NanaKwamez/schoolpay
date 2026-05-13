@@ -1,4 +1,5 @@
--- Include feeding_daily_log (paid, in current term) in fund_summary total_income for the feeding fund.
+-- Payments use fee_type_id → fee_types.fund_type; there is no payments.fund_id.
+-- Aggregate payment income per fund via fee_types matching funds.fund_type.
 
 CREATE OR REPLACE VIEW fund_summary AS
 WITH ct AS (
@@ -30,11 +31,10 @@ payment_collected AS (
   SELECT
     fu.id AS fund_id,
     COALESCE(SUM(p.amount_paid), 0)::numeric AS amt
-  FROM payments p
+  FROM funds fu
   CROSS JOIN ct
-  INNER JOIN fee_types ft ON ft.id = p.fee_type_id
-  INNER JOIN funds fu ON fu.fund_type = ft.fund_type
-  WHERE p.term_id = ct.term_id
+  INNER JOIN fee_types ft ON ft.fund_type = fu.fund_type
+  INNER JOIN payments p ON p.fee_type_id = ft.id AND p.term_id = ct.term_id
   GROUP BY fu.id
 ),
 feeding_collected AS (

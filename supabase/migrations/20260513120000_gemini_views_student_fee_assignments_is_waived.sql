@@ -19,12 +19,14 @@ fund_expected AS (
 ),
 fund_collected AS (
   SELECT
-    p.fund_id,
+    fu.id AS fund_id,
     COALESCE(SUM(p.amount_paid), 0)::numeric AS total_income
   FROM payments p
   CROSS JOIN ct
+  INNER JOIN fee_types ft ON ft.id = p.fee_type_id
+  INNER JOIN funds fu ON fu.fund_type = ft.fund_type
   WHERE p.term_id = ct.term_id
-  GROUP BY p.fund_id
+  GROUP BY fu.id
 )
 SELECT
   fu.id,

@@ -10,8 +10,8 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useToast } from '@/components/ui/Toast'
-import { formatGHS, getTodayGhana } from '@/lib/utils'
-import { cn } from '@/lib/utils'
+import { fundTypeFromFeeTypesEmbed } from '@/lib/postgrest-fee-type-embed'
+import { cn, formatGHS, getTodayGhana } from '@/lib/utils'
 import { validateAmount } from '@/lib/validation'
 
 interface FundDetail {
@@ -55,17 +55,34 @@ export default function AdminFundsPage() {
     const termId = term?.id
 
     const [paymentsRes, expensesRes, otherIncomeRes] = await Promise.all([
-      termId ? supabase.from('payments').select('amount_paid, fund_id, date_paid').eq('term_id', termId) : Promise.resolve({ data: [] }),
+      termId
+        ? supabase
+            .from('payments')
+            .select('amount_paid, date_paid, fee_types(fund_type)')
+            .eq('term_id', termId)
+        : Promise.resolve({ data: [] }),
       supabase.from('expenses').select('amount, fund_id, category, date_of_expense').eq('approval_status', 'approved'),
       supabase.from('other_income').select('amount, fund_id, source, date_received').order('date_received'),
     ])
 
-    const allPayments = (paymentsRes as { data: { amount_paid: number; fund_id: string; date_paid: string }[] | null }).data ?? []
+    type PayRow = {
+      amount_paid: number
+      date_paid: string
+      fee_types: unknown
+    }
+    const allPayments = (paymentsRes as { data: PayRow[] | null }).data ?? []
     const allExpenses = (expensesRes.data ?? []) as { amount: number; fund_id: string; category: string; date_of_expense: string }[]
-    const allOtherIncome = (otherIncomeRes.data ?? []) as { amount: number; fund_id: string; date_received: string }[]
+    const allOtherIncome = (otherIncomeRes.data ?? []) as {
+      amount: number
+      fund_id: string
+      source: string
+      date_received: string
+    }[]
 
     const fundDetails: FundDetail[] = (allFunds as { id: string; name: string; fund_type: string }[]).map(fund => {
-      const fundPayments = allPayments.filter(p => p.fund_id === fund.id)
+      const fundPayments = allPayments.filter(
+        p => fundTypeFromFeeTypesEmbed(p.fee_types) === fund.fund_type
+      )
       const fundExpenses = allExpenses.filter(e => e.fund_id === fund.id)
       const fundOtherIncome = allOtherIncome.filter(oi => oi.fund_id === fund.id)
 
