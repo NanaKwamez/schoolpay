@@ -12,7 +12,8 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
-import { getFeedingLogStoredAmount } from '@/lib/constants'
+import { feedingPaidAmountFromLogOrTier, getFeedingLogStoredAmount } from '@/lib/constants'
+import { logError } from '@/lib/logger'
 import { cn, formatDate, formatGHS, getTodayGhana } from '@/lib/utils'
 import type { FeedingStatus } from '@/types'
 
@@ -21,6 +22,8 @@ interface StudentRow {
   full_name: string
   parent_phone: string | null
   today_status: FeedingStatus | null
+  /** From `feeding_daily_log.amount` when a row exists for today. */
+  feeding_amount: unknown
   total_owed: number
   last_payment_date: string | null
 }
@@ -95,10 +98,7 @@ export function ProprietressClassView({ classId }: Props) {
       if (!mountedRef.current) return
 
       if (studentRes.error) {
-        console.error('Students query error:', {
-          message: studentRes.error.message,
-          code: studentRes.error.code,
-        })
+        logError('proprietress-class-students', studentRes.error, { classId })
         throw new Error(studentRes.error.message)
       }
 
@@ -107,12 +107,14 @@ export function ProprietressClassView({ classId }: Props) {
 
       const { data: feedingLogs, error: feedErr } = await supabase
         .from('feeding_daily_log')
-        .select('student_id, status')
+        .select('student_id, status, amount')
         .eq('date', today)
         .in('student_id', rawStudents.map((s: { id: string }) => s.id))
 
       if (!mountedRef.current) return
-      if (feedErr) console.error('Feeding log query error:', feedErr.message)
+      if (feedErr) {
+        logError('proprietress-class-feeding-log', feedErr, { classId, today })
+      }
 
       const { data: termData } = await supabase.from('terms').select('id').eq('is_current', true).single()
       const termId = termData?.id
@@ -158,18 +160,28 @@ export function ProprietressClassView({ classId }: Props) {
         })
       }
 
-      const feedMap = new Map<string, FeedingStatus>(
-        (feedingLogs ?? []).map((f: { student_id: string; status: string }) => [f.student_id, f.status as FeedingStatus])
+      const feedMap = new Map<
+        string,
+        { status: FeedingStatus; amount: unknown }
+      >(
+        (feedingLogs ?? []).map((f: { student_id: string; status: string; amount?: unknown }) => [
+          f.student_id,
+          { status: f.status as FeedingStatus, amount: f.amount },
+        ])
       )
 
-      const rows: StudentRow[] = rawStudents.map((s: { id: string; full_name: string; parent_phone: string | null }) => ({
-        id: s.id,
-        full_name: s.full_name,
-        parent_phone: s.parent_phone,
-        today_status: feedMap.get(s.id) ?? null,
-        total_owed: totalOwedMap.get(s.id) ?? 0,
-        last_payment_date: lastPaymentMap.get(s.id) ?? null,
-      }))
+      const rows: StudentRow[] = rawStudents.map((s: { id: string; full_name: string; parent_phone: string | null }) => {
+        const entry = feedMap.get(s.id)
+        return {
+          id: s.id,
+          full_name: s.full_name,
+          parent_phone: s.parent_phone,
+          today_status: entry?.status ?? null,
+          feeding_amount: entry?.amount,
+          total_owed: totalOwedMap.get(s.id) ?? 0,
+          last_payment_date: lastPaymentMap.get(s.id) ?? null,
+        }
+      })
 
       if (mountedRef.current) setStudents(rows)
     } catch (err) {
@@ -246,7 +258,10 @@ export function ProprietressClassView({ classId }: Props) {
   const paidCount = students.filter(s => s.today_status === 'paid').length
   const creditCount = students.filter(s => s.today_status === 'credit').length
   const absentCount = students.filter(s => s.today_status === 'absent').length
-  const collectedToday = students.filter(s => s.today_status === 'paid').reduce((sum) => sum + 5, 0)
+  const classNameForFeeding = classInfo?.name ?? ''
+  const collectedToday = students
+    .filter(s => s.today_status === 'paid')
+    .reduce((sum, s) => sum + feedingPaidAmountFromLogOrTier(s.feeding_amount, classNameForFeeding), 0)
 
   return (
     <div className="min-h-screen bg-mga-cream">

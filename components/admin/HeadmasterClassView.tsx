@@ -12,8 +12,9 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
-import { getFeedingLogStoredAmount } from '@/lib/constants'
-import { cn, getTodayGhana } from '@/lib/utils'
+import { feedingPaidAmountFromLogOrTier, getFeedingLogStoredAmount } from '@/lib/constants'
+import { logError } from '@/lib/logger'
+import { cn, formatGHS, getTodayGhana } from '@/lib/utils'
 import type { FeedingStatus } from '@/types'
 
 interface StudentRow {
@@ -21,6 +22,8 @@ interface StudentRow {
   full_name: string
   parent_phone: string | null
   today_status: FeedingStatus | null
+  /** From `feeding_daily_log.amount` when a row exists for today. */
+  feeding_amount: unknown
 }
 
 interface ClassInfo {
@@ -86,10 +89,7 @@ export function HeadmasterClassView({ classId }: Props) {
       if (!mountedRef.current) return
 
       if (studentRes.error) {
-        console.error('Students query error:', {
-          message: studentRes.error.message,
-          code: studentRes.error.code,
-        })
+        logError('headmaster-class-students', studentRes.error, { classId })
         throw new Error(studentRes.error.message)
       }
 
@@ -98,23 +98,35 @@ export function HeadmasterClassView({ classId }: Props) {
 
       const { data: feedingLogs, error: feedErr } = await supabase
         .from('feeding_daily_log')
-        .select('student_id, status')
+        .select('student_id, status, amount')
         .eq('date', today)
         .in('student_id', rawStudents.map((s: { id: string }) => s.id))
 
       if (!mountedRef.current) return
-      if (feedErr) console.error('Feeding log query error:', feedErr.message)
+      if (feedErr) {
+        logError('headmaster-class-feeding-log', feedErr, { classId, today })
+      }
 
-      const feedMap = new Map<string, FeedingStatus>(
-        (feedingLogs ?? []).map((f: { student_id: string; status: string }) => [f.student_id, f.status as FeedingStatus])
+      const feedMap = new Map<
+        string,
+        { status: FeedingStatus; amount: unknown }
+      >(
+        (feedingLogs ?? []).map((f: { student_id: string; status: string; amount?: unknown }) => [
+          f.student_id,
+          { status: f.status as FeedingStatus, amount: f.amount },
+        ])
       )
 
-      const rows: StudentRow[] = rawStudents.map((s: { id: string; full_name: string; parent_phone: string | null }) => ({
-        id: s.id,
-        full_name: s.full_name,
-        parent_phone: s.parent_phone,
-        today_status: feedMap.get(s.id) ?? null,
-      }))
+      const rows: StudentRow[] = rawStudents.map((s: { id: string; full_name: string; parent_phone: string | null }) => {
+        const entry = feedMap.get(s.id)
+        return {
+          id: s.id,
+          full_name: s.full_name,
+          parent_phone: s.parent_phone,
+          today_status: entry?.status ?? null,
+          feeding_amount: entry?.amount,
+        }
+      })
 
       if (mountedRef.current) setStudents(rows)
     } catch (err) {
@@ -154,6 +166,10 @@ export function HeadmasterClassView({ classId }: Props) {
   const paidCount = students.filter(s => s.today_status === 'paid').length
   const creditCount = students.filter(s => s.today_status === 'credit').length
   const absentCount = students.filter(s => s.today_status === 'absent').length
+  const classNameForFeeding = classInfo?.name ?? ''
+  const collectedToday = students
+    .filter(s => s.today_status === 'paid')
+    .reduce((sum, s) => sum + feedingPaidAmountFromLogOrTier(s.feeding_amount, classNameForFeeding), 0)
 
   return (
     <div className="min-h-screen bg-mga-cream">
@@ -174,11 +190,12 @@ export function HeadmasterClassView({ classId }: Props) {
       />
 
       <main className="px-4 py-4 space-y-4">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           {[
             { label: 'Paid', value: paidCount, color: 'text-green-700' },
             { label: 'Credit', value: creditCount, color: 'text-orange-600' },
             { label: 'Absent', value: absentCount, color: 'text-gray-500' },
+            { label: 'Collected', value: formatGHS(collectedToday), color: 'text-mga-green-dark' },
           ].map(stat => (
             <div key={stat.label} className="mga-card p-4 text-center">
               <p className={cn('text-base font-bold', stat.color)}>{stat.value}</p>

@@ -35,6 +35,21 @@ export function getFeedingLogStoredAmount(status: FeedingStatus, className: stri
   return 0
 }
 
+/** Paid feeding GHS: use `feeding_daily_log.amount` when present; else tier via `className`. */
+export function feedingPaidAmountFromLogOrTier(storedAmount: unknown, className: string): number {
+  if (storedAmount == null) {
+    return getFeedingLogStoredAmount('paid', className)
+  }
+  if (typeof storedAmount === 'number' && Number.isFinite(storedAmount)) {
+    return storedAmount
+  }
+  if (typeof storedAmount === 'string') {
+    const n = Number(storedAmount)
+    if (Number.isFinite(n)) return n
+  }
+  return getFeedingLogStoredAmount('paid', className)
+}
+
 export const EXPENSE_CATEGORIES_GENERAL = [
   'Exam materials and printing',
   'Stationery and supplies',
