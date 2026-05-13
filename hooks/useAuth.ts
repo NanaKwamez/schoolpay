@@ -1,16 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+
+import { runClientSignOut } from '@/lib/auth/client-sign-out'
+import { logError } from '@/lib/logger'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import type { UserProfile, UserRole } from '@/types'
-
-function clearBrowserAuthCaches(): void {
-  if (typeof window === 'undefined') return
-  localStorage.clear()
-  sessionStorage.clear()
-}
 
 interface AuthState {
   user: User | null
@@ -28,10 +24,30 @@ interface UseAuthReturn extends AuthState {
   signOut: () => void
 }
 
-/** Client session state + logout that clears storage and navigates before Supabase finishes. */
+type ProfileCore = Pick<
+  UserProfile,
+  'id' | 'full_name' | 'role' | 'class_id' | 'is_active'
+>
+
+function mergeProfileCore(
+  existing: UserProfile | null,
+  core: ProfileCore
+): UserProfile {
+  const samePerson = existing?.id === core.id
+  return {
+    id: core.id,
+    full_name: core.full_name,
+    role: core.role,
+    class_id: core.class_id,
+    is_active: core.is_active,
+    phone: samePerson ? existing.phone : null,
+    last_sync_at: samePerson ? existing.last_sync_at : null,
+  }
+}
+
+/** Client session state + sign-out that clears Dexie, storage, Supabase, then hard-navigates. */
 
 export function useAuth(): UseAuthReturn {
-  const router = useRouter()
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [state, setState] = useState<AuthState>({
     user: null,
@@ -62,65 +78,76 @@ export function useAuth(): UseAuthReturn {
   )
 
   useEffect(() => {
+    let mounted = true
     const supabase = createSupabaseBrowserClient()
 
-    const fetchProfile = async (userId: string): Promise<UserProfile | null> => {
+    const fetchProfileCore = async (
+      userId: string
+    ): Promise<ProfileCore | null> => {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id, full_name, role, class_id, is_active, phone, last_sync_at')
+        .select('id, full_name, role, class_id, is_active')
         .eq('id', userId)
         .single()
 
-      if (error ?? !data) return null
-      return data as UserProfile
+      if (error !== null) {
+        logError('useAuth.fetchProfileCore.query', error, { userId })
+        return null
+      }
+      if (data === null) return null
+      return data as ProfileCore
     }
 
     const signOutBrokenProfile = (): void => {
+      setIsSigningOut(true)
       setState(buildState(null, null))
-      clearBrowserAuthCaches()
-      router.push('/login')
-      void supabase.auth.signOut().catch(() => {})
+      void runClientSignOut(supabase)
     }
 
-    // Resolve initial session
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (user) {
-        const profile = await fetchProfile(user.id)
-        if (!profile) {
-          signOutBrokenProfile()
-          return
-        }
-        setState(buildState(user, profile))
-      } else {
+    async function emitUserProfile(user: User | null): Promise<void> {
+      if (user === null) {
+        if (!mounted) return
         setState(buildState(null, null))
+        return
       }
+
+      const core = await fetchProfileCore(user.id)
+      if (!mounted) return
+
+      if (core === null) {
+        signOutBrokenProfile()
+        return
+      }
+
+      setState(prev => {
+        if (!mounted) return prev
+        const existingProfile =
+          prev.user?.id === user.id ? prev.profile : null
+        const merged = mergeProfileCore(existingProfile, core)
+        return buildState(user, merged)
+      })
+    }
+
+    void supabase.auth.getUser().then(({ data }) => {
+      void emitUserProfile(data.user ?? null)
     })
 
-    // Keep state in sync with auth changes
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (session?.user) {
-          const profile = await fetchProfile(session.user.id)
-          if (!profile) {
-            signOutBrokenProfile()
-            return
-          }
-          setState(buildState(session.user, profile))
-        } else {
-          setState(buildState(null, null))
-        }
+      (_event, session) => {
+        void emitUserProfile(session?.user ?? null)
       }
     )
 
-    return () => listener.subscription.unsubscribe()
-  }, [buildState, router])
+    return (): void => {
+      mounted = false
+      listener.subscription.unsubscribe()
+    }
+  }, [buildState])
 
   const signOut = useCallback((): void => {
     setIsSigningOut(true)
-    clearBrowserAuthCaches()
-    router.push('/login')
-    void createSupabaseBrowserClient().auth.signOut().catch(() => {})
-  }, [router])
+    void runClientSignOut(createSupabaseBrowserClient())
+  }, [])
 
   return { ...state, isSigningOut, signOut }
 }

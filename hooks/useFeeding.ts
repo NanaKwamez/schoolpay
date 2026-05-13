@@ -2,10 +2,11 @@
 
 import { useMemo, useState, useCallback } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from '@/lib/dexie/schema'
+import { useToast } from '@/components/ui/Toast'
 import { saveFeedingMarkLocal } from '@/lib/dexie/helpers'
-import { addToQueue } from '@/lib/sync/queue'
-import { generateLocalId } from '@/lib/utils'
+import { logError } from '@/lib/logger'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { db } from '@/lib/dexie/schema'
 import { FEEDING_FEE_AMOUNT } from '@/lib/constants'
 import { useAuth } from './useAuth'
 import { useStudents } from './useStudents'
@@ -33,6 +34,7 @@ interface UseFeedingReturn {
 
 export function useFeeding(date?: string): UseFeedingReturn {
   const { profile } = useAuth()
+  const { showToast } = useToast()
   const classId = profile?.class_id ?? null
   const { students: classStudents, loading: studentsLoading } = useStudents()
   const today =
@@ -109,33 +111,68 @@ export function useFeeding(date?: string): UseFeedingReturn {
   )
 
   const submitToAdmin = useCallback(async (): Promise<void> => {
-    if (!profile || !classId || isSubmitted) return
+    if (!profile || !classId) return
 
-    const localId = generateLocalId()
-    const submission = {
-      local_id: localId,
-      id: '',
-      class_id: classId,
-      date: today,
-      submitted_by: profile.id,
-      submitted_at: new Date().toISOString(),
-      total_students: stats.total,
-      total_paid: stats.paid,
-      total_credit: stats.credit,
-      total_absent: stats.absent,
-      total_did_not_eat: stats.didNotEat,
-      total_covered_weekly: stats.coveredWeekly,
+    const logs = Array.from(feedingLog.values())
+    if (logs.length === 0) {
+      showToast('No students marked yet', 'error')
+      return
     }
 
-    await addToQueue({
-      tableName: 'class_daily_submissions',
-      localId,
-      operation: 'insert',
-      payload: submission as Record<string, unknown>,
-    })
+    const supabase = createSupabaseBrowserClient()
+    const submittedAt = new Date().toISOString()
+
+    const feedingRows = logs.map(log => ({
+      student_id: log.student_id,
+      date: today,
+      status: log.status,
+      amount: log.amount,
+      marked_by: profile.id,
+    }))
+
+    const { error: feedError } = await supabase.from('feeding_daily_log').upsert(
+      feedingRows,
+      { onConflict: 'student_id,date', ignoreDuplicates: false }
+    )
+
+    if (feedError) {
+      logError('useFeeding/submitToAdmin/feeding_daily_log', feedError, {
+        class_id: classId,
+        date: today,
+        rowCount: feedingRows.length,
+      })
+      showToast(feedError.message, 'error')
+      return
+    }
+
+    const { error: subError } = await supabase.from('class_daily_submissions').upsert(
+      {
+        class_id: classId,
+        date: today,
+        submitted_by: profile.id,
+        submitted_at: submittedAt,
+        student_count: stats.total,
+        marked_count: stats.marked,
+      },
+      { onConflict: 'class_id,date', ignoreDuplicates: false }
+    )
+
+    if (subError) {
+      logError('useFeeding/submitToAdmin/class_daily_submissions', subError, {
+        class_id: classId,
+        date: today,
+      })
+      showToast(subError.message, 'error')
+      return
+    }
+
+    await Promise.all(
+      logs.map(log => db.feedingLog.update(log.local_id, { synced: true }))
+    )
 
     setIsSubmitted(true)
-  }, [profile, classId, today, stats, isSubmitted])
+    showToast('Submitted to admin successfully', 'success')
+  }, [profile, classId, today, stats.marked, stats.total, feedingLog, showToast])
 
   const loading = studentsLoading || rawLogs === undefined
 

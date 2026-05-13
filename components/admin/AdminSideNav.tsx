@@ -2,18 +2,21 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
 import {
-  LayoutDashboard,
-  CreditCard,
   AlertCircle,
   BarChart2,
-  Users,
+  CreditCard,
   GraduationCap,
+  LayoutDashboard,
+  Loader2,
+  LogOut,
   Receipt,
   Settings,
-  LogOut,
+  Users,
 } from 'lucide-react'
+
+import { useAuth } from '@/hooks/useAuth'
+import { cn } from '@/lib/utils'
 
 const navItems = [
   { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -37,6 +40,7 @@ const bottomItems = [
  */
 export function AdminSideNav() {
   const pathname = usePathname()
+  const { signOut, isSigningOut } = useAuth()
 
   return (
     <nav
@@ -106,15 +110,23 @@ export function AdminSideNav() {
             </Link>
           )
         })}
-        <form action="/auth/logout" method="POST">
-          <button
-            type="submit"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl min-h-[52px] font-medium text-sm text-white/65 hover:text-white hover:bg-white/8 transition-all w-full"
-          >
+        <button
+          type="button"
+          onClick={() => signOut()}
+          disabled={isSigningOut}
+          className={cn(
+            'flex items-center gap-3 px-4 py-3 rounded-xl min-h-[52px] font-medium text-sm',
+            'text-white/65 hover:text-white hover:bg-white/8 transition-all w-full',
+            'disabled:opacity-70 disabled:cursor-not-allowed'
+          )}
+        >
+          {isSigningOut ? (
+            <Loader2 className="w-5 h-5 shrink-0 opacity-70 animate-spin" aria-hidden />
+          ) : (
             <LogOut className="w-5 h-5 shrink-0 opacity-70" strokeWidth={1.8} />
-            Logout
-          </button>
-        </form>
+          )}
+          {isSigningOut ? 'Signing out…' : 'Logout'}
+        </button>
       </div>
     </nav>
   )

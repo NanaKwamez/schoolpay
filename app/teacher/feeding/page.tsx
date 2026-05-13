@@ -8,10 +8,12 @@ import { TopBar } from '@/components/ui/TopBar'
 import { BottomNav } from '@/components/ui/BottomNav'
 import { Button } from '@/components/ui/Button'
 import { StudentFeedingRow } from '@/components/teacher/StudentFeedingRow'
+import { TeacherScreenLoadingShell } from '@/components/teacher/teacher-screen-loading-shell'
 import { StudentRowSkeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
 import { useFeeding } from '@/hooks/useFeeding'
 import { useTeacherClassName } from '@/hooks/use-teacher-class-name'
+import { useTeacherShellReady } from '@/hooks/use-teacher-shell-ready'
 import { getWeekStart } from '@/lib/utils'
 import { FEEDING_FEE_AMOUNT } from '@/lib/constants'
 import { db } from '@/lib/dexie/schema'
@@ -29,8 +31,19 @@ export default function TeacherFeedingPage() {
 
 function TeacherFeedingContent() {
   const { profile, user, loading: teacherAuthLoading } = useAuth()
-  const { className: teacherClassSubtitle } = useTeacherClassName()
+  const {
+    className: teacherClassSubtitle,
+    loading: teacherClassNameLoading,
+  } = useTeacherClassName()
   const { feedingLog, markStudent, submitToAdmin, stats, loading, isSubmitted, students } = useFeeding()
+  const shellReady = useTeacherShellReady(profile, {
+    className: teacherClassSubtitle,
+    classNameLoading: teacherClassNameLoading,
+  })
+  const isReady =
+    shellReady &&
+    (!profile?.class_id || !loading) &&
+    !teacherAuthLoading
   const [isEditing, setIsEditing] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
@@ -74,32 +87,27 @@ function TeacherFeedingContent() {
     [isLocked, markStudent]
   )
 
-  const handleSubmit = async () => {
+  const handleSubmitToAdmin = async () => {
+    if (!profile?.class_id) return
     setSubmitting(true)
-    await submitToAdmin()
-    setSubmitting(false)
-    setIsEditing(false)
+    try {
+      await submitToAdmin()
+    } finally {
+      setSubmitting(false)
+      setIsEditing(false)
+    }
   }
 
   const isLoading = loading
 
-  if (teacherAuthLoading) {
+  if (!isReady) {
     return (
-      <div className="min-h-screen bg-mga-cream dark:bg-[#0A1628]">
-        <TopBar
-          title="Mark Feeding"
-          subtitle={teacherClassSubtitle || 'Loading...'}
-          backHref="/teacher/home"
-          showSync
-          compactTitles
-        />
-        <div className="p-4 space-y-2">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <StudentRowSkeleton key={i} />
-          ))}
-        </div>
-        <BottomNav />
-      </div>
+      <TeacherScreenLoadingShell
+        topBarTitle="Mark Feeding"
+        backHref="/teacher/home"
+        showSync
+        compactTitles
+      />
     )
   }
 
@@ -208,7 +216,7 @@ function TeacherFeedingContent() {
           className="text-sm font-semibold"
           loading={submitting}
           disabled={stats.marked === 0 || isLocked}
-          onClick={handleSubmit}
+          onClick={handleSubmitToAdmin}
         >
           {isSubmitted && !isEditing
             ? '✓ Already Submitted'

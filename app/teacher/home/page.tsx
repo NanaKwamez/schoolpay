@@ -20,6 +20,8 @@ import { MgaLogoMark } from '@/components/branding/mga-logo-mark'
 import { MGA_LOGO_SRC, SCHOOL_NAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { EnrollmentRequestModal } from '@/components/teacher/EnrollmentRequestModal'
+import { TeacherMainLoadingBlocks } from '@/components/teacher/teacher-screen-loading-shell'
+import { useTeacherShellReady } from '@/hooks/use-teacher-shell-ready'
 
 // ─── Greeting ─────────────────────────────────────────────────────────────────
 
@@ -64,8 +66,15 @@ function formatLastSyncLine(iso: string | null | undefined): string {
 
 export default function TeacherHomePage() {
   const { profile } = useAuth()
-  const { className: teacherClassDisplayName, loading: teacherClassNameLoading } =
-    useTeacherClassName()
+  const {
+    className: teacherClassDisplayName,
+    loading: teacherClassNameLoading,
+  } = useTeacherClassName()
+
+  const isReady = useTeacherShellReady(profile, {
+    className: teacherClassDisplayName,
+    classNameLoading: teacherClassNameLoading,
+  })
   const classId = profile?.class_id ?? null
   const { feedingLog, stats, isSubmitted, loading } = useFeeding()
   const { syncNow } = useSync()
@@ -172,6 +181,9 @@ export default function TeacherHomePage() {
     <div className="min-h-screen bg-mga-cream pb-20">
       <TopBar title="My Class" showSync showSchoolBrand={false} />
 
+      {!isReady ? (
+        <TeacherMainLoadingBlocks />
+      ) : (
       <main className="px-4 py-5 space-y-5">
         {/* Greeting */}
         <div className="rounded-2xl p-4 mb-2" style={{ background: 'linear-gradient(135deg, #0A1628, #0D3B2E)' }}>
@@ -333,6 +345,7 @@ export default function TeacherHomePage() {
           )}
         </div>
       </main>
+      )}
 
       <BottomNav />
 

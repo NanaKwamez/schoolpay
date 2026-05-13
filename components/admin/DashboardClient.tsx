@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { X, AlertTriangle, DollarSign, TrendingDown, Clock, Loader2, LogOut } from 'lucide-react'
+import type { PostgrestError } from '@supabase/supabase-js'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { ClassCard } from './ClassCard'
@@ -17,9 +18,11 @@ import { useSync } from '@/hooks/useSync'
 import { useOnlineStatus } from '@/hooks/useOnline'
 import { EnrollmentRequestsPanel } from './EnrollmentRequestsPanel'
 import { Modal } from '@/components/ui/Modal'
+import { ADMIN_DASHBOARD_FETCH_TIMEOUT_MS } from '@/lib/constants'
+import { logError } from '@/lib/logger'
 import { formatGHS } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import type { ClassWithStats, FundSummary, AiInsightCache } from '@/types'
+import type { ClassLevel, ClassWithStats, FundSummary, FundType, AiInsightCache } from '@/types'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -29,15 +32,40 @@ interface TermStats {
   outstanding: number
 }
 
-interface RawFeedingLog {
-  student_id: string
-  status: string
-  amount: number
-}
-
 interface RawPayment {
   amount_paid: number
   student_id: string
+}
+
+interface FeedingTodayByClassRow {
+  class_id: string
+  class_name: string
+  total_students: unknown
+  paid_count: unknown
+  credit_count: unknown
+  absent_count: unknown
+}
+
+interface FundSummaryViewRow {
+  id: string
+  name: string
+  payment_income: unknown
+  total_income: unknown
+}
+
+function throwIfSupabaseError(result: { error: PostgrestError | null }, scope: string): void {
+  if (result.error) {
+    throw new Error(`${scope}: ${result.error.message}`)
+  }
+}
+
+function parseNumeric(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string') {
+    const n = Number(value)
+    return Number.isFinite(n) ? n : 0
+  }
+  return 0
 }
 
 // ─── Dashboard shell — `resolvedRole` MUST come from the server page, not useAuth ─
@@ -70,6 +98,8 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
   const [currentTime, setCurrentTime] = useState(new Date())
   const [headerLogoFailed, setHeaderLogoFailed] = useState(false)
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
+  const [dashboardError, setDashboardError] = useState<string | null>(null)
+  const fetchGenerationRef = useRef(0)
   const supabase = useMemo(() => createSupabaseBrowserClient(), [])
 
   // Live clock
@@ -86,113 +116,219 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
   // ── Data fetching ─────────────────────────────────────────────────────────
 
   const fetchDashboardData = useCallback(async () => {
-    const today = new Date().toISOString().split('T')[0]
+    const generation = ++fetchGenerationRef.current
+    const stillCurrent = () => generation === fetchGenerationRef.current
 
-    // 1. Current term
-    const { data: term } = await supabase.from('terms').select('id, term, year').eq('is_current', true).single()
-    const termId = term?.id
+    setLoading(true)
+    let timedOut = false
+    try {
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          timedOut = true
+          reject(new Error('Request timed out'))
+        }, ADMIN_DASHBOARD_FETCH_TIMEOUT_MS)
+      })
 
-    // 2. Classes + teachers + students
-    const [classRes, teacherRes, studentRes] = await Promise.all([
-      supabase.from('classes').select('*').order('sort_order'),
-      supabase.from('user_profiles').select('id, full_name, class_id').eq('role', 'teacher').eq('is_active', true),
-      supabase.from('students').select('id, class_id').eq('is_active', true),
-    ])
+      await Promise.race([
+        (async () => {
+          try {
+            const today = new Date().toISOString().split('T')[0]
 
-    const classes = classRes.data ?? []
-    const teachers = teacherRes.data ?? []
-    const students = studentRes.data ?? []
-
-    // Build student → class map
-    const studentClassMap = new Map<string, string>(
-      students.map((s: { id: string; class_id: string }) => [s.id, s.class_id])
-    )
-
-    // 3. Today's feeding + submissions + payments
-    const [feedRes, subRes, payRes] = await Promise.all([
-      supabase.from('feeding_daily_log').select('student_id, status, amount').eq('date', today ?? ''),
-      supabase.from('class_daily_submissions').select('class_id, submitted_at').eq('date', today ?? ''),
-      supabase.from('payments').select('amount_paid, student_id').eq('date_paid', today ?? ''),
-    ])
-
-    const feedingLogs: RawFeedingLog[] = feedRes.data ?? []
-    const submissions: { class_id: string; submitted_at: string }[] = subRes.data ?? []
-    const todayPayments: RawPayment[] = payRes.data ?? []
-
-    // Build ClassWithStats
-    const newClassStats: ClassWithStats[] = classes.map((cls: { id: string; name: string; level: string; sort_order: number }) => {
-      const teacher = teachers.find((t: { class_id: string | null }) => t.class_id === cls.id)
-      const classStudents = students.filter((s: { class_id: string }) => s.class_id === cls.id)
-      const classLogs = feedingLogs.filter(f => studentClassMap.get(f.student_id) === cls.id)
-      const sub = submissions.find(s => s.class_id === cls.id)
-      const classPayments = todayPayments.filter(p => studentClassMap.get(p.student_id) === cls.id)
-
-      return {
-        ...(cls as { id: string; name: string; level: import('@/types').ClassLevel; sort_order: number }),
-        teacher_name: (teacher as { full_name?: string } | undefined)?.full_name ?? 'No teacher assigned',
-        total_students: classStudents.length,
-        marked_count: classLogs.length,
-        paid_count: classLogs.filter(f => f.status === 'paid').length,
-        credit_count: classLogs.filter(f => f.status === 'credit').length,
-        absent_count: classLogs.filter(f => f.status === 'absent').length,
-        collected_today: classPayments.reduce((s, p) => s + (p.amount_paid ?? 0), 0),
-        submitted_at: sub?.submitted_at ?? null,
-      }
-    })
-
-    setClassStats(newClassStats)
-
-    // 4. Term stats
-    if (termId) {
-      const [termPayRes, feeAssignRes] = await Promise.all([
-        supabase.from('payments').select('amount_paid').eq('term_id', termId),
-        supabase.from('student_fee_assignments').select('fee_types(amount)').eq('term_id', termId).eq('is_active', true),
-      ])
-      const collected = (termPayRes.data ?? []).reduce((s: number, p: { amount_paid: number }) => s + p.amount_paid, 0)
-      const expected = (feeAssignRes.data ?? []).reduce((s: number, a: { fee_types: unknown }) => {
-        const ft = a.fee_types as { amount: number } | null
-        return s + (ft?.amount ?? 0)
-      }, 0)
-      setTermStats({ expected, collected, outstanding: Math.max(0, expected - collected) })
-    }
-
-    // 5. Fund summaries
-    const { data: funds } = await supabase.from('funds').select('*')
-    if (funds && termId) {
-      const fundSummaryData: FundSummary[] = await Promise.all(
-        (funds as { id: string; name: string; fund_type: string }[]).map(async fund => {
-          const [incomeRes, expRes] = await Promise.all([
-            supabase.from('payments').select('amount_paid').eq('fund_id', fund.id).eq('term_id', termId),
-            supabase.from('expenses').select('amount').eq('fund_id', fund.id),
+          const [
+            feedingViewRes,
+            fundSummaryViewRes,
+            termRes,
+            classRes,
+            teacherRes,
+            studentRes,
+            subRes,
+            payRes,
+          ] = await Promise.all([
+            supabase.from('feeding_today_by_class').select('*'),
+            supabase.from('fund_summary').select('*'),
+            supabase.from('terms').select('*').eq('is_current', true).single(),
+            supabase.from('classes').select('id, name, level, sort_order').order('sort_order'),
+            supabase.from('user_profiles').select('id, full_name, class_id').eq('role', 'teacher').eq('is_active', true),
+            supabase.from('students').select('id, class_id').eq('is_active', true),
+            supabase.from('class_daily_submissions').select('class_id, submitted_at').eq('date', today ?? ''),
+            supabase.from('payments').select('amount_paid, student_id').eq('date_paid', today ?? ''),
           ])
-          const totalIncome = (incomeRes.data ?? []).reduce((s: number, p: { amount_paid: number }) => s + p.amount_paid, 0)
-          const totalExpenses = (expRes.data ?? []).reduce((s: number, e: { amount: number }) => s + e.amount, 0)
-          return {
-            fund_id: fund.id,
-            fund_name: fund.name,
-            fund_type: fund.fund_type as import('@/types').FundType,
-            payment_income: totalIncome,
-            other_income: 0,
-            total_income: totalIncome,
-            total_expenses: totalExpenses,
-            net_balance: totalIncome - totalExpenses,
+
+          if (!stillCurrent() || timedOut) return
+
+          throwIfSupabaseError(feedingViewRes, 'feeding_today_by_class')
+          throwIfSupabaseError(fundSummaryViewRes, 'fund_summary')
+          throwIfSupabaseError(termRes, 'terms')
+          throwIfSupabaseError(classRes, 'classes')
+          throwIfSupabaseError(teacherRes, 'teachers')
+          throwIfSupabaseError(studentRes, 'students')
+          throwIfSupabaseError(subRes, 'class_daily_submissions')
+          throwIfSupabaseError(payRes, 'payments')
+
+          const classes = classRes.data ?? []
+          const teachers = teacherRes.data ?? []
+          const students = studentRes.data ?? []
+          const submissions = subRes.data ?? []
+          const todayPayments: RawPayment[] = payRes.data ?? []
+          const feedingRows = feedingViewRes.data ?? []
+
+          const studentClassMap = new Map<string, string>(
+            students.map((s: { id: string; class_id: string }) => [s.id, s.class_id])
+          )
+
+          const [expensesRes, fundsMetaRes] = await Promise.all([
+            supabase.from('expenses').select('fund_id, amount'),
+            supabase.from('funds').select('id, fund_type'),
+          ])
+
+          if (!stillCurrent() || timedOut) return
+
+          throwIfSupabaseError(expensesRes, 'expenses')
+          throwIfSupabaseError(fundsMetaRes, 'funds')
+
+          const termId = termRes.data?.id ?? null
+
+          let collected = 0
+          let expected = 0
+
+          if (termId) {
+            const [termPayRes, feeAssignRes] = await Promise.all([
+              supabase.from('payments').select('amount_paid').eq('term_id', termId),
+              supabase
+                .from('student_fee_assignments')
+                .select('fee_types(amount)')
+                .eq('term_id', termId)
+                .eq('is_active', true),
+            ])
+
+            if (!stillCurrent() || timedOut) return
+
+            throwIfSupabaseError(termPayRes, 'term_payments')
+            throwIfSupabaseError(feeAssignRes, 'student_fee_assignments')
+
+            collected = (termPayRes.data ?? []).reduce(
+              (s: number, p: { amount_paid: number }) => s + p.amount_paid,
+              0
+            )
+            expected = (feeAssignRes.data ?? []).reduce((s: number, a: { fee_types: unknown }) => {
+              const ft = a.fee_types as { amount: number } | null
+              return s + (ft?.amount ?? 0)
+            }, 0)
           }
-        })
-      )
-      setFundSummaries(fundSummaryData)
-    }
 
-    // 6. Pending expenses (proprietress only)
-    if (isProprietress) {
-      const { count } = await supabase
-        .from('expenses')
-        .select('id', { count: 'exact', head: true })
-        .eq('approval_status', 'pending')
-      setPendingExpenses(count ?? 0)
-    }
+          let pendingExpenseCount = 0
+          if (isProprietress) {
+            const pendingRes = await supabase
+              .from('expenses')
+              .select('id', { count: 'exact', head: true })
+              .eq('approval_status', 'pending')
 
-    setLoading(false)
+            if (!stillCurrent() || timedOut) return
+
+            throwIfSupabaseError(pendingRes, 'pending_expenses')
+            pendingExpenseCount = pendingRes.count ?? 0
+          }
+
+          const feedingByClassId = new Map(
+            feedingRows.map((row: FeedingTodayByClassRow) => [row.class_id, row])
+          )
+
+          const expenseByFund = new Map<string, number>()
+          for (const row of expensesRes.data ?? []) {
+            const fid = row.fund_id
+            if (fid == null) continue
+            expenseByFund.set(fid, (expenseByFund.get(fid) ?? 0) + parseNumeric(row.amount))
+          }
+
+          const fundTypeMap = new Map(
+            (fundsMetaRes.data ?? []).map((f: { id: string; fund_type: FundType }) => [f.id, f.fund_type])
+          )
+
+          const newClassStats: ClassWithStats[] = classes.map(
+            (cls: { id: string; name: string; level: string; sort_order: number }) => {
+              const feedRow = feedingByClassId.get(cls.id)
+              const teacher = teachers.find((t: { class_id: string | null }) => t.class_id === cls.id)
+              const classStudents = students.filter((s: { class_id: string }) => s.class_id === cls.id)
+              const sub = submissions.find((s: { class_id: string }) => s.class_id === cls.id)
+              const classPayments = todayPayments.filter(
+                p => studentClassMap.get(p.student_id) === cls.id
+              )
+
+              const paid = feedRow ? parseNumeric(feedRow.paid_count) : 0
+              const credit = feedRow ? parseNumeric(feedRow.credit_count) : 0
+              const absent = feedRow ? parseNumeric(feedRow.absent_count) : 0
+
+              return {
+                id: cls.id,
+                name: cls.name,
+                level: cls.level as ClassLevel,
+                sort_order: cls.sort_order,
+                teacher_name: (teacher as { full_name?: string } | undefined)?.full_name ?? 'No teacher assigned',
+                total_students: feedRow ? parseNumeric(feedRow.total_students) : classStudents.length,
+                marked_count: paid + credit + absent,
+                paid_count: paid,
+                credit_count: credit,
+                absent_count: absent,
+                collected_today: classPayments.reduce((s, p) => s + parseNumeric(p.amount_paid), 0),
+                submitted_at: sub?.submitted_at ?? null,
+              }
+            }
+          )
+
+          const fundRows = fundSummaryViewRes.data ?? []
+          const summaries: FundSummary[] = fundRows.map((row: FundSummaryViewRow) => {
+            const fid = row.id
+            const ft = fundTypeMap.get(fid) ?? 'general'
+            const expensesTotal = expenseByFund.get(fid) ?? 0
+            const totalIncome = parseNumeric(row.total_income)
+            return {
+              fund_id: fid,
+              fund_name: row.name,
+              fund_type: ft,
+              payment_income: parseNumeric(row.payment_income),
+              other_income: 0,
+              total_income: totalIncome,
+              total_expenses: expensesTotal,
+              net_balance: totalIncome - expensesTotal,
+            }
+          })
+
+          if (!stillCurrent() || timedOut) return
+
+          setDashboardError(null)
+          setClassStats(newClassStats)
+          setTermStats({
+            expected,
+            collected,
+            outstanding: Math.max(0, expected - collected),
+          })
+          setFundSummaries(summaries)
+          setPendingExpenses(pendingExpenseCount)
+          } catch (innerErr) {
+            if (timedOut || !stillCurrent()) return
+            throw innerErr
+          }
+        })(),
+        timeoutPromise,
+      ])
+    } catch (err) {
+      if (!stillCurrent()) return
+      const message =
+        err instanceof Error ? err.message : 'Could not load dashboard'
+      setDashboardError(message)
+      logError('admin-dashboard-fetch', err, { component: 'AdminDashboardShell' })
+    } finally {
+      if (stillCurrent()) {
+        setLoading(false)
+      }
+    }
   }, [supabase, isProprietress])
+
+  const handleDashboardRetry = useCallback(() => {
+    setDashboardError(null)
+    setLoading(true)
+    void fetchDashboardData()
+  }, [fetchDashboardData])
 
   const fetchInsights = useCallback(async () => {
     setInsightsLoading(true)
@@ -260,7 +396,13 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
         })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'payments' },
         () => handleRealtimeEvent())
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          logError('admin-dashboard-realtime', new Error('Realtime CHANNEL_ERROR'), {
+            channel: 'dashboard-realtime',
+          })
+        }
+      })
 
     return () => { supabase.removeChannel(channel) }
   }, [supabase, fetchDashboardData])
@@ -358,7 +500,30 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
       </header>
 
       <main className="px-3 tablet:px-6 lg:px-12 py-4 space-y-5 pb-8">
-
+        {dashboardError ? (
+          <div className="flex min-h-[40vh] items-center justify-center py-8">
+            <div
+              role="alert"
+              className="max-w-md w-full rounded-2xl border-2 border-red-200 bg-red-50 px-6 py-8 text-center shadow-lg dark:border-red-800 dark:bg-red-950/30"
+            >
+              <AlertTriangle className="mx-auto mb-4 h-10 w-10 text-red-500" aria-hidden />
+              <h2 className="mb-2 text-lg font-bold text-red-800 dark:text-red-200">
+                Could not load dashboard
+              </h2>
+              <p className="mb-6 text-sm text-red-700 dark:text-red-300">
+                {dashboardError}
+              </p>
+              <button
+                type="button"
+                onClick={handleDashboardRetry}
+                className="min-h-[48px] w-full rounded-xl bg-red-600 text-sm font-semibold text-white transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
         {/* ── Term Summary Bar ───────────────────────────────────────────── */}
         <section>
           <p className="text-xs font-bold text-[#0A1628] dark:text-gray-100 uppercase tracking-wide mb-3">Term Overview</p>
@@ -487,6 +652,8 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
               ))}
             </div>
           </section>
+        )}
+          </>
         )}
       </main>
 

@@ -8,9 +8,11 @@ import { TopBar } from '@/components/ui/TopBar'
 import { BottomNav } from '@/components/ui/BottomNav'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { TeacherScreenLoadingShell } from '@/components/teacher/teacher-screen-loading-shell'
 import { useAuth } from '@/hooks/useAuth'
 import { usePayments } from '@/hooks/usePayments'
 import { useTeacherClassName } from '@/hooks/use-teacher-class-name'
+import { useTeacherShellReady } from '@/hooks/use-teacher-shell-ready'
 import { db } from '@/lib/dexie/schema'
 import { formatGHS, getWeekStart } from '@/lib/utils'
 import { WEEKLY_FEEDING_AMOUNT, SCHOOL_NAME } from '@/lib/constants'
@@ -63,8 +65,17 @@ export default function TeacherPaymentPage() {
 }
 
 function TeacherPaymentContent() {
-  const { profile } = useAuth()
-  const { className: teacherClassDisplayName } = useTeacherClassName()
+  const { profile, loading: authLoading } = useAuth()
+  const {
+    className: teacherClassDisplayName,
+    loading: teacherClassNameLoading,
+  } = useTeacherClassName()
+
+  const shellReady = useTeacherShellReady(profile, {
+    className: teacherClassDisplayName,
+    classNameLoading: teacherClassNameLoading,
+  })
+
   const { savePayment, loading: saving } = usePayments()
   const { showToast } = useToast()
 
@@ -83,11 +94,11 @@ function TeacherPaymentContent() {
   // ── Data from Dexie ─────────────────────────────────────────────────────────
   const allStudents = useLiveQuery(
     async () => {
-      if (!classId) return []
+      if (!classId) return [] as Student[]
       return db.students.where('class_id').equals(classId).and(s => s.is_active).sortBy('full_name')
     },
     [classId],
-    []
+    classId ? undefined : ([] as Student[])
   )
 
   const feeTypes = useLiveQuery(
@@ -96,7 +107,7 @@ function TeacherPaymentContent() {
       return all.filter(f => f.is_active)
     },
     [],
-    []
+    undefined
   )
 
   const currentTerm = useLiveQuery(
@@ -105,8 +116,15 @@ function TeacherPaymentContent() {
       return terms.find(t => t.is_current) ?? null
     },
     [],
-    null
+    undefined
   )
+
+  const dexieReady =
+    feeTypes !== undefined &&
+    currentTerm !== undefined &&
+    (classId ? allStudents !== undefined : true)
+
+  const isReady = shellReady && dexieReady && !authLoading
 
   // ── Filtered students ────────────────────────────────────────────────────────
   const filteredStudents = useMemo(() => {
@@ -268,6 +286,17 @@ function TeacherPaymentContent() {
         </main>
         <BottomNav />
       </div>
+    )
+  }
+
+  if (!isReady) {
+    return (
+      <TeacherScreenLoadingShell
+        topBarTitle="Record Payment"
+        backHref="/teacher/home"
+        showSync
+        compactTitles
+      />
     )
   }
 
