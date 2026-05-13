@@ -11,6 +11,7 @@ import { StudentFeedingRow } from '@/components/teacher/StudentFeedingRow'
 import { StudentRowSkeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
 import { useFeeding } from '@/hooks/useFeeding'
+import { useTeacherClassName } from '@/hooks/use-teacher-class-name'
 import { getWeekStart } from '@/lib/utils'
 import { FEEDING_FEE_AMOUNT } from '@/lib/constants'
 import { db } from '@/lib/dexie/schema'
@@ -27,14 +28,8 @@ export default function TeacherFeedingPage() {
 }
 
 function TeacherFeedingContent() {
-  const todayStr = new Date().toLocaleDateString('en-GB', {
-    timeZone: 'Africa/Accra',
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  })
-
   const { profile, user, loading: teacherAuthLoading } = useAuth()
+  const { className: teacherClassSubtitle } = useTeacherClassName()
   const { feedingLog, markStudent, submitToAdmin, stats, loading, isSubmitted, students } = useFeeding()
   const [isEditing, setIsEditing] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -91,7 +86,13 @@ function TeacherFeedingContent() {
   if (teacherAuthLoading) {
     return (
       <div className="min-h-screen bg-mga-cream dark:bg-[#0A1628]">
-        <TopBar title="Mark Feeding" subtitle={todayStr} backHref="/teacher/home" showSync />
+        <TopBar
+          title="Mark Feeding"
+          subtitle={teacherClassSubtitle || 'Loading...'}
+          backHref="/teacher/home"
+          showSync
+          compactTitles
+        />
         <div className="p-4 space-y-2">
           {Array.from({ length: 8 }).map((_, i) => (
             <StudentRowSkeleton key={i} />
@@ -105,7 +106,13 @@ function TeacherFeedingContent() {
   if (!profile?.class_id) {
     return (
       <div className="min-h-screen bg-mga-cream dark:bg-[#0A1628] flex flex-col">
-        <TopBar title="Mark Feeding" subtitle={todayStr} backHref="/teacher/home" showSync />
+        <TopBar
+          title="Mark Feeding"
+          subtitle={teacherClassSubtitle || 'Loading...'}
+          backHref="/teacher/home"
+          showSync
+          compactTitles
+        />
         <div className="flex flex-1 flex-col items-center justify-center p-6">
           <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl p-6 max-w-sm text-center">
             <p className="text-red-700 dark:text-red-300 font-semibold mb-2">
@@ -129,9 +136,10 @@ function TeacherFeedingContent() {
     <div className="min-h-screen bg-mga-cream dark:bg-[#0A1628]">
       <TopBar
         title="Mark Feeding"
-        subtitle={todayStr}
+        subtitle={teacherClassSubtitle || 'Loading...'}
         backHref="/teacher/home"
         showSync
+        compactTitles
       />
 
       {/* Submitted banner */}
@@ -184,7 +192,7 @@ function TeacherFeedingContent() {
       {/* Sticky bottom bar — fixed on mobile above bottom nav; relative on tablet (no bottom nav) */}
       <div className="fixed bottom-16 left-0 right-0 z-20 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-600 px-4 pt-3 pb-2 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto md:px-6 md:py-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+          <span className="text-xs text-gray-600 dark:text-gray-300 font-medium">
             {stats.marked} of {stats.total} students marked
           </span>
           {stats.paid > 0 && (
@@ -197,6 +205,7 @@ function TeacherFeedingContent() {
           variant={isSubmitted && !isEditing ? 'secondary' : 'primary'}
           fullWidth
           size="lg"
+          className="text-sm font-semibold"
           loading={submitting}
           disabled={stats.marked === 0 || isLocked}
           onClick={handleSubmit}

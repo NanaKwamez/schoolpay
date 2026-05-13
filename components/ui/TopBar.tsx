@@ -25,6 +25,8 @@ interface TopBarProps {
   showSync?: boolean
   /** When false, omit school logo + name (use in-page branding instead). Default true. */
   showSchoolBrand?: boolean
+  /** Smaller title/subtitle for teacher mobile layouts. Default false. */
+  compactTitles?: boolean
 }
 
 export function TopBar({
@@ -34,6 +36,7 @@ export function TopBar({
   rightAction,
   showSync = false,
   showSchoolBrand = true,
+  compactTitles = false,
 }: TopBarProps) {
   const { pendingCount, isSyncing } = useSync()
   const { isOnline } = useOnlineStatus()
@@ -79,7 +82,11 @@ export function TopBar({
               <h1
                 className={cn(
                   'font-bold text-white truncate leading-tight',
-                  showSchoolBrand ? 'text-base sm:text-lg mt-0.5' : 'text-lg'
+                  compactTitles
+                    ? 'text-base'
+                    : showSchoolBrand
+                      ? 'text-base sm:text-lg mt-0.5'
+                      : 'text-lg'
                 )}
               >
                 {title}

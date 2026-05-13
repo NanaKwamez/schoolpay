@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { useToast } from '@/components/ui/Toast'
 import { useAuth } from '@/hooks/useAuth'
+import { useTeacherClassName } from '@/hooks/use-teacher-class-name'
 import { useFeeding } from '@/hooks/useFeeding'
 import { useSync } from '@/hooks/useSync'
 import { db } from '@/lib/dexie/schema'
@@ -63,6 +64,8 @@ function formatLastSyncLine(iso: string | null | undefined): string {
 
 export default function TeacherHomePage() {
   const { profile } = useAuth()
+  const { className: teacherClassDisplayName, loading: teacherClassNameLoading } =
+    useTeacherClassName()
   const classId = profile?.class_id ?? null
   const { feedingLog, stats, isSubmitted, loading } = useFeeding()
   const { syncNow } = useSync()
@@ -90,13 +93,6 @@ export default function TeacherHomePage() {
       window.removeEventListener('focus', triggerSync)
     }
   }, [triggerSync])
-
-  const classRow = useLiveQuery(
-    () => (classId ? db.classes.get(classId) : undefined),
-    [classId],
-    undefined
-  )
-  const classDisplayName = classRow?.name ?? 'Your Class'
 
   const savedStudentCount = useLiveQuery(
     () =>
@@ -186,13 +182,19 @@ export default function TeacherHomePage() {
             />
             <div className="min-w-0 flex-1">
               <p className="text-yellow-400 text-xs font-semibold">{SCHOOL_NAME}</p>
-              <p className="text-white/70 mt-0.5">{formatTodayLong()}</p>
-              <h1 className="text-2xl font-bold text-white mt-1">
-                {greeting}, {profile?.full_name?.split(' ')[0] ?? 'Teacher'}
-              </h1>
-              <p className="text-[32px] font-extrabold text-yellow-300 leading-tight mt-1">
-                {classDisplayName}
+              <p className="text-white/70 mt-0.5 text-xs">{formatTodayLong()}</p>
+              <p className="text-lg text-white mt-1">
+                {greeting},{' '}
+                <span className="text-base font-semibold">
+                  {profile?.full_name ?? 'Teacher'}
+                </span>
               </p>
+              {classId !== null && (
+                <p className="text-xl font-bold text-yellow-300 leading-tight mt-1">
+                  {teacherClassDisplayName ||
+                    (teacherClassNameLoading ? 'Loading...' : '')}
+                </p>
+              )}
               {classId && (
                 <p className="text-white/55 text-xs mt-1.5 font-medium">
                   {savedStudentCount} students saved • Last sync {formatLastSyncLine(lastSyncIso)}
@@ -206,7 +208,7 @@ export default function TeacherHomePage() {
         <Card className="p-4 border-0" style={{ background: '#0A1628' }}>
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-3xl font-extrabold text-yellow-400">
+              <p className="text-2xl font-extrabold text-yellow-400">
                 {loading ? '—' : stats.marked}
                 <span className="text-base font-medium text-white/70 ml-1">
                   marked today
@@ -259,7 +261,7 @@ export default function TeacherHomePage() {
                 <Utensils className="h-6 w-6 text-[#0A1628]" />
               </div>
               <div className="text-left">
-                <p className="text-xl font-bold">Mark Feeding</p>
+                <p className="text-sm font-semibold">Mark Feeding</p>
                 <p className="text-[#0A1628]/75 text-sm">Record today&apos;s feeding status</p>
               </div>
             </button>
@@ -278,7 +280,7 @@ export default function TeacherHomePage() {
                 <CreditCard className="h-6 w-6 text-yellow-400" />
               </div>
               <div className="text-left">
-                <p className="text-xl font-bold">Record Payment</p>
+                <p className="text-sm font-semibold">Record Payment</p>
                 <p className="text-yellow-400/70 text-sm">Log a student fee payment</p>
               </div>
             </button>
@@ -299,7 +301,7 @@ export default function TeacherHomePage() {
                 <Users className="h-6 w-6 text-blue-500" />
               </div>
               <div className="text-left">
-                <p className="text-xl font-bold">Manage Students</p>
+                <p className="text-sm font-semibold">Manage Students</p>
                 <p className="text-gray-500 text-sm">Request to enrol or withdraw a student</p>
               </div>
             </button>
@@ -308,7 +310,9 @@ export default function TeacherHomePage() {
 
         {/* Recent Activity */}
         <div>
-            <h2 className="text-base font-semibold text-[#0A1628] mb-3">Today&apos;s Activity</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-[#0A1628] mb-3">
+              Today&apos;s Activity
+            </h2>
           {recentLogs.length === 0 ? (
             <Card>
               <p className="text-gray-400 text-sm text-center py-4">No marks yet today</p>

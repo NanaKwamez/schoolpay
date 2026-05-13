@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { useAuth } from '@/hooks/useAuth'
 import { usePayments } from '@/hooks/usePayments'
+import { useTeacherClassName } from '@/hooks/use-teacher-class-name'
 import { db } from '@/lib/dexie/schema'
 import { formatGHS, getWeekStart } from '@/lib/utils'
 import { WEEKLY_FEEDING_AMOUNT, SCHOOL_NAME } from '@/lib/constants'
@@ -63,6 +64,7 @@ export default function TeacherPaymentPage() {
 
 function TeacherPaymentContent() {
   const { profile } = useAuth()
+  const { className: teacherClassDisplayName } = useTeacherClassName()
   const { savePayment, loading: saving } = usePayments()
   const { showToast } = useToast()
 
@@ -104,11 +106,6 @@ function TeacherPaymentContent() {
     },
     [],
     null
-  )
-
-  const classData = useLiveQuery(
-    async () => (classId ? db.classes.get(classId) : undefined),
-    [classId]
   )
 
   // ── Filtered students ────────────────────────────────────────────────────────
@@ -176,7 +173,7 @@ function TeacherPaymentContent() {
       setSavedReceipt({
         receiptNumber,
         studentName: selectedStudent.full_name,
-        className: classData?.name ?? '',
+        className: teacherClassDisplayName,
         feeName: selectedFeeType.name,
         amount: amountNum,
         paymentType,
@@ -192,7 +189,7 @@ function TeacherPaymentContent() {
     }
   }, [
     selectedStudent, selectedFeeType, profile, currentTerm,
-    resolvedAmount, paymentType, weekCoveredStr, notes, savePayment, classData, showToast,
+    resolvedAmount, paymentType, weekCoveredStr, notes, savePayment, teacherClassDisplayName, showToast,
   ])
 
   const handleReset = () => {
@@ -227,7 +224,7 @@ function TeacherPaymentContent() {
   if (savedReceipt) {
     return (
       <div className="min-h-screen bg-mga-cream">
-        <TopBar title="Payment Saved" backHref="/teacher/home" />
+        <TopBar title="Payment Saved" backHref="/teacher/home" compactTitles />
         <main className="px-4 py-8 space-y-5">
           <div className="flex flex-col items-center text-center gap-2">
             <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
@@ -277,7 +274,13 @@ function TeacherPaymentContent() {
   // ── Main form ───────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-mga-cream">
-      <TopBar title="Record Payment" backHref="/teacher/home" showSync />
+      <TopBar
+        title="Record Payment"
+        backHref="/teacher/home"
+        showSync
+        subtitle={teacherClassDisplayName || 'Loading...'}
+        compactTitles
+      />
 
       <main className="pb-24 md:pb-8">
         <div className="md:grid md:grid-cols-2 md:gap-6 md:px-6 md:pt-4 md:items-start">
@@ -286,13 +289,13 @@ function TeacherPaymentContent() {
 
         {/* ── Step 1: Select student ─────────────────────────────────────── */}
         <section className="bg-white border-b border-mga-gold/15 px-4 pt-4 pb-3 md:rounded-2xl md:shadow-sm md:border md:border-mga-gold/15 md:mb-4">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Step 1 — Student</p>
+          <p className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">Step 1 — Student</p>
 
           {selectedStudent ? (
             <div className="flex items-center gap-3 bg-mga-green-pale rounded-xl px-4 py-3 border border-mga-gold/25">
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-gray-900">{selectedStudent.full_name}</p>
-                <p className="text-xs text-mga-green-mid">{classData?.name}</p>
+                <p className="font-bold text-gray-900 text-sm">{selectedStudent.full_name}</p>
+                <p className="text-xs text-mga-green-mid">{teacherClassDisplayName || 'Loading...'}</p>
               </div>
               <button
                 onClick={() => { setSelectedStudent(null); setSelectedFeeType(null) }}
@@ -311,7 +314,7 @@ function TeacherPaymentContent() {
                   placeholder="Search student name..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="w-full min-h-[48px] pl-10 pr-4 py-2 border-2 border-gray-200 rounded-xl text-base outline-none focus:border-mga-green-mid transition"
+                  className="w-full min-h-[48px] pl-10 pr-4 py-2 border-2 border-gray-200 rounded-xl text-sm outline-none focus:border-mga-green-mid transition"
                 />
               </div>
               <div className="max-h-52 overflow-y-auto divide-y divide-mga-green-pale/40">
@@ -321,7 +324,7 @@ function TeacherPaymentContent() {
                     onClick={() => { setSelectedStudent(student); setSearch('') }}
                     className="w-full flex items-center justify-between px-2 py-3 min-h-[52px] hover:bg-mga-green-pale/50 active:bg-mga-cream-dark transition text-left"
                   >
-                    <span className="font-medium text-gray-900 text-base">{student.full_name}</span>
+                    <span className="font-medium text-gray-900 text-sm">{student.full_name}</span>
                     <ChevronRight className="h-4 w-4 text-gray-400" />
                   </button>
                 ))}
@@ -336,7 +339,7 @@ function TeacherPaymentContent() {
         {/* ── Step 2: Select fee type (only after student selected) ─────── */}
         {selectedStudent && (
           <section className="bg-white border-b border-mga-gold/15 px-4 pt-4 pb-3">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Step 2 — Fee Type</p>
+            <p className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">Step 2 — Fee Type</p>
             <div className="space-y-2">
               {(feeTypes ?? []).map(fee => {
                 const isSelected = selectedFeeType?.id === fee.id
@@ -352,7 +355,7 @@ function TeacherPaymentContent() {
                         : 'bg-white border-gray-200 text-gray-900 hover:border-mga-gold/30'
                     )}
                   >
-                    <span className="font-semibold text-base">{fee.name}</span>
+                    <span className="font-semibold text-sm">{fee.name}</span>
                     <span className={cn('text-sm font-bold', isSelected ? 'text-white/90' : 'text-mga-green-mid')}>
                       {formatGHS(fee.amount)}
                     </span>
@@ -366,7 +369,7 @@ function TeacherPaymentContent() {
         {/* ── Step 3: Payment details ───────────────────────────────────── */}
         {selectedStudent && selectedFeeType && (
           <section className="bg-white px-4 pt-4 pb-4 space-y-4">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Step 3 — Payment Details</p>
+            <p className="text-sm font-bold text-gray-400 uppercase tracking-wide">Step 3 — Payment Details</p>
 
             {/* Payment type */}
             <div>
@@ -377,7 +380,7 @@ function TeacherPaymentContent() {
                     key={pt}
                     onClick={() => setPaymentType(pt)}
                     className={cn(
-                      'min-h-[48px] rounded-xl border-2 text-xs font-bold transition',
+                      'min-h-[48px] rounded-xl border-2 text-sm font-bold transition',
                       paymentType === pt
                         ? 'bg-mga-green-mid border-mga-green-mid text-white'
                         : 'bg-white border-gray-200 text-gray-700 hover:border-mga-gold/30'
@@ -402,7 +405,7 @@ function TeacherPaymentContent() {
                     value={amount}
                     onChange={e => setAmount(e.target.value)}
                     placeholder={`Up to ${formatGHS(selectedFeeType.amount)}`}
-                    className="w-full min-h-[56px] border-2 border-gray-200 rounded-xl px-4 text-xl font-bold outline-none focus:border-mga-green-mid transition"
+                    className="w-full min-h-[56px] border-2 border-gray-200 rounded-xl px-4 text-sm font-bold outline-none focus:border-mga-green-mid transition"
                   />
                   {amount && !isNaN(parseFloat(amount)) && (
                     <p className="text-xs text-gray-500 mt-1">
@@ -412,7 +415,7 @@ function TeacherPaymentContent() {
                 </>
               ) : (
                 <div className="min-h-[56px] bg-mga-cream-dark border-2 border-mga-gold/20 rounded-xl px-4 flex items-center">
-                  <span className="text-xl font-bold text-gray-900">{formatGHS(parseFloat(resolvedAmount))}</span>
+                  <span className="text-base font-bold text-gray-900">{formatGHS(parseFloat(resolvedAmount))}</span>
                   <span className="text-xs text-gray-400 ml-2">(fixed)</span>
                 </div>
               )}
@@ -451,16 +454,16 @@ function TeacherPaymentContent() {
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
                 placeholder="Any additional notes…"
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base outline-none focus:border-mga-green-mid transition resize-none"
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-mga-green-mid transition resize-none"
               />
             </div>
 
             {/* Receipt preview — hidden on tablet (shown in right column instead) */}
-            <Card variant="green" className="text-sm md:hidden">
+            <Card variant="green" className="text-xs md:hidden">
               <p className="text-xs font-bold text-mga-green-dark uppercase tracking-wide mb-2">Receipt Preview</p>
-              <div className="space-y-1 font-mono text-mga-green-dark">
+              <div className="space-y-1 font-mono text-mga-green-dark text-xs">
                 <p>{SCHOOL_NAME}</p>
-                <p>Student: {selectedStudent.full_name} — {classData?.name}</p>
+                <p>Student: {selectedStudent.full_name} — {teacherClassDisplayName || '—'}</p>
                 <p>Fee: {selectedFeeType.name}</p>
                 <p>Amount: {formatGHS(parseFloat(resolvedAmount) || 0)}</p>
                 <p>Type: {paymentTypeLabel(paymentType)}</p>
@@ -474,11 +477,11 @@ function TeacherPaymentContent() {
         {/* Right column — receipt preview, visible md+ only */}
         {selectedStudent && selectedFeeType && (
           <div className="hidden md:block sticky top-4 self-start px-4 pt-4 pb-4">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Receipt Preview</p>
+            <p className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">Receipt Preview</p>
             <Card variant="green" className="text-sm">
-              <div className="space-y-1 font-mono text-mga-green-dark">
+              <div className="space-y-1 font-mono text-mga-green-dark text-xs">
                 <p className="font-bold">{SCHOOL_NAME}</p>
-                <p>Student: {selectedStudent.full_name} — {classData?.name}</p>
+                <p>Student: {selectedStudent.full_name} — {teacherClassDisplayName || '—'}</p>
                 <p>Fee: {selectedFeeType.name}</p>
                 <p>Amount: {formatGHS(parseFloat(resolvedAmount) || 0)}</p>
                 <p>Type: {paymentTypeLabel(paymentType)}</p>

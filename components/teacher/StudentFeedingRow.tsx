@@ -2,8 +2,7 @@
 
 import { memo, useCallback } from 'react'
 import { Check, X, Utensils } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { formatGHS } from '@/lib/utils'
+import { cn, formatGHS } from '@/lib/utils'
 import { StudentAvatar } from '@/components/ui/StudentAvatar'
 import type { Student, FeedingStatus } from '@/types'
 
@@ -37,7 +36,7 @@ function StudentFeedingRowBase({
 
       {/* Name + debt */}
       <div className="flex-1 min-w-0 py-3">
-        <p className="text-[18px] font-bold text-gray-900 dark:text-white leading-tight">
+        <p className="text-sm font-medium text-gray-900 dark:text-white leading-tight">
           {student.full_name}
         </p>
         {creditBalance > 0 && (
@@ -60,7 +59,7 @@ function StudentFeedingRowBase({
             aria-pressed={currentStatus === 'paid'}
             aria-label={`Mark ${student.full_name} as Paid`}
             className={cn(
-              'w-10 h-10 rounded-full flex items-center justify-center',
+              'w-9 h-9 rounded-full flex items-center justify-center',
               'border-2 transition-all duration-200',
               'hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-green-400',
               'touch-manipulation',
@@ -70,7 +69,7 @@ function StudentFeedingRowBase({
             )}
             title="Mark as Paid"
           >
-            <Check size={18} className={currentStatus === 'paid' ? 'text-white' : 'text-gray-400 dark:text-gray-300'} />
+            <Check size={14} className={currentStatus === 'paid' ? 'text-white' : 'text-gray-400 dark:text-gray-300'} />
           </button>
 
           {/* CREDIT */}
@@ -79,7 +78,7 @@ function StudentFeedingRowBase({
             aria-pressed={currentStatus === 'credit'}
             aria-label={`Mark ${student.full_name} as Credit`}
             className={cn(
-              'w-10 h-10 rounded-full flex items-center justify-center',
+              'w-9 h-9 rounded-full flex items-center justify-center',
               'border-2 transition-all duration-200',
               'hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-orange-400',
               'touch-manipulation',
@@ -89,7 +88,7 @@ function StudentFeedingRowBase({
             )}
             title="Mark as Credit"
           >
-            <span className={cn('text-sm font-bold', currentStatus === 'credit' ? 'text-white' : 'text-gray-400 dark:text-gray-300')}>
+            <span className={cn('text-xs font-bold', currentStatus === 'credit' ? 'text-white' : 'text-gray-400 dark:text-gray-300')}>
               ₵
             </span>
           </button>
@@ -100,7 +99,7 @@ function StudentFeedingRowBase({
             aria-pressed={currentStatus === 'absent'}
             aria-label={`Mark ${student.full_name} as Absent`}
             className={cn(
-              'w-10 h-10 rounded-full flex items-center justify-center',
+              'w-9 h-9 rounded-full flex items-center justify-center',
               'border-2 transition-all duration-200',
               'hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-gray-400',
               'touch-manipulation',
@@ -110,7 +109,7 @@ function StudentFeedingRowBase({
             )}
             title="Mark as Absent"
           >
-            <X size={18} className={currentStatus === 'absent' ? 'text-white' : 'text-gray-400 dark:text-gray-300'} />
+            <X size={14} className={currentStatus === 'absent' ? 'text-white' : 'text-gray-400 dark:text-gray-300'} />
           </button>
 
           {/* DID NOT EAT */}
@@ -119,7 +118,7 @@ function StudentFeedingRowBase({
             aria-pressed={currentStatus === 'did_not_eat'}
             aria-label={`Mark ${student.full_name} as Did Not Eat`}
             className={cn(
-              'w-10 h-10 rounded-full flex items-center justify-center',
+              'w-9 h-9 rounded-full flex items-center justify-center',
               'border-2 transition-all duration-200',
               'hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-400',
               'touch-manipulation',
@@ -129,7 +128,7 @@ function StudentFeedingRowBase({
             )}
             title="Did Not Eat"
           >
-            <Utensils size={16} className={currentStatus === 'did_not_eat' ? 'text-white' : 'text-gray-400 dark:text-gray-300'} />
+            <Utensils size={14} className={currentStatus === 'did_not_eat' ? 'text-white' : 'text-gray-400 dark:text-gray-300'} />
           </button>
         </div>
       )}

@@ -8,6 +8,7 @@ import { BottomNav } from '@/components/ui/BottomNav'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { useAuth } from '@/hooks/useAuth'
+import { useTeacherClassName } from '@/hooks/use-teacher-class-name'
 import { useFeeding } from '@/hooks/useFeeding'
 import { usePayments } from '@/hooks/usePayments'
 import { db } from '@/lib/dexie/schema'
@@ -36,6 +37,7 @@ function StatCard({ label, value, bg, text }: StatCardProps) {
 
 export default function TeacherSummaryPage() {
   const { profile } = useAuth()
+  const { className: teacherClassSubtitle } = useTeacherClassName()
   const classId = profile?.class_id ?? null
 
   const { stats, feedingLog } = useFeeding()
@@ -44,17 +46,6 @@ export default function TeacherSummaryPage() {
   const [recentPayments, setRecentPayments] = useState<LocalPayment[]>([])
   const [creditBalances, setCreditBalances] = useState<Map<string, number>>(new Map())
 
-  const today = new Date().toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  })
-
-  // Fetch class name
-  const classData = useLiveQuery(
-    async () => (classId ? db.classes.get(classId) : undefined),
-    [classId]
-  )
-
-  // Fetch students
   const students = useLiveQuery(
     async () => {
       if (!classId) return []
@@ -107,11 +98,15 @@ export default function TeacherSummaryPage() {
     return debtors.sort((a, b) => b.balance - a.balance)
   }, [creditBalances, studentMap])
 
-  const titleText = classData ? `${classData.name} Summary` : 'Class Summary'
-
   return (
     <div className="min-h-screen bg-mga-cream pb-20">
-      <TopBar title={titleText} subtitle={today} backHref="/teacher/home" showSync />
+      <TopBar
+        title="Class Summary"
+        subtitle={teacherClassSubtitle || 'Loading...'}
+        backHref="/teacher/home"
+        showSync
+        compactTitles
+      />
 
       <main className="px-4 py-5 space-y-6">
 
