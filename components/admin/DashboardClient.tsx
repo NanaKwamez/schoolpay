@@ -18,10 +18,9 @@ import { useSync } from '@/hooks/useSync'
 import { useOnlineStatus } from '@/hooks/useOnline'
 import { EnrollmentRequestsPanel } from './EnrollmentRequestsPanel'
 import { Modal } from '@/components/ui/Modal'
-import { ADMIN_DASHBOARD_FETCH_TIMEOUT_MS } from '@/lib/constants'
+import { ADMIN_DASHBOARD_FETCH_TIMEOUT_MS, feedingPaidAmountFromLogOrTier } from '@/lib/constants'
 import { logError } from '@/lib/logger'
-import { formatGHS } from '@/lib/utils'
-import { cn } from '@/lib/utils'
+import { cn, formatGHS, getTodayGhana } from '@/lib/utils'
 import type { ClassLevel, ClassWithStats, FundSummary, FundType, AiInsightCache } from '@/types'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -30,11 +29,6 @@ interface TermStats {
   expected: number
   collected: number
   outstanding: number
-}
-
-interface RawPayment {
-  amount_paid: number
-  student_id: string
 }
 
 interface FeedingTodayByClassRow {
@@ -66,6 +60,11 @@ function parseNumeric(value: unknown): number {
     return Number.isFinite(n) ? n : 0
   }
   return 0
+}
+
+/** Daily cash feeding: only these rows carry revenue in {@link feeding_daily_log}. */
+function isFeedingRevenueStatus(status: string): boolean {
+  return status === 'paid' || status === 'covered_weekly'
 }
 
 // ─── Dashboard shell — `resolvedRole` MUST come from the server page, not useAuth ─
@@ -132,7 +131,7 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
       await Promise.race([
         (async () => {
           try {
-            const today = new Date().toISOString().split('T')[0]
+            const today = getTodayGhana()
 
           const [
             feedingViewRes,
@@ -142,7 +141,9 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
             teacherRes,
             studentRes,
             subRes,
-            payRes,
+            feedingTodayLogsRes,
+            expensesRes,
+            fundsMetaRes,
           ] = await Promise.all([
             supabase.from('feeding_today_by_class').select('*'),
             supabase.from('fund_summary').select('*'),
@@ -150,8 +151,10 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
             supabase.from('classes').select('id, name, level, sort_order').order('sort_order'),
             supabase.from('user_profiles').select('id, full_name, class_id').eq('role', 'teacher').eq('is_active', true),
             supabase.from('students').select('id, class_id').eq('is_active', true),
-            supabase.from('class_daily_submissions').select('class_id, submitted_at').eq('date', today ?? ''),
-            supabase.from('payments').select('amount_paid, student_id').eq('date_paid', today ?? ''),
+            supabase.from('class_daily_submissions').select('class_id, submitted_at').eq('date', today),
+            supabase.from('feeding_daily_log').select('student_id, amount, status').eq('date', today),
+            supabase.from('expenses').select('fund_id, amount'),
+            supabase.from('funds').select('id, fund_type'),
           ])
 
           if (!stillCurrent() || timedOut) return
@@ -163,57 +166,127 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
           throwIfSupabaseError(teacherRes, 'teachers')
           throwIfSupabaseError(studentRes, 'students')
           throwIfSupabaseError(subRes, 'class_daily_submissions')
-          throwIfSupabaseError(payRes, 'payments')
+          throwIfSupabaseError(feedingTodayLogsRes, 'feeding_daily_log today')
+          throwIfSupabaseError(expensesRes, 'expenses')
+          throwIfSupabaseError(fundsMetaRes, 'funds')
 
           const classes = classRes.data ?? []
           const teachers = teacherRes.data ?? []
           const students = studentRes.data ?? []
           const submissions = subRes.data ?? []
-          const todayPayments: RawPayment[] = payRes.data ?? []
           const feedingRows = feedingViewRes.data ?? []
 
           const studentClassMap = new Map<string, string>(
             students.map((s: { id: string; class_id: string }) => [s.id, s.class_id])
           )
+          const activeStudentIds = new Set<string>(
+            students.map((s: { id: string }) => s.id)
+          )
+          const classIdToName = new Map(
+            classes.map((c: { id: string; name: string }) => [c.id, c.name])
+          )
 
-          const [expensesRes, fundsMetaRes] = await Promise.all([
-            supabase.from('expenses').select('fund_id, amount'),
-            supabase.from('funds').select('id, fund_type'),
-          ])
+          const feedingCollectedByClass = new Map<string, number>()
+          for (const row of feedingTodayLogsRes.data ?? []) {
+            const rec = row as { student_id: string; status: string; amount: unknown }
+            if (!isFeedingRevenueStatus(rec.status)) continue
+            if (!activeStudentIds.has(rec.student_id)) continue
+            const classId = studentClassMap.get(rec.student_id)
+            if (classId == null) continue
+            const tierName = classIdToName.get(classId) ?? ''
+            const amt = feedingPaidAmountFromLogOrTier(rec.amount, tierName)
+            feedingCollectedByClass.set(classId, (feedingCollectedByClass.get(classId) ?? 0) + amt)
+          }
 
-          if (!stillCurrent() || timedOut) return
-
-          throwIfSupabaseError(expensesRes, 'expenses')
-          throwIfSupabaseError(fundsMetaRes, 'funds')
+          const feedingFundId =
+            (fundsMetaRes.data ?? []).find((f: { fund_type: FundType }) => f.fund_type === 'feeding')?.id ?? null
 
           const termId = termRes.data?.id ?? null
 
           let collected = 0
           let expected = 0
+          let recomputedFeedingFundTotalIncome: number | null = null
 
           if (termId) {
-            const [termPayRes, feeAssignRes] = await Promise.all([
-              supabase.from('payments').select('amount_paid').eq('term_id', termId),
-              supabase
-                .from('student_fee_assignments')
-                .select('fee_types(amount)')
-                .eq('term_id', termId)
-                .eq('is_waived', false),
-            ])
+            const termStartRaw = termRes.data?.start_date ?? '1970-01-01'
+            const termEndRaw = termRes.data?.end_date ?? '1970-01-01'
+            const termStart = typeof termStartRaw === 'string' ? termStartRaw.split('T')[0] ?? '1970-01-01' : '1970-01-01'
+            const termEnd = typeof termEndRaw === 'string' ? termEndRaw.split('T')[0] ?? '1970-01-01' : '1970-01-01'
 
-            if (!stillCurrent() || timedOut) return
+            if (feedingFundId != null) {
+              const [termPayRes, feeAssignRes, feedingFundPayRes, feedingTermLogsRes] = await Promise.all([
+                supabase.from('payments').select('amount_paid').eq('term_id', termId),
+                supabase
+                  .from('student_fee_assignments')
+                  .select('fee_types(amount)')
+                  .eq('term_id', termId)
+                  .eq('is_waived', false),
+                supabase
+                  .from('payments')
+                  .select('amount_paid')
+                  .eq('term_id', termId)
+                  .eq('fund_id', feedingFundId),
+                supabase
+                  .from('feeding_daily_log')
+                  .select('student_id, amount, status')
+                  .gte('date', termStart)
+                  .lte('date', termEnd),
+              ])
 
-            throwIfSupabaseError(termPayRes, 'term_payments')
-            throwIfSupabaseError(feeAssignRes, 'student_fee_assignments')
+              if (!stillCurrent() || timedOut) return
 
-            collected = (termPayRes.data ?? []).reduce(
-              (s: number, p: { amount_paid: number }) => s + p.amount_paid,
-              0
-            )
-            expected = (feeAssignRes.data ?? []).reduce((s: number, a: { fee_types: unknown }) => {
-              const ft = a.fee_types as { amount: number } | null
-              return s + (ft?.amount ?? 0)
-            }, 0)
+              throwIfSupabaseError(termPayRes, 'term_payments')
+              throwIfSupabaseError(feeAssignRes, 'student_fee_assignments')
+              throwIfSupabaseError(feedingFundPayRes, 'term_payments feeding fund')
+              throwIfSupabaseError(feedingTermLogsRes, 'feeding_daily_log term')
+
+              collected = (termPayRes.data ?? []).reduce(
+                (s: number, p: { amount_paid: number }) => s + parseNumeric(p.amount_paid),
+                0
+              )
+              expected = (feeAssignRes.data ?? []).reduce((s: number, a: { fee_types: unknown }) => {
+                const ft = a.fee_types as { amount: number } | null
+                return s + (ft?.amount ?? 0)
+              }, 0)
+
+              const feedingPaySum = (feedingFundPayRes.data ?? []).reduce(
+                (s: number, p: { amount_paid: number }) => s + parseNumeric(p.amount_paid),
+                0
+              )
+              let feedingLogSum = 0
+              for (const row of feedingTermLogsRes.data ?? []) {
+                const rec = row as { student_id: string; status: string; amount: unknown }
+                if (!isFeedingRevenueStatus(rec.status)) continue
+                if (!activeStudentIds.has(rec.student_id)) continue
+                const cid = studentClassMap.get(rec.student_id)
+                if (cid == null) continue
+                feedingLogSum += feedingPaidAmountFromLogOrTier(rec.amount, classIdToName.get(cid) ?? '')
+              }
+              recomputedFeedingFundTotalIncome = feedingPaySum + feedingLogSum
+            } else {
+              const [termPayRes, feeAssignRes] = await Promise.all([
+                supabase.from('payments').select('amount_paid').eq('term_id', termId),
+                supabase
+                  .from('student_fee_assignments')
+                  .select('fee_types(amount)')
+                  .eq('term_id', termId)
+                  .eq('is_waived', false),
+              ])
+
+              if (!stillCurrent() || timedOut) return
+
+              throwIfSupabaseError(termPayRes, 'term_payments')
+              throwIfSupabaseError(feeAssignRes, 'student_fee_assignments')
+
+              collected = (termPayRes.data ?? []).reduce(
+                (s: number, p: { amount_paid: number }) => s + parseNumeric(p.amount_paid),
+                0
+              )
+              expected = (feeAssignRes.data ?? []).reduce((s: number, a: { fee_types: unknown }) => {
+                const ft = a.fee_types as { amount: number } | null
+                return s + (ft?.amount ?? 0)
+              }, 0)
+            }
           }
 
           let pendingExpenseCount = 0
@@ -250,9 +323,6 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
               const teacher = teachers.find((t: { class_id: string | null }) => t.class_id === cls.id)
               const classStudents = students.filter((s: { class_id: string }) => s.class_id === cls.id)
               const sub = submissions.find((s: { class_id: string }) => s.class_id === cls.id)
-              const classPayments = todayPayments.filter(
-                p => studentClassMap.get(p.student_id) === cls.id
-              )
 
               const paid = feedRow ? parseNumeric(feedRow.paid_count) : 0
               const credit = feedRow ? parseNumeric(feedRow.credit_count) : 0
@@ -269,7 +339,7 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
                 paid_count: paid,
                 credit_count: credit,
                 absent_count: absent,
-                collected_today: classPayments.reduce((s, p) => s + parseNumeric(p.amount_paid), 0),
+                collected_today: feedingCollectedByClass.get(cls.id) ?? 0,
                 submitted_at: sub?.submitted_at ?? null,
               }
             }
@@ -280,7 +350,10 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
             const fid = row.id
             const ft = fundTypeMap.get(fid) ?? 'general'
             const expensesTotal = expenseByFund.get(fid) ?? 0
-            const totalIncome = parseNumeric(row.total_income)
+            const totalIncome =
+              fid === feedingFundId && recomputedFeedingFundTotalIncome != null
+                ? recomputedFeedingFundTotalIncome
+                : parseNumeric(row.total_income)
             return {
               fund_id: fid,
               fund_name: row.name,
