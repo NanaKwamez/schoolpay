@@ -1,7 +1,6 @@
 // Dexie helper functions — all DB reads/writes go through here
 import { db } from './schema'
 import { generateLocalId, getWeekStart } from '@/lib/utils'
-import { FEEDING_FEE_AMOUNT } from '@/lib/constants'
 import type { Student, LocalFeedingLog, LocalPayment, SyncQueueItem, SyncOperation } from '@/types'
 
 // ─── Student helpers ──────────────────────────────────────────────────────────
@@ -242,10 +241,3 @@ export async function savePaymentLocal(
   return local_id
 }
 
-// ─── Unused amount helper ─────────────────────────────────────────────────────
-
-export function getFeedingAmount(status: string): number {
-  if (status === 'paid' || status === 'covered_weekly') return FEEDING_FEE_AMOUNT
-  if (status === 'credit') return FEEDING_FEE_AMOUNT
-  return 0
-}

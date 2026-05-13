@@ -12,8 +12,8 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
-import { getTodayGhana } from '@/lib/utils'
-import { cn } from '@/lib/utils'
+import { getFeedingLogStoredAmount } from '@/lib/constants'
+import { cn, getTodayGhana } from '@/lib/utils'
 import type { FeedingStatus } from '@/types'
 
 interface StudentRow {
@@ -137,7 +137,7 @@ export function HeadmasterClassView({ classId }: Props) {
         student_id: overrideStudent.id,
         date: today,
         status: overrideStatus,
-        amount: 0,
+        amount: getFeedingLogStoredAmount(overrideStatus, classInfo?.name ?? ''),
         marked_by: profile.id,
         notes: `[Admin Override] ${overrideReason.trim()}`,
       }, { onConflict: 'student_id,date' })

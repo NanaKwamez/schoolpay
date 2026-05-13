@@ -108,7 +108,7 @@ export default function AdminReportsPage() {
         .from('student_fee_assignments')
         .select('fee_types(name, amount)')
         .eq('term_id', term.id)
-        .eq('is_active', true)
+        .eq('is_waived', false)
 
       type AssignRow = { fee_types: unknown }
       const expectedMap = new Map<string, number>()
@@ -143,7 +143,7 @@ export default function AdminReportsPage() {
         .from('student_fee_assignments')
         .select('student_id, fee_types(name, amount), students(full_name, classes(name))')
         .eq('term_id', term.id)
-        .eq('is_active', true)
+        .eq('is_waived', false)
 
       const { data: payments } = await supabase
         .from('payments')

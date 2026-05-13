@@ -72,7 +72,7 @@ export interface StudentFeeAssignment {
   student_id: string
   fee_type_id: string
   term_id: string
-  is_active: boolean
+  is_waived: boolean
 }
 
 export interface WeeklyAdvance {

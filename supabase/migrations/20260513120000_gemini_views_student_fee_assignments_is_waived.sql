@@ -1,6 +1,4 @@
--- Views for Gemini AI admin chat — term-aware aggregates used by /api/gemini
-
--- ─── fund_summary: per fund, expected (fee assignments) vs collected (payments) ─
+-- student_fee_assignments uses is_waived (not is_active). Refresh dependent views.
 
 CREATE OR REPLACE VIEW fund_summary AS
 WITH ct AS (
@@ -36,45 +34,6 @@ SELECT
 FROM funds fu
 LEFT JOIN fund_expected fe ON fe.fund_id = fu.id
 LEFT JOIN fund_collected fc ON fc.fund_id = fu.id;
-
--- ─── feeding_today_by_class: aggregates for today's feeding (Ghana date) ─────────
-
-CREATE OR REPLACE VIEW feeding_today_by_class AS
-WITH tz_date AS (
-  SELECT ((CURRENT_TIMESTAMP AT TIME ZONE 'Africa/Accra'))::date AS d
-)
-SELECT
-  c.id AS class_id,
-  c.name AS class_name,
-  (
-    SELECT COUNT(*)::bigint
-    FROM students st
-    WHERE st.class_id = c.id AND st.is_active = TRUE
-  ) AS total_students,
-  (
-    SELECT COUNT(DISTINCT fl.student_id)::bigint
-    FROM feeding_daily_log fl
-    INNER JOIN students st ON st.id = fl.student_id AND st.class_id = c.id
-    CROSS JOIN tz_date z
-    WHERE fl.date = z.d AND fl.status = 'paid'
-  ) AS paid_count,
-  (
-    SELECT COUNT(DISTINCT fl.student_id)::bigint
-    FROM feeding_daily_log fl
-    INNER JOIN students st ON st.id = fl.student_id AND st.class_id = c.id
-    CROSS JOIN tz_date z
-    WHERE fl.date = z.d AND fl.status = 'credit'
-  ) AS credit_count,
-  (
-    SELECT COUNT(DISTINCT fl.student_id)::bigint
-    FROM feeding_daily_log fl
-    INNER JOIN students st ON st.id = fl.student_id AND st.class_id = c.id
-    CROSS JOIN tz_date z
-    WHERE fl.date = z.d AND fl.status = 'absent'
-  ) AS absent_count
-FROM classes c;
-
--- ─── students_in_debt: total outstanding per student (current term) ─────────────
 
 CREATE OR REPLACE VIEW students_in_debt AS
 WITH ct AS (

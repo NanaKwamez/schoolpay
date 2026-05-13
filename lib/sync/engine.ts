@@ -184,7 +184,7 @@ export class SyncEngine {
     if (classId) {
       const { data: assignments } = await supabase
         .from('student_fee_assignments')
-        .select('id, student_id, fee_type_id, term_id, is_active')
+        .select('id, student_id, fee_type_id, term_id, is_waived')
         .eq('class_id', classId)
         .gt('updated_at', lastSyncAt)
 
@@ -275,7 +275,7 @@ export class SyncEngine {
     if (currentTermId && studentIds.length > 0) {
       const { data: assignments } = await supabase
         .from('student_fee_assignments')
-        .select('id, student_id, fee_type_id, term_id, is_active')
+        .select('id, student_id, fee_type_id, term_id, is_waived')
         .eq('term_id', currentTermId)
         .in('student_id', studentIds)
 

@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/dexie/schema'
 import { generateLocalId } from '@/lib/utils'
-import { FEEDING_FEE_AMOUNT } from '@/lib/constants'
+import { getFeedingFeeForClass } from '@/lib/constants'
 import type { LocalPayment } from '@/types'
 
 // ─── Receipt number generator ─────────────────────────────────────────────────
@@ -65,7 +65,7 @@ export function usePayments(): UsePaymentsReturn {
 
   /**
    * Returns total outstanding balance for a student.
-   * Each credit feeding log = one unpaid day (FEEDING_FEE_AMOUNT owed).
+   * Each credit feeding log = one unpaid day at the class tier rate.
    */
   const getStudentBalance = useCallback(async (studentId: string): Promise<number> => {
     const creditLogs = await db.feedingLog
@@ -73,7 +73,15 @@ export function usePayments(): UsePaymentsReturn {
       .equals(studentId)
       .filter(l => l.status === 'credit')
       .toArray()
-    return creditLogs.length * FEEDING_FEE_AMOUNT
+    if (creditLogs.length === 0) return 0
+
+    const student = await db.students.where('id').equals(studentId).first()
+    if (!student) return 0
+
+    const cls = await db.classes.where('id').equals(student.class_id).first()
+    const feedingAmount = getFeedingFeeForClass(cls?.name ?? '')
+
+    return creditLogs.length * feedingAmount
   }, [])
 
   /**

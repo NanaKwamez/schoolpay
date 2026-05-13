@@ -12,8 +12,8 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
-import { formatGHS, formatDate, getTodayGhana } from '@/lib/utils'
-import { cn } from '@/lib/utils'
+import { getFeedingLogStoredAmount } from '@/lib/constants'
+import { cn, formatDate, formatGHS, getTodayGhana } from '@/lib/utils'
 import type { FeedingStatus } from '@/types'
 
 interface StudentRow {
@@ -132,6 +132,7 @@ export function ProprietressClassView({ classId }: Props) {
             .from('student_fee_assignments')
             .select('student_id, fee_types(amount)')
             .eq('term_id', termId)
+            .eq('is_waived', false)
             .in('student_id', rawStudents.map((s: { id: string }) => s.id)),
         ])
 
@@ -191,7 +192,7 @@ export function ProprietressClassView({ classId }: Props) {
         student_id: overrideStudent.id,
         date: today,
         status: overrideStatus,
-        amount: 0,
+        amount: getFeedingLogStoredAmount(overrideStatus, classInfo?.name ?? ''),
         marked_by: profile.id,
         notes: `[Admin Override] ${overrideReason.trim()}`,
       }, { onConflict: 'student_id,date' })

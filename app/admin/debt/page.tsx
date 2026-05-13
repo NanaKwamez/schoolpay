@@ -63,7 +63,7 @@ export default function AdminDebtPage() {
       .from('student_fee_assignments')
       .select('student_id, fee_types(id, name, amount), students(full_name, parent_phone, class_id, classes(name))')
       .eq('term_id', term.id)
-      .eq('is_active', true)
+      .eq('is_waived', false)
 
     const { data: payments } = await supabase
       .from('payments')

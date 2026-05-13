@@ -1,3 +1,5 @@
+import type { FeedingStatus } from '@/types'
+
 export const SCHOOL_NAME = process.env.NEXT_PUBLIC_SCHOOL_NAME ?? 'Morning Glory Academy'
 
 /** Public path to school logo under `/public` */
@@ -13,8 +15,25 @@ export const MAX_SYNC_ATTEMPTS = 5
  * full active roster per sync for the teacher's class (see migrations).
  */
 export const STUDENTS_TABLE_SUPPORTS_UPDATED_AT_FILTER = false
-export const FEEDING_FEE_AMOUNT = 5.00 // GHS
 export const WEEKLY_FEEDING_AMOUNT = 25.00 // GHS
+
+/** Daily feeding fee (GHS) by class display name from `classes.name`. */
+export function getFeedingFeeForClass(className: string): number {
+  const nurseryKG = ['Nursery 1', 'Nursery 2', 'KG 1', 'KG 2']
+  const basic1to5 = ['Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5']
+
+  if (nurseryKG.includes(className)) return 10.0
+  if (basic1to5.includes(className)) return 11.0
+  return 12.0 // Basic 6–9 default
+}
+
+/** `feeding_daily_log.amount` / local log: tier fee for paid or weekly cover; else 0. */
+export function getFeedingLogStoredAmount(status: FeedingStatus, className: string): number {
+  if (status === 'paid' || status === 'covered_weekly') {
+    return getFeedingFeeForClass(className)
+  }
+  return 0
+}
 
 export const EXPENSE_CATEGORIES_GENERAL = [
   'Exam materials and printing',

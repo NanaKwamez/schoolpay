@@ -198,7 +198,7 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
                 .from('student_fee_assignments')
                 .select('fee_types(amount)')
                 .eq('term_id', termId)
-                .eq('is_active', true),
+                .eq('is_waived', false),
             ])
 
             if (!stillCurrent() || timedOut) return

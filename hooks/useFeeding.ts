@@ -3,11 +3,11 @@
 import { useMemo, useState, useCallback } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useToast } from '@/components/ui/Toast'
+import { getFeedingLogStoredAmount } from '@/lib/constants'
 import { saveFeedingMarkLocal } from '@/lib/dexie/helpers'
+import { db } from '@/lib/dexie/schema'
 import { logError } from '@/lib/logger'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { db } from '@/lib/dexie/schema'
-import { FEEDING_FEE_AMOUNT } from '@/lib/constants'
 import { useAuth } from './useAuth'
 import { useStudents } from './useStudents'
 import type { LocalFeedingLog, FeedingStatus, Student } from '@/types'
@@ -40,6 +40,16 @@ export function useFeeding(date?: string): UseFeedingReturn {
   const today =
     date ?? new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Accra' })
   const [isSubmitted, setIsSubmitted] = useState(false)
+
+  const classRow = useLiveQuery(
+    async () => {
+      if (!classId) return undefined
+      return db.classes.where('id').equals(classId).first()
+    },
+    [classId],
+    undefined
+  )
+  const className = classRow?.name ?? ''
 
   const students = useMemo(
     () => (classId ? classStudents : []),
@@ -92,10 +102,7 @@ export function useFeeding(date?: string): UseFeedingReturn {
     async (studentId: string, status: FeedingStatus): Promise<void> => {
       if (!profile) return
 
-      const amount =
-        status === 'paid' || status === 'covered_weekly' || status === 'credit'
-          ? FEEDING_FEE_AMOUNT
-          : 0
+      const amount = getFeedingLogStoredAmount(status, className)
 
       await saveFeedingMarkLocal({
         id: '', // will be set after sync
@@ -107,7 +114,7 @@ export function useFeeding(date?: string): UseFeedingReturn {
         synced: false,
       })
     },
-    [profile, today]
+    [profile, today, className]
   )
 
   const submitToAdmin = useCallback(async (): Promise<void> => {

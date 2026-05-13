@@ -15,7 +15,7 @@ import { useFeeding } from '@/hooks/useFeeding'
 import { useTeacherClassName } from '@/hooks/use-teacher-class-name'
 import { useTeacherShellReady } from '@/hooks/use-teacher-shell-ready'
 import { getWeekStart } from '@/lib/utils'
-import { FEEDING_FEE_AMOUNT } from '@/lib/constants'
+import { getFeedingFeeForClass } from '@/lib/constants'
 import { db } from '@/lib/dexie/schema'
 import type { FeedingStatus } from '@/types'
 
@@ -40,6 +40,7 @@ function TeacherFeedingContent() {
     className: teacherClassSubtitle,
     classNameLoading: teacherClassNameLoading,
   })
+  const feedingAmount = getFeedingFeeForClass(teacherClassSubtitle)
   const isReady =
     shellReady &&
     (!profile?.class_id || !loading) &&
@@ -189,7 +190,7 @@ function TeacherFeedingContent() {
                 student={student}
                 currentStatus={feedingLog.get(student.id)?.status ?? null}
                 isCoveredWeekly={coveredIds.has(student.id)}
-                creditBalance={(creditBalanceMap.get(student.id) ?? 0) * FEEDING_FEE_AMOUNT}
+                creditBalance={(creditBalanceMap.get(student.id) ?? 0) * feedingAmount}
                 onMark={handleMark}
               />
             ))}
