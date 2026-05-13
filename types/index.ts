@@ -234,6 +234,17 @@ export interface SchoolAttendanceTodayRow {
   total_outstanding: number
 }
 
+/** Single-row `term_cumulative_summary` view — snake_case matches DB columns. */
+export interface TermCumulativeSummaryRow {
+  term_start: string
+  grand_total_collected: number
+  total_feeding_collected: number
+  total_general_collected: number
+  total_expenses: number
+  net_balance: number
+  school_days_recorded: number
+}
+
 export interface AiInsightCache {
   id: string
   insight_type: 'anomaly' | 'trend' | 'forecast'

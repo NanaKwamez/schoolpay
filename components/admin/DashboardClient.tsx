@@ -11,7 +11,6 @@ import {
   Loader2,
   LogOut,
   Percent,
-  TrendingDown,
   UserCheck,
   UserX,
   X,
@@ -38,7 +37,7 @@ import {
 } from '@/lib/constants'
 import { logError } from '@/lib/logger'
 import { fundTypeFromFeeTypesEmbed } from '@/lib/postgrest-fee-type-embed'
-import { cn, formatGHS, getTodayGhana } from '@/lib/utils'
+import { cn, formatDate, formatGHS, getTodayGhana } from '@/lib/utils'
 import type {
   AiInsightCache,
   ClassLevel,
@@ -46,14 +45,19 @@ import type {
   FundSummary,
   FundType,
   SchoolAttendanceTodayRow,
+  TermCumulativeSummaryRow,
 } from '@/types'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-interface TermStats {
-  expected: number
-  collected: number
-  outstanding: number
+const EMPTY_TERM_CUMULATIVE_SUMMARY: TermCumulativeSummaryRow = {
+  term_start: '',
+  grand_total_collected: 0,
+  total_feeding_collected: 0,
+  total_general_collected: 0,
+  total_expenses: 0,
+  net_balance: 0,
+  school_days_recorded: 0,
 }
 
 interface FeedingTodayByClassRow {
@@ -82,6 +86,12 @@ const EMPTY_SCHOOL_ATTENDANCE_TODAY: SchoolAttendanceTodayRow = {
   total_expected: 0,
   total_outstanding: 0,
 }
+
+const EMPTY_TERM_ASSIGNMENTS_SNAPSHOT = {
+  expectedAssignments: 0,
+  collectedTotal: 0,
+  outstandingVsAssignments: 0,
+} as const
 
 function throwIfSupabaseError(result: { error: PostgrestError | null }, scope: string): void {
   if (result.error) {
@@ -146,6 +156,21 @@ function parseSchoolAttendanceTodayRow(data: unknown): SchoolAttendanceTodayRow 
   }
 }
 
+function parseTermCumulativeSummaryRow(data: unknown): TermCumulativeSummaryRow | null {
+  if (!isRecord(data)) return null
+  const termStartRaw = data.term_start
+  const termStart = typeof termStartRaw === 'string' ? termStartRaw.split('T')[0] ?? '' : ''
+  return {
+    term_start: termStart,
+    grand_total_collected: parseNumeric(data.grand_total_collected),
+    total_feeding_collected: parseNumeric(data.total_feeding_collected),
+    total_general_collected: parseNumeric(data.total_general_collected),
+    total_expenses: parseNumeric(data.total_expenses),
+    net_balance: parseNumeric(data.net_balance),
+    school_days_recorded: parseNumeric(data.school_days_recorded),
+  }
+}
+
 function deriveSchoolAttendanceFromClasses(classStats: ClassWithStats[]): SchoolAttendanceTodayRow {
   let present = 0
   let absent = 0
@@ -207,6 +232,36 @@ function isFeedingRevenueStatus(status: string): boolean {
   return status === 'paid' || status === 'covered_weekly'
 }
 
+/**
+ * Term KPIs aligned with fund_summary rows for current term (assignments vs receipts).
+ * Only feeding + general — matches {@link term_cumulative_summary} scope (two fund types).
+ */
+function aggregateTermFinanceFromFundSummaries(rows: FundSummary[]): {
+  expectedAssignments: number
+  feedingCollected: number
+  generalCollected: number
+  collectedTotal: number
+  outstandingVsAssignments: number
+} {
+  let expectedAssignments = 0
+  let feedingCollected = 0
+  let generalCollected = 0
+  for (const r of rows) {
+    if (r.fund_type !== 'feeding' && r.fund_type !== 'general') continue
+    expectedAssignments += r.payment_income
+    if (r.fund_type === 'feeding') feedingCollected += r.total_income
+    else generalCollected += r.total_income
+  }
+  const collectedTotal = feedingCollected + generalCollected
+  return {
+    expectedAssignments,
+    feedingCollected,
+    generalCollected,
+    collectedTotal,
+    outstandingVsAssignments: Math.max(0, expectedAssignments - collectedTotal),
+  }
+}
+
 // ─── Dashboard shell — `resolvedRole` MUST come from the server page, not useAuth ─
 
 export type AdminDashboardResolvedRole = 'proprietress' | 'headmaster'
@@ -225,7 +280,7 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
   const { pendingCount, isSyncing } = useSync()
   const { isOnline } = useOnlineStatus()
 
-  const [termStats, setTermStats] = useState<TermStats>({ expected: 0, collected: 0, outstanding: 0 })
+  const [termSummary, setTermSummary] = useState<TermCumulativeSummaryRow>(EMPTY_TERM_CUMULATIVE_SUMMARY)
   const [classStats, setClassStats] = useState<ClassWithStats[]>([])
   const [fundSummaries, setFundSummaries] = useState<FundSummary[]>([])
   const [insights, setInsights] = useState<AiInsightCache[]>([])
@@ -239,6 +294,11 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
   const [dashboardError, setDashboardError] = useState<string | null>(null)
   const [attendance, setAttendance] = useState<SchoolAttendanceTodayRow>(EMPTY_SCHOOL_ATTENDANCE_TODAY)
+  const [termAssignmentsSnapshot, setTermAssignmentsSnapshot] = useState<{
+    expectedAssignments: number
+    collectedTotal: number
+    outstandingVsAssignments: number
+  }>(EMPTY_TERM_ASSIGNMENTS_SNAPSHOT)
   const fetchGenerationRef = useRef(0)
   const supabase = useMemo(() => createSupabaseBrowserClient(), [])
 
@@ -286,6 +346,7 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
             expensesRes,
             fundsMetaRes,
             attendanceTodayRes,
+            termCumulativeRes,
           ] = await Promise.all([
             supabase.from('feeding_today_by_class').select('*'),
             supabase.from('fund_summary').select('id, name, fund_type, payment_income, total_income'),
@@ -298,6 +359,7 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
             supabase.from('expenses').select('fund_id, amount'),
             supabase.from('funds').select('id, fund_type'),
             supabase.from('school_attendance_today').select('*').maybeSingle(),
+            supabase.from('term_cumulative_summary').select('*').maybeSingle(),
           ])
 
           if (!stillCurrent() || timedOut) return
@@ -312,6 +374,7 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
           throwIfSupabaseError(feedingTodayLogsRes, 'feeding_daily_log today')
           throwIfSupabaseError(expensesRes, 'expenses')
           throwIfSupabaseError(fundsMetaRes, 'funds')
+          throwIfSupabaseError(termCumulativeRes, 'term_cumulative_summary')
 
           const classes = classRes.data ?? []
           const teachers = teacherRes.data ?? []
@@ -346,77 +409,48 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
 
           const termId = termRes.data?.id ?? null
 
-          let expected = 0
           let recomputedFeedingFundTotalIncome: number | null = null
 
-          if (termId) {
+          if (termId !== null && feedingFundId !== null) {
             const termStartRaw = termRes.data?.start_date ?? '1970-01-01'
             const termEndRaw = termRes.data?.end_date ?? '1970-01-01'
             const termStart = typeof termStartRaw === 'string' ? termStartRaw.split('T')[0] ?? '1970-01-01' : '1970-01-01'
             const termEnd = typeof termEndRaw === 'string' ? termEndRaw.split('T')[0] ?? '1970-01-01' : '1970-01-01'
 
-            if (feedingFundId != null) {
-              const [feeAssignRes, feedingFundPayRes, feedingTermLogsRes] = await Promise.all([
-                supabase
-                  .from('student_fee_assignments')
-                  .select('fee_types(amount)')
-                  .eq('term_id', termId)
-                  .eq('is_waived', false),
-                supabase
-                  .from('payments')
-                  .select('amount_paid, fee_types(fund_type)')
-                  .eq('term_id', termId),
-                supabase
-                  .from('feeding_daily_log')
-                  .select('student_id, amount, status')
-                  .gte('date', termStart)
-                  .lte('date', termEnd),
-              ])
+            const [feedingFundPayRes, feedingTermLogsRes] = await Promise.all([
+              supabase
+                .from('payments')
+                .select('amount_paid, fee_types(fund_type)')
+                .eq('term_id', termId),
+              supabase
+                .from('feeding_daily_log')
+                .select('student_id, amount, status')
+                .gte('date', termStart)
+                .lte('date', termEnd),
+            ])
 
-              if (!stillCurrent() || timedOut) return
+            if (!stillCurrent() || timedOut) return
 
-              throwIfSupabaseError(feeAssignRes, 'student_fee_assignments')
-              throwIfSupabaseError(feedingFundPayRes, 'term_payments feeding fund')
-              throwIfSupabaseError(feedingTermLogsRes, 'feeding_daily_log term')
+            throwIfSupabaseError(feedingFundPayRes, 'term_payments feeding fund')
+            throwIfSupabaseError(feedingTermLogsRes, 'feeding_daily_log term')
 
-              expected = (feeAssignRes.data ?? []).reduce((s: number, a: { fee_types: unknown }) => {
-                const ft = a.fee_types as { amount: number } | null
-                return s + (ft?.amount ?? 0)
-              }, 0)
-
-              const feedingPaySum = (feedingFundPayRes.data ?? []).reduce(
-                (s: number, p: { amount_paid: number; fee_types: unknown }) => {
-                  if (fundTypeFromFeeTypesEmbed(p.fee_types) !== 'feeding') return s
-                  return s + parseNumeric(p.amount_paid)
-                },
-                0
-              )
-              let feedingLogSum = 0
-              for (const row of feedingTermLogsRes.data ?? []) {
-                const rec = row as { student_id: string; status: string; amount: unknown }
-                if (!isFeedingRevenueStatus(rec.status)) continue
-                if (!activeStudentIds.has(rec.student_id)) continue
-                const cid = studentClassMap.get(rec.student_id)
-                if (cid == null) continue
-                feedingLogSum += feedingPaidAmountFromLogOrTier(rec.amount, classIdToName.get(cid) ?? '')
-              }
-              recomputedFeedingFundTotalIncome = feedingPaySum + feedingLogSum
-            } else {
-              const feeAssignRes = await supabase
-                .from('student_fee_assignments')
-                .select('fee_types(amount)')
-                .eq('term_id', termId)
-                .eq('is_waived', false)
-
-              if (!stillCurrent() || timedOut) return
-
-              throwIfSupabaseError(feeAssignRes, 'student_fee_assignments')
-
-              expected = (feeAssignRes.data ?? []).reduce((s: number, a: { fee_types: unknown }) => {
-                const ft = a.fee_types as { amount: number } | null
-                return s + (ft?.amount ?? 0)
-              }, 0)
+            const feedingPaySum = (feedingFundPayRes.data ?? []).reduce(
+              (s: number, p: { amount_paid: number; fee_types: unknown }) => {
+                if (fundTypeFromFeeTypesEmbed(p.fee_types) !== 'feeding') return s
+                return s + parseNumeric(p.amount_paid)
+              },
+              0
+            )
+            let feedingLogSum = 0
+            for (const row of feedingTermLogsRes.data ?? []) {
+              const rec = row as { student_id: string; status: string; amount: unknown }
+              if (!isFeedingRevenueStatus(rec.status)) continue
+              if (!activeStudentIds.has(rec.student_id)) continue
+              const cid = studentClassMap.get(rec.student_id)
+              if (cid == null) continue
+              feedingLogSum += feedingPaidAmountFromLogOrTier(rec.amount, classIdToName.get(cid) ?? '')
             }
+            recomputedFeedingFundTotalIncome = feedingPaySum + feedingLogSum
           }
 
           let pendingExpenseCount = 0
@@ -496,17 +530,26 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
             }
           })
 
-          const termCollected = summaries.reduce((s, r) => s + r.total_income, 0)
-
           if (!stillCurrent() || timedOut) return
+
+          const termFinance = aggregateTermFinanceFromFundSummaries(summaries)
+          const parsedTermCumulative =
+            parseTermCumulativeSummaryRow(termCumulativeRes.data) ?? EMPTY_TERM_CUMULATIVE_SUMMARY
 
           setDashboardError(null)
           setClassStats(newClassStats)
           setAttendance(finalizeSchoolAttendanceToday(attendanceTodayRes, newClassStats))
-          setTermStats({
-            expected,
-            collected: termCollected,
-            outstanding: Math.max(0, expected - termCollected),
+          setTermSummary({
+            ...parsedTermCumulative,
+            grand_total_collected: termFinance.collectedTotal,
+            total_feeding_collected: termFinance.feedingCollected,
+            total_general_collected: termFinance.generalCollected,
+            net_balance: termFinance.collectedTotal - parsedTermCumulative.total_expenses,
+          })
+          setTermAssignmentsSnapshot({
+            expectedAssignments: termFinance.expectedAssignments,
+            collectedTotal: termFinance.collectedTotal,
+            outstandingVsAssignments: termFinance.outstandingVsAssignments,
           })
           setFundSummaries(dedupeFundSummariesOnePerType(summaries))
           setPendingExpenses(pendingExpenseCount)
@@ -730,46 +773,83 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
           </div>
         ) : (
           <>
-        {/* ── Term Summary Bar ───────────────────────────────────────────── */}
+        {/* ── Cumulative term summary (DB view term_cumulative_summary) ─ */}
         <section>
-          <p className="text-xs font-bold text-[#0A1628] dark:text-gray-100 uppercase tracking-wide mb-3">Term Overview</p>
+          <p className="text-xs font-bold text-[#0A1628] dark:text-gray-100 uppercase tracking-wide mb-3">Term overview</p>
           {loading ? (
             <>
-              <div className="grid grid-cols-2 tablet:grid-cols-3 gap-3 tablet:gap-4">
-                {[0, 1, 2].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)}
+              <div className="grid grid-cols-2 tablet:grid-cols-4 gap-3 tablet:gap-4">
+                {[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
               </div>
               <Skeleton className="mt-3 h-[92px] w-full rounded-2xl" />
             </>
           ) : (
             <>
-              <div className="grid grid-cols-2 tablet:grid-cols-3 gap-3 tablet:gap-4">
-                {[
-                  { label: 'Expected', value: termStats.expected, icon: <DollarSign className="h-4 w-4 text-yellow-500/60" /> },
-                  { label: 'Collected', value: termStats.collected, icon: <DollarSign className="h-4 w-4 text-yellow-500/60" /> },
-                  { label: 'Outstanding', value: termStats.outstanding, icon: <TrendingDown className="h-4 w-4 text-yellow-500/60" /> },
-                ].map(stat => (
-                  <div
-                    key={stat.label}
-                    className="rounded-2xl p-5 border-l-4 border-yellow-500 shadow-gold-glow text-center"
-                    style={{ background: '#0A1628' }}
-                  >
-                    <div className="flex justify-center mb-1">{stat.icon}</div>
-                    <p className="text-yellow-400 font-bold text-base leading-tight">
-                      {formatGHS(stat.value)}
-                    </p>
-                    <p className="text-white/70 text-xs mt-0.5">{stat.label}</p>
-                  </div>
-                ))}
+              <div className="grid grid-cols-2 tablet:grid-cols-4 gap-3 tablet:gap-4">
+                <div className="rounded-2xl p-5 border border-gray-200 border-l-4 border-l-mga-green-dark bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900/80 dark:border-l-mga-green-mid text-center">
+                  <div className="flex justify-center mb-1"><DollarSign className="h-4 w-4 text-mga-green-dark shrink-0" /></div>
+                  <p className="text-mga-green-dark dark:text-mga-green-mid font-bold text-base leading-tight tabular-nums">{formatGHS(termSummary.grand_total_collected)}</p>
+                  <p className="text-[#0A1628] dark:text-gray-100 text-xs font-semibold mt-0.5">Collected this term</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-[11px] mt-0.5">Since term start</p>
+                </div>
+                <div className="rounded-2xl p-5 border border-gray-200 border-l-4 border-l-mga-gold bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900/80 text-center">
+                  <div className="flex justify-center mb-1"><DollarSign className="h-4 w-4 text-mga-gold shrink-0" /></div>
+                  <p className="text-mga-gold font-bold text-base leading-tight tabular-nums">{formatGHS(termSummary.total_feeding_collected)}</p>
+                  <p className="text-[#0A1628] dark:text-gray-100 text-xs font-semibold mt-0.5">Feeding income</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-[11px] mt-0.5">Term to date</p>
+                </div>
+                <div className="rounded-2xl p-5 border border-gray-200 border-l-4 border-l-mga-accent-blue bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900/80 text-center">
+                  <div className="flex justify-center mb-1"><DollarSign className="h-4 w-4 text-mga-accent-blue shrink-0" /></div>
+                  <p className="text-mga-accent-blue font-bold text-base leading-tight tabular-nums">{formatGHS(termSummary.total_general_collected)}</p>
+                  <p className="text-[#0A1628] dark:text-gray-100 text-xs font-semibold mt-0.5">Fees &amp; levies</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-[11px] mt-0.5">Term to date</p>
+                </div>
+                <div
+                  className={cn(
+                    'rounded-2xl p-5 border border-gray-200 border-l-4 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900/80 text-center',
+                    termSummary.net_balance >= 0 ? 'border-l-mga-green-dark' : 'border-l-red-500'
+                  )}
+                >
+                  <div className="flex justify-center mb-1"><DollarSign className={cn('h-4 w-4 shrink-0', termSummary.net_balance >= 0 ? 'text-mga-green-dark' : 'text-red-500')} /></div>
+                  <p className={cn(
+                    'font-bold text-base leading-tight tabular-nums',
+                    termSummary.net_balance >= 0 ? 'text-mga-green-dark dark:text-mga-green-mid' : 'text-red-600 dark:text-red-400'
+                  )}>{formatGHS(termSummary.net_balance)}</p>
+                  <p className="text-[#0A1628] dark:text-gray-100 text-xs font-semibold mt-0.5">Net balance</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-[11px] mt-0.5">
+                    After {formatGHS(termSummary.total_expenses)} expenses
+                  </p>
+                </div>
               </div>
+              <p className="mt-2 text-center text-[11px] text-gray-500 dark:text-gray-400">
+                {Math.round(termSummary.school_days_recorded)} school day{Math.round(termSummary.school_days_recorded) === 1 ? '' : 's'} recorded · Term start{' '}
+                {termSummary.term_start !== '' ? formatDate(termSummary.term_start) : '—'}
+              </p>
               <div className="mt-3 rounded-2xl border border-mga-gold/25 bg-white p-4 shadow-sm dark:border-mga-gold/20 dark:bg-gray-900/80">
                 <p className="text-xs font-bold uppercase tracking-wide text-mga-gold">
-                  Today&apos;s Feeding Collection
+                  Term fees vs receipts
+                </p>
+                <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                  Expected from fee assignments (current term); collected is general payments plus feeding (
+                  daily log and fee-type payments). Outstanding is expected minus collected (not below zero).
                 </p>
                 <div className="mt-3 grid grid-cols-1 gap-3 tablet:grid-cols-3">
                   {[
-                    { label: 'Collected', amount: attendance.total_collected, emphasize: true },
-                    { label: 'Expected', amount: attendance.total_expected, emphasize: false },
-                    { label: 'Outstanding', amount: attendance.total_outstanding, emphasize: false },
+                    {
+                      label: 'Expected',
+                      amount: termAssignmentsSnapshot.expectedAssignments,
+                      emphasize: false,
+                    },
+                    {
+                      label: 'Collected',
+                      amount: termAssignmentsSnapshot.collectedTotal,
+                      emphasize: true,
+                    },
+                    {
+                      label: 'Outstanding',
+                      amount: termAssignmentsSnapshot.outstandingVsAssignments,
+                      emphasize: false,
+                    },
                   ].map(row => (
                     <div key={row.label} className="text-center tablet:text-left">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
