@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { X, AlertTriangle, DollarSign, TrendingDown, Clock, LogOut } from 'lucide-react'
+import { X, AlertTriangle, DollarSign, TrendingDown, Clock, Loader2, LogOut } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { ClassCard } from './ClassCard'
@@ -12,7 +12,7 @@ import { AiInsightsGrid } from './AiInsightBanner'
 import { GeminiChat } from './GeminiChat'
 import { SyncIndicator } from '@/components/ui/SyncIndicator'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
-import { DashboardSkeleton, Skeleton } from '@/components/ui/Skeleton'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { useSync } from '@/hooks/useSync'
 import { useOnlineStatus } from '@/hooks/useOnline'
 import { EnrollmentRequestsPanel } from './EnrollmentRequestsPanel'
@@ -40,11 +40,21 @@ interface RawPayment {
   student_id: string
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// ─── Dashboard shell — `resolvedRole` MUST come from the server page, not useAuth ─
 
-export function DashboardClient() {
+export type AdminDashboardResolvedRole = 'proprietress' | 'headmaster'
+
+interface AdminDashboardShellProps {
+  /** From Server Component — never trust client-only auth for admin role. */
+  resolvedRole: AdminDashboardResolvedRole
+  greetingName: string
+}
+
+export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboardShellProps) {
   const router = useRouter()
-  const { profile, role, isProprietress, loading: authLoading, signOut } = useAuth()
+  const { signOut, isSigningOut } = useAuth()
+  const isProprietress = resolvedRole === 'proprietress'
+  const role = resolvedRole
   const { pendingCount, isSyncing } = useSync()
   const { isOnline } = useOnlineStatus()
 
@@ -76,9 +86,6 @@ export function DashboardClient() {
   // ── Data fetching ─────────────────────────────────────────────────────────
 
   const fetchDashboardData = useCallback(async () => {
-    // Don't fetch until auth has resolved — otherwise isProprietress is wrong
-    // and the callback would fire twice (loading → false), causing a role flash.
-    if (authLoading) return
     const today = new Date().toISOString().split('T')[0]
 
     // 1. Current term
@@ -185,7 +192,7 @@ export function DashboardClient() {
     }
 
     setLoading(false)
-  }, [supabase, isProprietress, authLoading])
+  }, [supabase, isProprietress])
 
   const fetchInsights = useCallback(async () => {
     setInsightsLoading(true)
@@ -273,18 +280,8 @@ export function DashboardClient() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  // Gate on auth: prevents the role badge from flashing 'Headmaster' while
-  // useAuth() resolves from its initial loading state after SPA navigation.
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-mga-cream bg-dot-pattern">
-        <DashboardSkeleton />
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-mga-cream bg-dot-pattern">
+    <div className="min-h-screen bg-mga-cream bg-dot-pattern dark:bg-[#0A1628]">
       {/* Header */}
       <header
         className="relative px-4 pb-3 safe-top shadow-md sticky top-0 z-30 text-white border-b-2 border-yellow-600/40"
@@ -305,6 +302,11 @@ export function DashboardClient() {
           )}>
             {role === 'proprietress' ? 'Proprietress' : 'Headmaster'}
           </span>
+          {process.env.NODE_ENV === 'development' && (
+            <span className="text-xs bg-red-600 text-white px-2 py-1 rounded font-mono shrink-0">
+              ROLE: {resolvedRole}
+            </span>
+          )}
           <ThemeToggle inverted className="h-9 w-9" />
           <button
             onClick={() => setShowSignOutConfirm(true)}
@@ -342,7 +344,7 @@ export function DashboardClient() {
 
         <div className="relative pt-1 pr-20">
           <p className="text-sm text-white/90">
-            {greeting}, {profile?.full_name?.split(' ')[0] ?? 'Admin'}
+            {greeting}, {greetingName}
           </p>
           <div className="flex items-center gap-2 text-xs text-white/70 mt-1">
             <Clock className="h-3 w-3 shrink-0" />
@@ -359,7 +361,7 @@ export function DashboardClient() {
 
         {/* ── Term Summary Bar ───────────────────────────────────────────── */}
         <section>
-          <p className="text-xs font-bold text-[#0A1628] uppercase tracking-wide mb-3">Term Overview</p>
+          <p className="text-xs font-bold text-[#0A1628] dark:text-gray-100 uppercase tracking-wide mb-3">Term Overview</p>
           {loading ? (
             <div className="grid grid-cols-2 tablet:grid-cols-3 gap-3 tablet:gap-4">
               {[0, 1, 2].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)}
@@ -389,15 +391,15 @@ export function DashboardClient() {
 
         {/* ── Alert Banner ─────────────────────────────────────────────────── */}
         {showAlert && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-3">
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl p-3">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-start gap-2">
                 <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-bold text-red-700">
+                  <p className="text-sm font-bold text-red-700 dark:text-red-300">
                     ⚠ {unsubmittedClasses.length} class{unsubmittedClasses.length > 1 ? 'es' : ''} haven&apos;t submitted feeding by 10am
                   </p>
-                  <p className="text-xs text-red-600 mt-0.5">
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
                     {unsubmittedClasses.slice(0, 5).map(c => c.name).join(', ')}
                     {unsubmittedClasses.length > 5 && ` +${unsubmittedClasses.length - 5} more`}
                   </p>
@@ -421,11 +423,11 @@ export function DashboardClient() {
         {isProprietress && pendingExpenses > 0 && (
           <button
             onClick={() => router.push('/admin/expenses')}
-            className="w-full flex items-center justify-between bg-orange-50 border border-orange-200 rounded-2xl px-4 py-3 hover:bg-orange-100 transition-colors"
+            className="w-full flex items-center justify-between bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-2xl px-4 py-3 hover:bg-orange-100 dark:hover:bg-orange-950/50 transition-colors"
           >
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-orange-500" />
-              <p className="text-sm font-semibold text-orange-700">
+              <p className="text-sm font-semibold text-orange-700 dark:text-orange-300">
                 {pendingExpenses} expense{pendingExpenses > 1 ? 's' : ''} awaiting your approval
               </p>
             </div>
@@ -438,13 +440,13 @@ export function DashboardClient() {
 
         {/* ── AI Insights ──────────────────────────────────────────────────── */}
         <section>
-          <p className="text-xs font-bold text-[#0A1628] uppercase tracking-wide mb-3">AI Insights</p>
+          <p className="text-xs font-bold text-[#0A1628] dark:text-gray-100 uppercase tracking-wide mb-3">AI Insights</p>
           <AiInsightsGrid insights={insights} loading={insightsLoading} />
         </section>
 
         {/* ── Today's Feeding by Class ──────────────────────────────────────── */}
         <section>
-          <p className="text-xs font-bold text-[#0A1628] uppercase tracking-wide mb-3">
+          <p className="text-xs font-bold text-[#0A1628] dark:text-gray-100 uppercase tracking-wide mb-3">
             Today&apos;s Feeding by Class
           </p>
           {loading ? (
@@ -452,8 +454,8 @@ export function DashboardClient() {
               {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-2xl" />)}
             </div>
           ) : classStats.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <p className="font-medium">No class data yet</p>
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <p className="font-medium dark:text-gray-200">No class data yet</p>
               <p className="text-sm mt-1">Teachers need to mark feeding first</p>
             </div>
           ) : (
@@ -473,7 +475,7 @@ export function DashboardClient() {
         {/* ── Fund Summary ─────────────────────────────────────────────────── */}
         {fundSummaries.length > 0 && (
           <section>
-            <p className="text-xs font-bold text-[#0A1628] uppercase tracking-wide mb-3">Fund Summary</p>
+            <p className="text-xs font-bold text-[#0A1628] dark:text-gray-100 uppercase tracking-wide mb-3">Fund Summary</p>
             <div className="grid grid-cols-1 tablet:grid-cols-2 gap-4">
               {fundSummaries.map(fund => (
                 <FundSummaryCard
@@ -498,26 +500,43 @@ export function DashboardClient() {
           <div className="flex gap-2">
             <button
               onClick={() => setShowSignOutConfirm(false)}
-              className="flex-1 min-h-[48px] rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              className="flex-1 min-h-[48px] rounded-xl border-2 border-gray-200 dark:border-gray-600 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               Cancel
             </button>
             <button
-              onClick={async () => {
-                Object.keys(localStorage)
-                  .filter(k => k.startsWith('schoolpay-') || k.startsWith('mga-'))
-                  .forEach(k => localStorage.removeItem(k))
-                await signOut()
-              }}
-              className="flex-1 min-h-[48px] rounded-xl bg-red-600 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+              type="button"
+              onClick={signOut}
+              disabled={isSigningOut}
+              className={cn(
+                'flex-1 min-h-[48px] rounded-xl bg-red-600 text-sm font-semibold text-white hover:bg-red-700 transition-colors',
+                'flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed'
+              )}
             >
-              Sign Out
+              {isSigningOut ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" aria-hidden />
+                  Signing out...
+                </>
+              ) : (
+                'Sign Out'
+              )}
             </button>
           </div>
         }
       >
-        <p className="text-sm text-gray-600">Sign out of SchoolPay?</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300">Sign out of SchoolPay?</p>
       </Modal>
     </div>
   )
+}
+
+/** Server-verified proprietress — separate tree from {@link HeadmasterDashboard}. */
+export function ProprietressDashboard({ greetingName }: { greetingName: string }) {
+  return <AdminDashboardShell resolvedRole="proprietress" greetingName={greetingName} />
+}
+
+/** Server-verified headmaster — separate tree from {@link ProprietressDashboard}. */
+export function HeadmasterDashboard({ greetingName }: { greetingName: string }) {
+  return <AdminDashboardShell resolvedRole="headmaster" greetingName={greetingName} />
 }

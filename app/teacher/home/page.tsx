@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/Badge'
 import { useAuth } from '@/hooks/useAuth'
 import { useFeeding } from '@/hooks/useFeeding'
 import { useSync } from '@/hooks/useSync'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { db } from '@/lib/dexie/schema'
 import { MgaLogoMark } from '@/components/branding/mga-logo-mark'
 import { SCHOOL_NAME } from '@/lib/constants'
@@ -45,6 +46,7 @@ export default function TeacherHomePage() {
   const { syncNow } = useSync()
   const [greeting, setGreeting] = useState(getGreeting())
   const [showEnrollModal, setShowEnrollModal] = useState(false)
+  const [resolvedClassName, setResolvedClassName] = useState<string | null>(null)
 
   // Update greeting if the hour changes (edge case)
   useEffect(() => {
@@ -64,11 +66,28 @@ export default function TeacherHomePage() {
     }
   }, [triggerSync])
 
-  // Fetch class name from local DB
-  const classData = useLiveQuery(
-    async () => (classId ? db.classes.get(classId) : undefined),
-    [classId]
-  )
+  useEffect(() => {
+    if (!classId) {
+      setResolvedClassName(null)
+      return
+    }
+    let cancelled = false
+    const supabase = createSupabaseBrowserClient()
+    void supabase
+      .from('classes')
+      .select('name')
+      .eq('id', classId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled || error) return
+        setResolvedClassName(data?.name ?? null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [classId])
+
+  const classDisplayName = resolvedClassName ?? 'Your Class'
 
   // Recent feeding marks for today (last 5 in log)
   const recentLogs = useMemo(() => {
@@ -116,11 +135,9 @@ export default function TeacherHomePage() {
               <h1 className="text-2xl font-bold text-white mt-1">
                 {greeting}, {profile?.full_name?.split(' ')[0] ?? 'Teacher'}
               </h1>
-              {classData && (
-                <p className="text-[32px] font-extrabold text-yellow-300 leading-tight mt-1">
-                  {classData.name}
-                </p>
-              )}
+              <p className="text-[32px] font-extrabold text-yellow-300 leading-tight mt-1">
+                {classDisplayName}
+              </p>
             </div>
           </div>
         </div>

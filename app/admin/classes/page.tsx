@@ -31,7 +31,7 @@ export default function AdminClassesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const today = new Date().toISOString().split('T')[0]!
+  const today = new Date().toISOString().split('T')[0] ?? ''
 
   const fetchClasses = useCallback(async () => {
     setLoading(true)

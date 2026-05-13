@@ -53,7 +53,7 @@ export function Modal({ isOpen, onClose, title, children, footer, className }: M
       {/* Panel — slides up on mobile, centered on sm+ */}
       <div
         className={cn(
-          'relative bg-white w-full sm:max-w-lg tablet:max-w-md',
+          'relative bg-white dark:bg-gray-800 w-full sm:max-w-lg tablet:max-w-md',
           'rounded-t-3xl sm:rounded-2xl shadow-2xl',
           'max-h-[92vh] flex flex-col',
           'animate-slide-up sm:animate-none',
@@ -61,10 +61,10 @@ export function Modal({ isOpen, onClose, title, children, footer, className }: M
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-600 shrink-0">
           <h2
             id="modal-title"
-            className="text-base font-semibold text-gray-900"
+            className="text-base font-semibold text-gray-900 dark:text-white"
           >
             {title ?? ''}
           </h2>
@@ -74,11 +74,11 @@ export function Modal({ isOpen, onClose, title, children, footer, className }: M
             className={cn(
               'flex items-center justify-center rounded-xl transition-colors',
               'min-h-[48px] min-w-[48px]',
-              'hover:bg-gray-100 active:bg-gray-200',
+              'hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-700 dark:active:bg-gray-600',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mga-green-light'
             )}
           >
-            <X className="h-5 w-5 text-gray-500" />
+            <X className="h-5 w-5 text-gray-500 dark:text-gray-300" />
           </button>
         </div>
 
@@ -87,7 +87,7 @@ export function Modal({ isOpen, onClose, title, children, footer, className }: M
 
         {/* Footer */}
         {footer && (
-          <div className="px-4 py-3 border-t border-gray-100 shrink-0 safe-bottom">
+          <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-600 shrink-0 safe-bottom">
             {footer}
           </div>
         )}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { CheckCircle, Edit2 } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
@@ -9,14 +9,12 @@ import { BottomNav } from '@/components/ui/BottomNav'
 import { Button } from '@/components/ui/Button'
 import { StudentFeedingRow } from '@/components/teacher/StudentFeedingRow'
 import { StudentRowSkeleton } from '@/components/ui/Skeleton'
-import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { useFeeding } from '@/hooks/useFeeding'
 import { useStudents } from '@/hooks/useStudents'
-import { db } from '@/lib/dexie/schema'
 import { getWeekStart } from '@/lib/utils'
 import { FEEDING_FEE_AMOUNT } from '@/lib/constants'
-import type { FeedingStatus, Student } from '@/types'
+import type { FeedingStatus } from '@/types'
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -36,30 +34,11 @@ function TeacherFeedingContent() {
     month: 'long',
   })
 
-  const { profile } = useAuth()
+  const { profile, user, loading: teacherAuthLoading } = useAuth()
   const { feedingLog, markStudent, submitToAdmin, stats, loading, isSubmitted } = useFeeding()
   const { students, loading: studentsLoading } = useStudents()
   const [isEditing, setIsEditing] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-
-  // One-time seed: if Dexie students is empty after loading, pull from Supabase
-  const seededRef = useRef(false)
-  useEffect(() => {
-    const classId = profile?.class_id
-    if (studentsLoading || seededRef.current || !classId || students.length > 0) return
-    seededRef.current = true
-    const supabase = createSupabaseBrowserClient()
-    void supabase
-      .from('students')
-      .select('id, full_name, class_id, parent_phone, is_active')
-      .eq('class_id', classId)
-      .eq('is_active', true)
-      .then(({ data }) => {
-        if (data?.length) {
-          void db.students.bulkPut(data as Student[])
-        }
-      })
-  }, [profile?.class_id, students.length, studentsLoading])
 
   const isLocked = isSubmitted && !isEditing
 
@@ -110,8 +89,45 @@ function TeacherFeedingContent() {
 
   const isLoading = loading || studentsLoading
 
+  if (teacherAuthLoading) {
+    return (
+      <div className="min-h-screen bg-mga-cream dark:bg-[#0A1628]">
+        <TopBar title="Mark Feeding" subtitle={todayStr} backHref="/teacher/home" showSync />
+        <div className="p-4 space-y-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <StudentRowSkeleton key={i} />
+          ))}
+        </div>
+        <BottomNav />
+      </div>
+    )
+  }
+
+  if (!profile?.class_id) {
+    return (
+      <div className="min-h-screen bg-mga-cream dark:bg-[#0A1628] flex flex-col">
+        <TopBar title="Mark Feeding" subtitle={todayStr} backHref="/teacher/home" showSync />
+        <div className="flex flex-1 flex-col items-center justify-center p-6">
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl p-6 max-w-sm text-center">
+            <p className="text-red-700 dark:text-red-300 font-semibold mb-2">
+              Account Setup Incomplete
+            </p>
+            <p className="text-red-600 dark:text-red-400 text-sm">
+              Your account is not linked to a class yet.
+              Please contact the headmaster or proprietress.
+            </p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">
+              User ID: {user?.id ?? profile?.id ?? 'unknown'}
+            </p>
+          </div>
+        </div>
+        <BottomNav />
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-mga-cream">
+    <div className="min-h-screen bg-mga-cream dark:bg-[#0A1628]">
       <TopBar
         title="Mark Feeding"
         subtitle={todayStr}
@@ -144,9 +160,9 @@ function TeacherFeedingContent() {
           Array.from({ length: 10 }).map((_, i) => <StudentRowSkeleton key={i} />)
         ) : students.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-8">
-            <p className="text-gray-400 text-base">No students in your class yet.</p>
-            <p className="text-gray-300 text-sm mt-1">Students will appear after syncing.</p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-gray-400 dark:text-gray-300 text-base">No students in your class yet.</p>
+            <p className="text-gray-300 dark:text-gray-500 text-sm mt-1">Students will appear after syncing.</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
               class_id: {profile?.class_id ?? 'not set'}
             </p>
           </div>
@@ -167,9 +183,9 @@ function TeacherFeedingContent() {
       </div>
 
       {/* Sticky bottom bar — fixed on mobile above bottom nav; relative on tablet (no bottom nav) */}
-      <div className="fixed bottom-16 left-0 right-0 z-20 bg-white border-t border-gray-100 px-4 pt-3 pb-2 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto md:px-6 md:py-4">
+      <div className="fixed bottom-16 left-0 right-0 z-20 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-600 px-4 pt-3 pb-2 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto md:px-6 md:py-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-600 font-medium">
+          <span className="text-sm text-gray-600 dark:text-gray-300 font-medium">
             {stats.marked} of {stats.total} students marked
           </span>
           {stats.paid > 0 && (

@@ -32,15 +32,15 @@ export const ClassCard = React.memo(function ClassCard({
     <button
       onClick={onClick}
       className={cn(
-        'w-full text-left bg-white rounded-2xl shadow-sm border p-4 overflow-hidden',
+        'w-full text-left bg-white dark:bg-gray-800 rounded-2xl shadow-sm border p-4 overflow-hidden',
         'transition-all duration-200',
         'hover:shadow-md hover:border-t-yellow-400 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2',
         'focus-visible:ring-mga-green-light',
         isSubmitted
-          ? 'border-green-300 bg-green-50 shadow-green-100'
+          ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20 shadow-green-100'
           : isPastDeadline
-          ? 'border-orange-300 bg-orange-50'
-          : 'border-gray-100',
+          ? 'border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20'
+          : 'border-gray-100 dark:border-gray-600',
         justUpdated && 'ring-2 ring-mga-gold/50'
       )}
       aria-label={`View ${classData.name} feeding details`}
@@ -48,8 +48,8 @@ export const ClassCard = React.memo(function ClassCard({
       {/* Row 1: Class name + submission badge */}
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="min-w-0">
-          <p className="text-lg font-bold text-mga-navy leading-tight truncate">{classData.name}</p>
-          <p className="text-xs text-gray-500 truncate">{classData.teacher_name}</p>
+          <p className="text-lg font-bold text-mga-navy dark:text-white leading-tight truncate">{classData.name}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{classData.teacher_name}</p>
         </div>
         {isSubmitted ? (
           <span className="shrink-0 flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded-full">
@@ -68,11 +68,11 @@ export const ClassCard = React.memo(function ClassCard({
 
       {/* Row 2: Progress bar */}
       <div className="mb-3">
-        <div className="flex justify-between text-xs text-gray-500 mb-1">
+        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
           <span>{classData.marked_count} marked</span>
           <span>{classData.total_students} students</span>
         </div>
-        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div className="h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{
@@ -98,8 +98,8 @@ export const ClassCard = React.memo(function ClassCard({
 
       {/* Row 4: Collected today */}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-500">Collected today</span>
-        <span className="text-sm font-bold text-mga-green-dark">
+        <span className="text-xs text-gray-500 dark:text-gray-400">Collected today</span>
+        <span className="text-sm font-bold text-yellow-500 dark:text-yellow-400">
           {formatGHS(classData.collected_today)}
         </span>
       </div>

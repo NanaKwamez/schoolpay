@@ -10,7 +10,7 @@ import type { LocalPayment } from '@/types'
 // ─── Receipt number generator ─────────────────────────────────────────────────
 
 function generateReceiptNumber(): string {
-  const date = new Date().toISOString().split('T')[0]!.replace(/-/g, '')
+  const date = (new Date().toISOString().split('T')[0] ?? '').replace(/-/g, '')
   const seq = String(Math.floor(Math.random() * 9999)).padStart(4, '0')
   return `MGA-${date}-${seq}`
 }

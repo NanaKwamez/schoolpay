@@ -32,12 +32,12 @@ function StudentFeedingRowBase({
   )
 
   return (
-    <div className="px-4 tablet:px-6 border-b border-mga-green-pale/40 last:border-0 bg-white min-h-[64px] flex items-center gap-3">
+    <div className="px-4 tablet:px-6 border-b border-mga-green-pale/40 dark:border-gray-600 last:border-0 bg-white dark:bg-gray-800 min-h-[64px] flex items-center gap-3">
       <StudentAvatar photoUrl={student.photo_url} name={student.full_name} size={40} />
 
       {/* Name + debt */}
       <div className="flex-1 min-w-0 py-3">
-        <p className="text-[18px] font-bold text-gray-900 leading-tight">
+        <p className="text-[18px] font-bold text-gray-900 dark:text-white leading-tight">
           {student.full_name}
         </p>
         {creditBalance > 0 && (
@@ -49,7 +49,7 @@ function StudentFeedingRowBase({
 
       {/* Weekly advance badge OR circular status buttons */}
       {isCoveredWeekly ? (
-        <span className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-bold border border-yellow-400">
+        <span className="px-3 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 text-xs font-bold border border-yellow-400 dark:border-yellow-600">
           Weekly
         </span>
       ) : (
@@ -66,11 +66,11 @@ function StudentFeedingRowBase({
               'touch-manipulation',
               currentStatus === 'paid'
                 ? 'bg-green-500 border-green-500 shadow-lg shadow-green-500/40 scale-105'
-                : 'bg-white border-gray-300 hover:border-green-400'
+                : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-500 hover:border-green-400 dark:hover:border-green-500'
             )}
             title="Mark as Paid"
           >
-            <Check size={18} className={currentStatus === 'paid' ? 'text-white' : 'text-gray-400'} />
+            <Check size={18} className={currentStatus === 'paid' ? 'text-white' : 'text-gray-400 dark:text-gray-300'} />
           </button>
 
           {/* CREDIT */}
@@ -85,11 +85,11 @@ function StudentFeedingRowBase({
               'touch-manipulation',
               currentStatus === 'credit'
                 ? 'bg-orange-500 border-orange-500 shadow-lg shadow-orange-500/40 scale-105'
-                : 'bg-white border-gray-300 hover:border-orange-400'
+                : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-500 hover:border-orange-400 dark:hover:border-orange-500'
             )}
             title="Mark as Credit"
           >
-            <span className={cn('text-sm font-bold', currentStatus === 'credit' ? 'text-white' : 'text-gray-400')}>
+            <span className={cn('text-sm font-bold', currentStatus === 'credit' ? 'text-white' : 'text-gray-400 dark:text-gray-300')}>
               ₵
             </span>
           </button>
@@ -106,11 +106,11 @@ function StudentFeedingRowBase({
               'touch-manipulation',
               currentStatus === 'absent'
                 ? 'bg-gray-500 border-gray-500 shadow-lg shadow-gray-500/40 scale-105'
-                : 'bg-white border-gray-300 hover:border-gray-400'
+                : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-500 hover:border-gray-400 dark:hover:border-gray-400'
             )}
             title="Mark as Absent"
           >
-            <X size={18} className={currentStatus === 'absent' ? 'text-white' : 'text-gray-400'} />
+            <X size={18} className={currentStatus === 'absent' ? 'text-white' : 'text-gray-400 dark:text-gray-300'} />
           </button>
 
           {/* DID NOT EAT */}
@@ -125,11 +125,11 @@ function StudentFeedingRowBase({
               'touch-manipulation',
               currentStatus === 'did_not_eat'
                 ? 'bg-blue-500 border-blue-500 shadow-lg shadow-blue-500/40 scale-105'
-                : 'bg-white border-gray-300 hover:border-blue-400'
+                : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-500 hover:border-blue-400 dark:hover:border-blue-500'
             )}
             title="Did Not Eat"
           >
-            <Utensils size={16} className={currentStatus === 'did_not_eat' ? 'text-white' : 'text-gray-400'} />
+            <Utensils size={16} className={currentStatus === 'did_not_eat' ? 'text-white' : 'text-gray-400 dark:text-gray-300'} />
           </button>
         </div>
       )}

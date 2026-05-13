@@ -157,26 +157,39 @@ export default function AdminExpensesPage() {
 
   const handleApprove = async (expenseId: string) => {
     if (!profile) return
-    await supabase.from('expenses').update({
+    const { error } = await supabase.from('expenses').update({
       approval_status: 'approved',
       approved_by: profile.id,
       approved_at: new Date().toISOString(),
     }).eq('id', expenseId)
+    if (error) {
+      showToast(error.message, 'error')
+      return
+    }
+    showToast('Expense approved', 'success')
     await fetchData()
   }
 
   const handleReject = async () => {
     if (!rejectTarget || !profile || !rejectReason.trim()) return
     setSaving(true)
-    await supabase.from('expenses').update({
-      approval_status: 'rejected',
-      approved_by: profile.id,
-      approved_at: new Date().toISOString(),
-      rejection_reason: rejectReason.trim(),
-    }).eq('id', rejectTarget.id)
-    setRejectTarget(null); setRejectReason('')
-    await fetchData()
-    setSaving(false)
+    try {
+      const { error } = await supabase.from('expenses').update({
+        approval_status: 'rejected',
+        approved_by: profile.id,
+        approved_at: new Date().toISOString(),
+        rejection_reason: rejectReason.trim(),
+      }).eq('id', rejectTarget.id)
+      if (error) {
+        showToast(error.message, 'error')
+        return
+      }
+      setRejectTarget(null); setRejectReason('')
+      showToast('Expense rejected', 'success')
+      await fetchData()
+    } finally {
+      setSaving(false)
+    }
   }
 
   const monthTotal = expenses

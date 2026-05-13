@@ -8,6 +8,7 @@ import { addToQueue } from '@/lib/sync/queue'
 import { generateLocalId, getTodayGhana } from '@/lib/utils'
 import { FEEDING_FEE_AMOUNT } from '@/lib/constants'
 import { useAuth } from './useAuth'
+import { useStudents } from './useStudents'
 import type { LocalFeedingLog, FeedingStatus } from '@/types'
 
 interface FeedingStats {
@@ -32,22 +33,11 @@ interface UseFeedingReturn {
 export function useFeeding(date?: string): UseFeedingReturn {
   const { profile } = useAuth()
   const classId = profile?.class_id ?? null
+  const { students: classStudents, loading: studentsLoading } = useStudents()
   const today = date ?? getTodayGhana()
   const [isSubmitted, setIsSubmitted] = useState(false)
 
-  // Live students for this class
-  const students = useLiveQuery(
-    async () => {
-      if (!classId) return [] as import('@/types').Student[]
-      return db.students
-        .where('class_id')
-        .equals(classId)
-        .and(s => s.is_active)
-        .toArray()
-    },
-    [classId],
-    undefined
-  )
+  const students = classId ? classStudents : []
 
   // Live feeding logs for today
   const rawLogs = useLiveQuery(
@@ -58,7 +48,7 @@ export function useFeeding(date?: string): UseFeedingReturn {
 
   // Build student_id → log map, filtered to this class
   const studentIds = useMemo(
-    () => new Set((students ?? []).map(s => s.id)),
+    () => new Set(students.map(s => s.id)),
     [students]
   )
 
@@ -72,7 +62,7 @@ export function useFeeding(date?: string): UseFeedingReturn {
 
   // Computed stats
   const stats = useMemo((): FeedingStats => {
-    const total = students?.length ?? 0
+    const total = students.length
     let marked = 0, paid = 0, credit = 0, absent = 0, didNotEat = 0, coveredWeekly = 0
 
     feedingLog.forEach(log => {
@@ -142,7 +132,7 @@ export function useFeeding(date?: string): UseFeedingReturn {
     setIsSubmitted(true)
   }, [profile, classId, today, stats, isSubmitted])
 
-  const loading = students === undefined || rawLogs === undefined
+  const loading = studentsLoading || rawLogs === undefined
 
   return { feedingLog, markStudent, submitToAdmin, stats, loading, isSubmitted }
 }

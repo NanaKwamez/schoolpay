@@ -12,6 +12,7 @@ import { Modal } from '@/components/ui/Modal'
 import { StudentAvatar } from '@/components/ui/StudentAvatar'
 import { isValidGhanaPhone, fieldBorder } from '@/lib/validation'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useToast } from '@/components/ui/Toast'
 import { cn, compressImage } from '@/lib/utils'
 
 interface StudentRow {
@@ -28,6 +29,7 @@ interface ClassOption { id: string; name: string; count: number }
 
 export default function AdminStudentsPage() {
   const supabase = useMemo(() => createSupabaseBrowserClient(), [])
+  const { showToast } = useToast()
   const [students, setStudents] = useState<StudentRow[]>([])
   const [classes, setClasses] = useState<ClassOption[]>([])
   const [loading, setLoading] = useState(true)
@@ -109,38 +111,70 @@ export default function AdminStudentsPage() {
     if (Object.keys(errs).length > 0) return
 
     setSaving(true)
-    await supabase.from('students').insert({
-      full_name: addName.trim(),
-      class_id: addClassId,
-      parent_phone: addPhone.trim() || null,
-      is_active: true,
-    })
-    setShowAdd(false); setAddName(''); setAddClassId(''); setAddPhone(''); setAddErrors({})
-    await fetchData(); setSaving(false)
+    try {
+      const { error } = await supabase.from('students').insert({
+        full_name: addName.trim(),
+        class_id: addClassId,
+        parent_phone: addPhone.trim() || null,
+        is_active: true,
+      })
+      if (error) {
+        showToast(error.message, 'error')
+        return
+      }
+      showToast('Student added', 'success')
+      setShowAdd(false); setAddName(''); setAddClassId(''); setAddPhone(''); setAddErrors({})
+      await fetchData()
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleMove = async () => {
     if (!moveStudent || !moveClassId) return
     setSaving(true)
-    await supabase.from('students').update({ class_id: moveClassId }).eq('id', moveStudent.id)
-    setMoveStudent(null); setMoveClassId('')
-    await fetchData(); setSaving(false)
+    try {
+      const { error } = await supabase.from('students').update({ class_id: moveClassId }).eq('id', moveStudent.id)
+      if (error) {
+        showToast(error.message, 'error')
+        return
+      }
+      showToast('Student moved', 'success')
+      setMoveStudent(null); setMoveClassId('')
+      await fetchData()
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleToggleActive = async (student: StudentRow) => {
-    await supabase.from('students').update({ is_active: !student.is_active }).eq('id', student.id)
+    const { error } = await supabase.from('students').update({ is_active: !student.is_active }).eq('id', student.id)
+    if (error) {
+      showToast(error.message, 'error')
+      return
+    }
+    showToast(student.is_active ? 'Student deactivated' : 'Student activated', 'success')
     await fetchData()
   }
 
   const handleBulkImport = async () => {
     if (!bulkText.trim() || !bulkClassId) return
     setSaving(true)
-    const names = bulkText.split('\n').map(n => n.trim()).filter(Boolean)
-    await supabase.from('students').insert(names.map(name => ({
-      full_name: name, class_id: bulkClassId, is_active: true, parent_phone: null,
-    })))
-    setShowBulk(false); setBulkText(''); setBulkClassId('')
-    await fetchData(); setSaving(false)
+    try {
+      const names = bulkText.split('\n').map(n => n.trim()).filter(Boolean)
+      const { error } = await supabase.from('students').insert(names.map(name => ({
+        full_name: name, class_id: bulkClassId, is_active: true, parent_phone: null,
+      })))
+      if (error) {
+        showToast(error.message, 'error')
+        return
+      }
+      showToast(`Imported ${names.length} student${names.length === 1 ? '' : 's'}`, 'success')
+      setShowBulk(false); setBulkText(''); setBulkClassId('')
+      await fetchData()
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleCameraClick = (studentId: string) => {

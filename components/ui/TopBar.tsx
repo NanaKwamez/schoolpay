@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { ChevronLeft, LogOut } from 'lucide-react'
+import { ChevronLeft, Loader2, LogOut } from 'lucide-react'
 
 import { MgaLogoMark } from '@/components/branding/mga-logo-mark'
 import { Modal } from './Modal'
@@ -37,14 +37,11 @@ export function TopBar({
 }: TopBarProps) {
   const { pendingCount, isSyncing } = useSync()
   const { isOnline } = useOnlineStatus()
-  const { signOut } = useAuth()
+  const { signOut, isSigningOut } = useAuth()
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
 
-  const handleSignOut = async () => {
-    Object.keys(localStorage)
-      .filter(k => k.startsWith('schoolpay-') || k.startsWith('mga-'))
-      .forEach(k => localStorage.removeItem(k))
-    await signOut()
+  const handleSignOut = (): void => {
+    signOut()
   }
 
   return (
@@ -127,20 +124,32 @@ export function TopBar({
           <div className="flex gap-2">
             <button
               onClick={() => setShowSignOutConfirm(false)}
-              className="flex-1 min-h-[48px] rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              className="flex-1 min-h-[48px] rounded-xl border-2 border-gray-200 dark:border-gray-600 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleSignOut}
-              className="flex-1 min-h-[48px] rounded-xl bg-red-600 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+              disabled={isSigningOut}
+              className={cn(
+                'flex-1 min-h-[48px] rounded-xl bg-red-600 text-sm font-semibold text-white hover:bg-red-700 transition-colors',
+                'flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed'
+              )}
             >
-              Sign Out
+              {isSigningOut ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" aria-hidden />
+                  Signing out...
+                </>
+              ) : (
+                'Sign Out'
+              )}
             </button>
           </div>
         }
       >
-        <p className="text-sm text-gray-600">Sign out of SchoolPay?</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300">Sign out of SchoolPay?</p>
       </Modal>
     </>
   )
