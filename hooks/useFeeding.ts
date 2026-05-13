@@ -9,7 +9,7 @@ import { generateLocalId, getTodayGhana } from '@/lib/utils'
 import { FEEDING_FEE_AMOUNT } from '@/lib/constants'
 import { useAuth } from './useAuth'
 import { useStudents } from './useStudents'
-import type { LocalFeedingLog, FeedingStatus } from '@/types'
+import type { LocalFeedingLog, FeedingStatus, Student } from '@/types'
 
 interface FeedingStats {
   total: number
@@ -28,6 +28,7 @@ interface UseFeedingReturn {
   stats: FeedingStats
   loading: boolean
   isSubmitted: boolean
+  students: Student[]
 }
 
 export function useFeeding(date?: string): UseFeedingReturn {
@@ -37,7 +38,10 @@ export function useFeeding(date?: string): UseFeedingReturn {
   const today = date ?? getTodayGhana()
   const [isSubmitted, setIsSubmitted] = useState(false)
 
-  const students = classId ? classStudents : []
+  const students = useMemo(
+    () => (classId ? classStudents : []),
+    [classId, classStudents]
+  )
 
   // Live feeding logs for today
   const rawLogs = useLiveQuery(
@@ -134,5 +138,5 @@ export function useFeeding(date?: string): UseFeedingReturn {
 
   const loading = studentsLoading || rawLogs === undefined
 
-  return { feedingLog, markStudent, submitToAdmin, stats, loading, isSubmitted }
+  return { feedingLog, markStudent, submitToAdmin, stats, loading, isSubmitted, students }
 }

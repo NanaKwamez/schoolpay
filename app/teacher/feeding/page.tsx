@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { CheckCircle, Edit2 } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
@@ -11,9 +11,9 @@ import { StudentFeedingRow } from '@/components/teacher/StudentFeedingRow'
 import { StudentRowSkeleton } from '@/components/ui/Skeleton'
 import { useAuth } from '@/hooks/useAuth'
 import { useFeeding } from '@/hooks/useFeeding'
-import { useStudents } from '@/hooks/useStudents'
 import { getWeekStart } from '@/lib/utils'
 import { FEEDING_FEE_AMOUNT } from '@/lib/constants'
+import { db } from '@/lib/dexie/schema'
 import type { FeedingStatus } from '@/types'
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -35,8 +35,7 @@ function TeacherFeedingContent() {
   })
 
   const { profile, user, loading: teacherAuthLoading } = useAuth()
-  const { feedingLog, markStudent, submitToAdmin, stats, loading, isSubmitted } = useFeeding()
-  const { students, loading: studentsLoading } = useStudents()
+  const { feedingLog, markStudent, submitToAdmin, stats, loading, isSubmitted, students } = useFeeding()
   const [isEditing, setIsEditing] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
@@ -87,7 +86,7 @@ function TeacherFeedingContent() {
     setIsEditing(false)
   }
 
-  const isLoading = loading || studentsLoading
+  const isLoading = loading
 
   if (teacherAuthLoading) {
     return (
