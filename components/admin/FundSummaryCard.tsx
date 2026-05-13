@@ -30,10 +30,7 @@ export function FundSummaryCard({ fund, isProprietress, isFeeding }: FundSummary
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>
-          <p className="text-xs font-bold text-white/60 uppercase tracking-wide">
-            {isFeeding ? 'Feeding Fund' : 'General Fund'}
-          </p>
-          <p className="text-sm font-semibold text-white/90 mt-0.5">{fund.fund_name}</p>
+          <p className="text-sm font-semibold text-white/90">{fund.fund_name}</p>
         </div>
         <div className="h-8 w-8 rounded-xl bg-white/15 flex items-center justify-center">
           {isFeeding

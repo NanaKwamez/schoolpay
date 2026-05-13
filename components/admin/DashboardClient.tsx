@@ -30,7 +30,12 @@ import { useSync } from '@/hooks/useSync'
 import { useOnlineStatus } from '@/hooks/useOnline'
 import { EnrollmentRequestsPanel } from './EnrollmentRequestsPanel'
 import { Modal } from '@/components/ui/Modal'
-import { ADMIN_DASHBOARD_FETCH_TIMEOUT_MS, feedingPaidAmountFromLogOrTier, getFeedingFeeForClass } from '@/lib/constants'
+import {
+  ADMIN_DASHBOARD_FETCH_TIMEOUT_MS,
+  ADMIN_DASHBOARD_FUND_SUMMARY_ORDER,
+  feedingPaidAmountFromLogOrTier,
+  getFeedingFeeForClass,
+} from '@/lib/constants'
 import { logError } from '@/lib/logger'
 import { fundTypeFromFeeTypesEmbed } from '@/lib/postgrest-fee-type-embed'
 import { cn, formatGHS, getTodayGhana } from '@/lib/utils'
@@ -63,6 +68,7 @@ interface FeedingTodayByClassRow {
 interface FundSummaryViewRow {
   id: string
   name: string
+  fund_type: unknown
   payment_income: unknown
   total_income: unknown
 }
@@ -90,6 +96,37 @@ function parseNumeric(value: unknown): number {
     return Number.isFinite(n) ? n : 0
   }
   return 0
+}
+
+function fundTypeFromDbValue(
+  viewValue: unknown,
+  fundTypeByFundId: Map<string, FundType>,
+  fundId: string
+): FundType {
+  if (viewValue === 'feeding' || viewValue === 'general') return viewValue
+  const meta = fundTypeByFundId.get(fundId)
+  if (meta === 'feeding' || meta === 'general') return meta
+  return 'general'
+}
+
+/** One dashboard card per `fund_type` (avoids duplicate generals when rows mis-keyed). */
+function dedupeFundSummariesOnePerType(rows: FundSummary[]): FundSummary[] {
+  const seen = new Set<FundType>()
+  const out: FundSummary[] = []
+  for (const t of ADMIN_DASHBOARD_FUND_SUMMARY_ORDER) {
+    const hit = rows.find(r => r.fund_type === t)
+    if (hit) {
+      out.push(hit)
+      seen.add(t)
+    }
+  }
+  for (const r of rows) {
+    if (!seen.has(r.fund_type)) {
+      out.push(r)
+      seen.add(r.fund_type)
+    }
+  }
+  return out
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -251,7 +288,7 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
             attendanceTodayRes,
           ] = await Promise.all([
             supabase.from('feeding_today_by_class').select('*'),
-            supabase.from('fund_summary').select('*'),
+            supabase.from('fund_summary').select('id, name, fund_type, payment_income, total_income'),
             supabase.from('terms').select('*').eq('is_current', true).single(),
             supabase.from('classes').select('id, name, level, sort_order').order('sort_order'),
             supabase.from('user_profiles').select('id, full_name, class_id').eq('role', 'teacher').eq('is_active', true),
@@ -309,7 +346,6 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
 
           const termId = termRes.data?.id ?? null
 
-          let collected = 0
           let expected = 0
           let recomputedFeedingFundTotalIncome: number | null = null
 
@@ -320,8 +356,7 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
             const termEnd = typeof termEndRaw === 'string' ? termEndRaw.split('T')[0] ?? '1970-01-01' : '1970-01-01'
 
             if (feedingFundId != null) {
-              const [termPayRes, feeAssignRes, feedingFundPayRes, feedingTermLogsRes] = await Promise.all([
-                supabase.from('payments').select('amount_paid').eq('term_id', termId),
+              const [feeAssignRes, feedingFundPayRes, feedingTermLogsRes] = await Promise.all([
                 supabase
                   .from('student_fee_assignments')
                   .select('fee_types(amount)')
@@ -340,15 +375,10 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
 
               if (!stillCurrent() || timedOut) return
 
-              throwIfSupabaseError(termPayRes, 'term_payments')
               throwIfSupabaseError(feeAssignRes, 'student_fee_assignments')
               throwIfSupabaseError(feedingFundPayRes, 'term_payments feeding fund')
               throwIfSupabaseError(feedingTermLogsRes, 'feeding_daily_log term')
 
-              collected = (termPayRes.data ?? []).reduce(
-                (s: number, p: { amount_paid: number }) => s + parseNumeric(p.amount_paid),
-                0
-              )
               expected = (feeAssignRes.data ?? []).reduce((s: number, a: { fee_types: unknown }) => {
                 const ft = a.fee_types as { amount: number } | null
                 return s + (ft?.amount ?? 0)
@@ -372,24 +402,16 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
               }
               recomputedFeedingFundTotalIncome = feedingPaySum + feedingLogSum
             } else {
-              const [termPayRes, feeAssignRes] = await Promise.all([
-                supabase.from('payments').select('amount_paid').eq('term_id', termId),
-                supabase
-                  .from('student_fee_assignments')
-                  .select('fee_types(amount)')
-                  .eq('term_id', termId)
-                  .eq('is_waived', false),
-              ])
+              const feeAssignRes = await supabase
+                .from('student_fee_assignments')
+                .select('fee_types(amount)')
+                .eq('term_id', termId)
+                .eq('is_waived', false)
 
               if (!stillCurrent() || timedOut) return
 
-              throwIfSupabaseError(termPayRes, 'term_payments')
               throwIfSupabaseError(feeAssignRes, 'student_fee_assignments')
 
-              collected = (termPayRes.data ?? []).reduce(
-                (s: number, p: { amount_paid: number }) => s + parseNumeric(p.amount_paid),
-                0
-              )
               expected = (feeAssignRes.data ?? []).reduce((s: number, a: { fee_types: unknown }) => {
                 const ft = a.fee_types as { amount: number } | null
                 return s + (ft?.amount ?? 0)
@@ -455,8 +477,8 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
 
           const fundRows = fundSummaryViewRes.data ?? []
           const summaries: FundSummary[] = fundRows.map((row: FundSummaryViewRow) => {
-            const fid = row.id
-            const ft = fundTypeMap.get(fid) ?? 'general'
+            const fid = typeof row.id === 'string' ? row.id : String(row.id)
+            const ft = fundTypeFromDbValue(row.fund_type, fundTypeMap, fid)
             const expensesTotal = expenseByFund.get(fid) ?? 0
             const totalIncome =
               fid === feedingFundId && recomputedFeedingFundTotalIncome != null
@@ -474,6 +496,8 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
             }
           })
 
+          const termCollected = summaries.reduce((s, r) => s + r.total_income, 0)
+
           if (!stillCurrent() || timedOut) return
 
           setDashboardError(null)
@@ -481,10 +505,10 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
           setAttendance(finalizeSchoolAttendanceToday(attendanceTodayRes, newClassStats))
           setTermStats({
             expected,
-            collected,
-            outstanding: Math.max(0, expected - collected),
+            collected: termCollected,
+            outstanding: Math.max(0, expected - termCollected),
           })
-          setFundSummaries(summaries)
+          setFundSummaries(dedupeFundSummariesOnePerType(summaries))
           setPendingExpenses(pendingExpenseCount)
           } catch (innerErr) {
             if (timedOut || !stillCurrent()) return

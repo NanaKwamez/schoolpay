@@ -1,4 +1,4 @@
-import type { FeedingStatus } from '@/types'
+import type { FeedingStatus, FundType } from '@/types'
 
 export const SCHOOL_NAME = process.env.NEXT_PUBLIC_SCHOOL_NAME ?? 'Morning Glory Academy'
 
@@ -8,6 +8,9 @@ export const CURRENCY = 'GHS'
 export const SYNC_INTERVAL_MS = 60_000 // 60 seconds
 /** Bound slow Supabase dashboard loads so the UI does not spin indefinitely */
 export const ADMIN_DASHBOARD_FETCH_TIMEOUT_MS = 10_000
+
+/** Fund summary section: at most one card per `fund_type`, in this order. */
+export const ADMIN_DASHBOARD_FUND_SUMMARY_ORDER: readonly FundType[] = ['feeding', 'general']
 export const MAX_SYNC_ATTEMPTS = 5
 
 /**
