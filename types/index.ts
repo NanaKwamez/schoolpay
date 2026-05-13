@@ -223,6 +223,17 @@ export interface ClassWithStats extends Class {
   last_updated?: string
 }
 
+/** Single-row `school_attendance_today` view — snake_case matches DB columns. */
+export interface SchoolAttendanceTodayRow {
+  total_present: number
+  total_absent: number
+  attendance_percentage: number
+  total_unmarked: number
+  total_collected: number
+  total_expected: number
+  total_outstanding: number
+}
+
 export interface AiInsightCache {
   id: string
   insight_type: 'anomaly' | 'trend' | 'forecast'

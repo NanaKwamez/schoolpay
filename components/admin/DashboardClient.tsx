@@ -3,7 +3,19 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { X, AlertTriangle, DollarSign, TrendingDown, Clock, Loader2, LogOut } from 'lucide-react'
+import {
+  AlertTriangle,
+  Clock,
+  DollarSign,
+  HelpCircle,
+  Loader2,
+  LogOut,
+  Percent,
+  TrendingDown,
+  UserCheck,
+  UserX,
+  X,
+} from 'lucide-react'
 import type { PostgrestError } from '@supabase/supabase-js'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -18,11 +30,18 @@ import { useSync } from '@/hooks/useSync'
 import { useOnlineStatus } from '@/hooks/useOnline'
 import { EnrollmentRequestsPanel } from './EnrollmentRequestsPanel'
 import { Modal } from '@/components/ui/Modal'
-import { ADMIN_DASHBOARD_FETCH_TIMEOUT_MS, feedingPaidAmountFromLogOrTier } from '@/lib/constants'
+import { ADMIN_DASHBOARD_FETCH_TIMEOUT_MS, feedingPaidAmountFromLogOrTier, getFeedingFeeForClass } from '@/lib/constants'
 import { logError } from '@/lib/logger'
 import { fundTypeFromFeeTypesEmbed } from '@/lib/postgrest-fee-type-embed'
 import { cn, formatGHS, getTodayGhana } from '@/lib/utils'
-import type { ClassLevel, ClassWithStats, FundSummary, FundType, AiInsightCache } from '@/types'
+import type {
+  AiInsightCache,
+  ClassLevel,
+  ClassWithStats,
+  FundSummary,
+  FundType,
+  SchoolAttendanceTodayRow,
+} from '@/types'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -48,6 +67,16 @@ interface FundSummaryViewRow {
   total_income: unknown
 }
 
+const EMPTY_SCHOOL_ATTENDANCE_TODAY: SchoolAttendanceTodayRow = {
+  total_present: 0,
+  total_absent: 0,
+  attendance_percentage: 0,
+  total_unmarked: 0,
+  total_collected: 0,
+  total_expected: 0,
+  total_outstanding: 0,
+}
+
 function throwIfSupabaseError(result: { error: PostgrestError | null }, scope: string): void {
   if (result.error) {
     throw new Error(`${scope}: ${result.error.message}`)
@@ -61,6 +90,79 @@ function parseNumeric(value: unknown): number {
     return Number.isFinite(n) ? n : 0
   }
   return 0
+}
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return v !== null && typeof v === 'object' && !Array.isArray(v)
+}
+
+function parseSchoolAttendanceTodayRow(data: unknown): SchoolAttendanceTodayRow | null {
+  if (!isRecord(data)) return null
+  return {
+    total_present: parseNumeric(data.total_present),
+    total_absent: parseNumeric(data.total_absent),
+    attendance_percentage: parseNumeric(data.attendance_percentage),
+    total_unmarked: parseNumeric(data.total_unmarked),
+    total_collected: parseNumeric(data.total_collected),
+    total_expected: parseNumeric(data.total_expected),
+    total_outstanding: parseNumeric(data.total_outstanding),
+  }
+}
+
+function deriveSchoolAttendanceFromClasses(classStats: ClassWithStats[]): SchoolAttendanceTodayRow {
+  let present = 0
+  let absent = 0
+  let marked = 0
+  let enrollment = 0
+  let collected = 0
+  let expected = 0
+  for (const c of classStats) {
+    present += c.paid_count + c.credit_count
+    absent += c.absent_count
+    marked += c.marked_count
+    enrollment += c.total_students
+    collected += c.collected_today
+    const fee = getFeedingFeeForClass(c.name)
+    expected += Math.max(0, c.total_students - c.absent_count) * fee
+  }
+  const unmarked = Math.max(0, enrollment - marked)
+  const denom = present + absent
+  const attendance_percentage = denom > 0 ? Math.round((10000 * present) / denom) / 100 : 0
+  return {
+    total_present: present,
+    total_absent: absent,
+    attendance_percentage,
+    total_unmarked: unmarked,
+    total_collected: collected,
+    total_expected: expected,
+    total_outstanding: Math.max(0, expected - collected),
+  }
+}
+
+function finalizeSchoolAttendanceToday(
+  res: { data: unknown; error: PostgrestError | null },
+  classStats: ClassWithStats[]
+): SchoolAttendanceTodayRow {
+  const derived = deriveSchoolAttendanceFromClasses(classStats)
+  if (res.error) {
+    if (res.error.code !== 'PGRST116') {
+      logError('admin-dashboard-school-attendance-today', new Error(res.error.message), {
+        code: res.error.code,
+      })
+    }
+    return derived
+  }
+  const row = parseSchoolAttendanceTodayRow(res.data)
+  if (row == null) return derived
+  if (row.total_collected === 0 && derived.total_collected > 0) {
+    return {
+      ...row,
+      total_collected: derived.total_collected,
+      total_expected: derived.total_expected,
+      total_outstanding: Math.max(0, derived.total_expected - derived.total_collected),
+    }
+  }
+  return row
 }
 
 /** Daily cash feeding: only these rows carry revenue in {@link feeding_daily_log}. */
@@ -99,6 +201,7 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
   const [headerLogoFailed, setHeaderLogoFailed] = useState(false)
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
   const [dashboardError, setDashboardError] = useState<string | null>(null)
+  const [attendance, setAttendance] = useState<SchoolAttendanceTodayRow>(EMPTY_SCHOOL_ATTENDANCE_TODAY)
   const fetchGenerationRef = useRef(0)
   const supabase = useMemo(() => createSupabaseBrowserClient(), [])
 
@@ -145,6 +248,7 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
             feedingTodayLogsRes,
             expensesRes,
             fundsMetaRes,
+            attendanceTodayRes,
           ] = await Promise.all([
             supabase.from('feeding_today_by_class').select('*'),
             supabase.from('fund_summary').select('*'),
@@ -156,6 +260,7 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
             supabase.from('feeding_daily_log').select('student_id, amount, status').eq('date', today),
             supabase.from('expenses').select('fund_id, amount'),
             supabase.from('funds').select('id, fund_type'),
+            supabase.from('school_attendance_today').select('*').maybeSingle(),
           ])
 
           if (!stillCurrent() || timedOut) return
@@ -373,6 +478,7 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
 
           setDashboardError(null)
           setClassStats(newClassStats)
+          setAttendance(finalizeSchoolAttendanceToday(attendanceTodayRes, newClassStats))
           setTermStats({
             expected,
             collected,
@@ -604,26 +710,113 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
         <section>
           <p className="text-xs font-bold text-[#0A1628] dark:text-gray-100 uppercase tracking-wide mb-3">Term Overview</p>
           {loading ? (
-            <div className="grid grid-cols-2 tablet:grid-cols-3 gap-3 tablet:gap-4">
-              {[0, 1, 2].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)}
+            <>
+              <div className="grid grid-cols-2 tablet:grid-cols-3 gap-3 tablet:gap-4">
+                {[0, 1, 2].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)}
+              </div>
+              <Skeleton className="mt-3 h-[92px] w-full rounded-2xl" />
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 tablet:grid-cols-3 gap-3 tablet:gap-4">
+                {[
+                  { label: 'Expected', value: termStats.expected, icon: <DollarSign className="h-4 w-4 text-yellow-500/60" /> },
+                  { label: 'Collected', value: termStats.collected, icon: <DollarSign className="h-4 w-4 text-yellow-500/60" /> },
+                  { label: 'Outstanding', value: termStats.outstanding, icon: <TrendingDown className="h-4 w-4 text-yellow-500/60" /> },
+                ].map(stat => (
+                  <div
+                    key={stat.label}
+                    className="rounded-2xl p-5 border-l-4 border-yellow-500 shadow-gold-glow text-center"
+                    style={{ background: '#0A1628' }}
+                  >
+                    <div className="flex justify-center mb-1">{stat.icon}</div>
+                    <p className="text-yellow-400 font-bold text-base leading-tight">
+                      {formatGHS(stat.value)}
+                    </p>
+                    <p className="text-white/70 text-xs mt-0.5">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 rounded-2xl border border-mga-gold/25 bg-white p-4 shadow-sm dark:border-mga-gold/20 dark:bg-gray-900/80">
+                <p className="text-xs font-bold uppercase tracking-wide text-mga-gold">
+                  Today&apos;s Feeding Collection
+                </p>
+                <div className="mt-3 grid grid-cols-1 gap-3 tablet:grid-cols-3">
+                  {[
+                    { label: 'Collected', amount: attendance.total_collected, emphasize: true },
+                    { label: 'Expected', amount: attendance.total_expected, emphasize: false },
+                    { label: 'Outstanding', amount: attendance.total_outstanding, emphasize: false },
+                  ].map(row => (
+                    <div key={row.label} className="text-center tablet:text-left">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        {row.label}
+                      </p>
+                      <p
+                        className={cn(
+                          'text-sm font-bold tabular-nums',
+                          row.emphasize
+                            ? 'text-mga-gold'
+                            : 'text-[#0A1628] dark:text-gray-100'
+                        )}
+                      >
+                        {formatGHS(row.amount)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </section>
+
+        {/* Today's Attendance (feeding marks) */}
+        <section>
+          <p className="text-xs font-bold text-[#0A1628] dark:text-gray-100 uppercase tracking-wide mb-3">
+            Today&apos;s Attendance
+          </p>
+          {loading ? (
+            <div className="grid grid-cols-2 gap-3">
+              {[0, 1, 2, 3].map(i => (
+                <Skeleton key={i} className="h-24 rounded-2xl" />
+              ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 tablet:grid-cols-3 gap-3 tablet:gap-4">
+            <div className="grid grid-cols-2 gap-3">
               {[
-                { label: 'Expected', value: termStats.expected, icon: <DollarSign className="h-4 w-4 text-yellow-500/60" /> },
-                { label: 'Collected', value: termStats.collected, icon: <DollarSign className="h-4 w-4 text-yellow-500/60" /> },
-                { label: 'Outstanding', value: termStats.outstanding, icon: <TrendingDown className="h-4 w-4 text-yellow-500/60" /> },
-              ].map(stat => (
+                {
+                  label: 'Present',
+                  display: String(Math.round(attendance.total_present)),
+                  icon: <UserCheck className="h-4 w-4 text-mga-green-mid shrink-0" aria-hidden />,
+                },
+                {
+                  label: 'Absent',
+                  display: String(Math.round(attendance.total_absent)),
+                  icon: <UserX className="h-4 w-4 text-red-500/80 shrink-0" aria-hidden />,
+                },
+                {
+                  label: 'Attendance rate',
+                  display: `${attendance.attendance_percentage.toFixed(1)}%`,
+                  icon: <Percent className="h-4 w-4 text-mga-gold shrink-0" aria-hidden />,
+                },
+                {
+                  label: 'Unmarked',
+                  display: String(Math.round(attendance.total_unmarked)),
+                  icon: <HelpCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" aria-hidden />,
+                },
+              ].map(card => (
                 <div
-                  key={stat.label}
-                  className="rounded-2xl p-5 border-l-4 border-yellow-500 shadow-gold-glow text-center"
-                  style={{ background: '#0A1628' }}
+                  key={card.label}
+                  className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900/80"
                 >
-                  <div className="flex justify-center mb-1">{stat.icon}</div>
-                  <p className="text-yellow-400 font-bold text-base leading-tight">
-                    {formatGHS(stat.value)}
+                  <div className="mb-1 flex items-center gap-2">
+                    {card.icon}
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 leading-tight">
+                      {card.label}
+                    </span>
+                  </div>
+                  <p className="text-lg font-bold tabular-nums leading-tight text-[#0A1628] dark:text-gray-100 break-words">
+                    {card.display}
                   </p>
-                  <p className="text-white/70 text-xs mt-0.5">{stat.label}</p>
                 </div>
               ))}
             </div>

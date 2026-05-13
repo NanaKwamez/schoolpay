@@ -32,7 +32,7 @@ export default async function AdminDashboardPage() {
   const role = profile.role as UserRole
   if (role !== 'proprietress' && role !== 'headmaster') redirect('/login')
 
-  const greetingName = profile.full_name?.split(/\s+/)[0] ?? 'Admin'
+  const greetingName = profile.full_name ?? 'Admin'
 
   const dashboard =
     role === 'proprietress' ? (
