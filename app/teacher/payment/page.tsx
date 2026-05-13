@@ -1,13 +1,15 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Search, X, CheckCircle, MessageCircle, ChevronRight } from 'lucide-react'
+import { Search, X, ChevronRight } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { TopBar } from '@/components/ui/TopBar'
 import { BottomNav } from '@/components/ui/BottomNav'
 import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
+import { TeacherNewFeeTypeModal } from '@/components/teacher/teacher-new-fee-type-modal'
+import { TeacherPaymentReceiptPreview } from '@/components/teacher/teacher-payment-receipt-preview'
+import { TeacherPaymentSavedView } from '@/components/teacher/teacher-payment-saved-view'
 import { TeacherScreenLoadingShell } from '@/components/teacher/teacher-screen-loading-shell'
 import { useAuth } from '@/hooks/useAuth'
 import { usePayments } from '@/hooks/usePayments'
@@ -15,44 +17,15 @@ import { useTeacherClassName } from '@/hooks/use-teacher-class-name'
 import { useTeacherShellReady } from '@/hooks/use-teacher-shell-ready'
 import { db } from '@/lib/dexie/schema'
 import { formatGHS, getWeekStart } from '@/lib/utils'
-import { WEEKLY_FEEDING_AMOUNT, SCHOOL_NAME } from '@/lib/constants'
+import { WEEKLY_FEEDING_AMOUNT } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui/Toast'
+import {
+  formatWeekLabel,
+  type TeacherPaymentSavedReceipt,
+} from '@/lib/teacher-payment-helpers'
 import { validateAmount } from '@/lib/validation'
-import { generateReceiptText, getWhatsAppReceiptUrl } from '@/lib/receipt'
 import type { Student, FeeType, PaymentType } from '@/types'
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface SavedReceipt {
-  receiptNumber: string
-  studentName: string
-  className: string
-  feeName: string
-  amount: number
-  paymentType: PaymentType
-  date: string
-  parentPhone: string | null
-  markedByName: string
-  weekCovered?: string
-  remainingBalance?: number
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function paymentTypeLabel(pt: PaymentType): string {
-  const labels: Record<PaymentType, string> = {
-    full: 'Full Payment',
-    credit: 'Part Payment',
-    weekly_advance: 'Weekly Advance',
-    daily: 'Daily',
-  }
-  return labels[pt]
-}
-
-function formatWeekLabel(date: Date): string {
-  return `Week of ${date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
-}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -89,7 +62,8 @@ function TeacherPaymentContent() {
   const [notes, setNotes] = useState('')
   const [search, setSearch] = useState('')
   const [weekOffset, setWeekOffset] = useState(0) // 0 = current, -1 = last week
-  const [savedReceipt, setSavedReceipt] = useState<SavedReceipt | null>(null)
+  const [savedReceipt, setSavedReceipt] = useState<TeacherPaymentSavedReceipt | null>(null)
+  const [showNewFeeTypeModal, setShowNewFeeTypeModal] = useState(false)
 
   // ── Data from Dexie ─────────────────────────────────────────────────────────
   const allStudents = useLiveQuery(
@@ -145,21 +119,39 @@ function TeacherPaymentContent() {
     [weekDate]
   )
 
-  // ── Auto-set amount when fee type or payment type changes ────────────────────
-  const resolvedAmount = useMemo(() => {
-    if (!selectedFeeType) return ''
-    if (paymentType === 'full') return selectedFeeType.amount.toFixed(2)
-    if (paymentType === 'weekly_advance') return WEEKLY_FEEDING_AMOUNT.toFixed(2)
-    return amount
-  }, [selectedFeeType, paymentType, amount])
+  // ── Prefill / clear amount when fee id, standard amount, or payment mode changes ─
+  useEffect(() => {
+    if (!selectedFeeType) return
+    if (paymentType === 'credit') {
+      setAmount('')
+      return
+    }
+    if (paymentType === 'full') {
+      setAmount(selectedFeeType.amount.toFixed(2))
+      return
+    }
+    if (paymentType === 'weekly_advance') {
+      setAmount(WEEKLY_FEEDING_AMOUNT.toFixed(2))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Dexie live rows churn object identity; prefill only when id/amount/mode change
+  }, [selectedFeeType?.id, selectedFeeType?.amount, paymentType])
+
+  const parsedAmountForSubmit = parseFloat(amount.trim())
+  const canSubmitAmount =
+    Number.isFinite(parsedAmountForSubmit) && parsedAmountForSubmit >= 0.01
 
   // ── Save ─────────────────────────────────────────────────────────────────────
   const handleSave = useCallback(async () => {
     if (!selectedStudent || !selectedFeeType || !profile || !currentTerm) return
 
-    const amountCheck = validateAmount(resolvedAmount)
+    const amountCheck = validateAmount(amount)
     if (!amountCheck.ok) {
       showToast(amountCheck.error, 'error')
+      return
+    }
+
+    if (amountCheck.value < 0.01) {
+      showToast('Amount must be at least 0.01 GHS', 'error')
       return
     }
 
@@ -207,7 +199,7 @@ function TeacherPaymentContent() {
     }
   }, [
     selectedStudent, selectedFeeType, profile, currentTerm,
-    resolvedAmount, paymentType, weekCoveredStr, notes, savePayment, teacherClassDisplayName, showToast,
+    amount, paymentType, weekCoveredStr, notes, savePayment, teacherClassDisplayName, showToast,
   ])
 
   const handleReset = () => {
@@ -220,73 +212,9 @@ function TeacherPaymentContent() {
     setSearch('')
   }
 
-  const handleWhatsApp = () => {
-    if (!savedReceipt) return
-    const receiptText = generateReceiptText({
-      studentName: savedReceipt.studentName,
-      className: savedReceipt.className,
-      feeName: savedReceipt.feeName,
-      amountPaid: savedReceipt.amount,
-      paymentType: savedReceipt.paymentType,
-      date: savedReceipt.date,
-      receiptNumber: savedReceipt.receiptNumber,
-      markedBy: savedReceipt.markedByName,
-      weekCovered: savedReceipt.weekCovered,
-      remainingBalance: savedReceipt.remainingBalance,
-    })
-    const url = getWhatsAppReceiptUrl(receiptText, savedReceipt.parentPhone ?? undefined)
-    window.open(url, '_blank', 'noopener,noreferrer')
-  }
-
   // ── Success screen ──────────────────────────────────────────────────────────
   if (savedReceipt) {
-    return (
-      <div className="min-h-screen bg-mga-cream">
-        <TopBar title="Payment Saved" backHref="/teacher/home" compactTitles />
-        <main className="px-4 py-8 space-y-5">
-          <div className="flex flex-col items-center text-center gap-2">
-            <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle className="h-9 w-9 text-green-600" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900">Payment Saved!</h2>
-            <p className="text-gray-500 text-sm">Stored offline, will sync when online</p>
-          </div>
-
-          {/* Receipt card */}
-          <Card variant="green" className="font-mono text-sm">
-            <pre className="whitespace-pre-wrap text-mga-green-dark text-xs leading-relaxed">
-              {generateReceiptText({
-                studentName: savedReceipt.studentName,
-                className: savedReceipt.className,
-                feeName: savedReceipt.feeName,
-                amountPaid: savedReceipt.amount,
-                paymentType: savedReceipt.paymentType,
-                date: savedReceipt.date,
-                receiptNumber: savedReceipt.receiptNumber,
-                markedBy: savedReceipt.markedByName,
-                weekCovered: savedReceipt.weekCovered,
-                remainingBalance: savedReceipt.remainingBalance,
-              })}
-            </pre>
-          </Card>
-
-          <Button
-            variant="success"
-            fullWidth
-            size="lg"
-            icon={<MessageCircle className="h-5 w-5" />}
-            onClick={handleWhatsApp}
-          >
-            Share via WhatsApp
-          </Button>
-
-          <Button variant="secondary" fullWidth size="lg" onClick={handleReset}>
-            Record Another Payment
-          </Button>
-        </main>
-        <BottomNav />
-      </div>
-    )
+    return <TeacherPaymentSavedView savedReceipt={savedReceipt} onReset={handleReset} />
   }
 
   if (!isReady) {
@@ -375,7 +303,10 @@ function TeacherPaymentContent() {
                 return (
                   <button
                     key={fee.id}
-                    onClick={() => { setSelectedFeeType(fee); setPaymentType('full') }}
+                    onClick={() => {
+                      setSelectedFeeType(fee)
+                      setPaymentType('full')
+                    }}
                     className={cn(
                       'w-full min-h-[56px] rounded-xl border-2 px-4 flex items-center justify-between transition',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mga-green-light',
@@ -391,6 +322,14 @@ function TeacherPaymentContent() {
                   </button>
                 )
               })}
+              <Button
+                variant="secondary"
+                fullWidth
+                className="mt-3 border-dashed border-2 border-mga-gold/35 text-mga-green-dark"
+                onClick={() => setShowNewFeeTypeModal(true)}
+              >
+                + Add New Payment Type
+              </Button>
             </div>
           </section>
         )}
@@ -424,29 +363,23 @@ function TeacherPaymentContent() {
             {/* Amount */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Amount (GHS)</label>
-              {paymentType === 'credit' ? (
-                <>
-                  <input
-                    type="number"
-                    min="0.01"
-                    max={selectedFeeType.amount}
-                    step="0.01"
-                    value={amount}
-                    onChange={e => setAmount(e.target.value)}
-                    placeholder={`Up to ${formatGHS(selectedFeeType.amount)}`}
-                    className="w-full min-h-[56px] border-2 border-gray-200 rounded-xl px-4 text-sm font-bold outline-none focus:border-mga-green-mid transition"
-                  />
-                  {amount && !isNaN(parseFloat(amount)) && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Remaining: {formatGHS(Math.max(0, selectedFeeType.amount - parseFloat(amount)))}
-                    </p>
-                  )}
-                </>
-              ) : (
-                <div className="min-h-[56px] bg-mga-cream-dark border-2 border-mga-gold/20 rounded-xl px-4 flex items-center">
-                  <span className="text-base font-bold text-gray-900">{formatGHS(parseFloat(resolvedAmount))}</span>
-                  <span className="text-xs text-gray-400 ml-2">(fixed)</span>
-                </div>
+              <input
+                type="number"
+                min="0.01"
+                max={paymentType === 'credit' ? selectedFeeType.amount : undefined}
+                step="0.01"
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+                placeholder="Enter amount"
+                className="w-full min-h-[56px] border-2 border-gray-200 rounded-xl px-4 text-sm font-bold outline-none focus:border-mga-green-mid transition"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Standard amount: GHS {selectedFeeType?.amount?.toFixed(2)}
+              </p>
+              {paymentType === 'credit' && amount.trim() !== '' && !Number.isNaN(parseFloat(amount)) && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Remaining: {formatGHS(Math.max(0, selectedFeeType.amount - parseFloat(amount)))}
+                </p>
               )}
             </div>
 
@@ -487,18 +420,15 @@ function TeacherPaymentContent() {
               />
             </div>
 
-            {/* Receipt preview — hidden on tablet (shown in right column instead) */}
-            <Card variant="green" className="text-xs md:hidden">
-              <p className="text-xs font-bold text-mga-green-dark uppercase tracking-wide mb-2">Receipt Preview</p>
-              <div className="space-y-1 font-mono text-mga-green-dark text-xs">
-                <p>{SCHOOL_NAME}</p>
-                <p>Student: {selectedStudent.full_name} — {teacherClassDisplayName || '—'}</p>
-                <p>Fee: {selectedFeeType.name}</p>
-                <p>Amount: {formatGHS(parseFloat(resolvedAmount) || 0)}</p>
-                <p>Type: {paymentTypeLabel(paymentType)}</p>
-                <p>Date: {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-              </div>
-            </Card>
+            <TeacherPaymentReceiptPreview
+              amountInput={amount}
+              paymentType={paymentType}
+              student={selectedStudent}
+              fee={selectedFeeType}
+              teacherClassDisplayName={teacherClassDisplayName || '—'}
+              className="text-xs md:hidden"
+              showHeading
+            />
           </section>
         )}
         </div>{/* end left column */}
@@ -507,16 +437,14 @@ function TeacherPaymentContent() {
         {selectedStudent && selectedFeeType && (
           <div className="hidden md:block sticky top-4 self-start px-4 pt-4 pb-4">
             <p className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">Receipt Preview</p>
-            <Card variant="green" className="text-sm">
-              <div className="space-y-1 font-mono text-mga-green-dark text-xs">
-                <p className="font-bold">{SCHOOL_NAME}</p>
-                <p>Student: {selectedStudent.full_name} — {teacherClassDisplayName || '—'}</p>
-                <p>Fee: {selectedFeeType.name}</p>
-                <p>Amount: {formatGHS(parseFloat(resolvedAmount) || 0)}</p>
-                <p>Type: {paymentTypeLabel(paymentType)}</p>
-                <p>Date: {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-              </div>
-            </Card>
+            <TeacherPaymentReceiptPreview
+              amountInput={amount}
+              paymentType={paymentType}
+              student={selectedStudent}
+              fee={selectedFeeType}
+              teacherClassDisplayName={teacherClassDisplayName || '—'}
+              className="text-sm"
+            />
 
             {/* Save button in right column on tablet */}
             <div className="mt-4">
@@ -525,7 +453,7 @@ function TeacherPaymentContent() {
                 fullWidth
                 size="lg"
                 loading={saving}
-                disabled={!resolvedAmount || parseFloat(resolvedAmount) <= 0}
+                disabled={!canSubmitAmount}
                 onClick={handleSave}
               >
                 Save Payment
@@ -544,13 +472,22 @@ function TeacherPaymentContent() {
             fullWidth
             size="lg"
             loading={saving}
-            disabled={!resolvedAmount || parseFloat(resolvedAmount) <= 0}
+            disabled={!canSubmitAmount}
             onClick={handleSave}
           >
             Save Payment
           </Button>
         </div>
       )}
+
+      <TeacherNewFeeTypeModal
+        isOpen={showNewFeeTypeModal}
+        onClose={() => setShowNewFeeTypeModal(false)}
+        onCreated={fee => {
+          setSelectedFeeType(fee)
+          setPaymentType('full')
+        }}
+      />
 
       <BottomNav />
     </div>
