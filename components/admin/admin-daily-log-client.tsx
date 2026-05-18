@@ -16,7 +16,6 @@ import {
   type AdminDailyLogDayDetail,
   type DayPillState,
 } from '@/lib/admin-daily-log/fetch-admin-daily-log'
-import { INCOME_ENTRY_CATEGORY_LABELS } from '@/lib/constants'
 import { useAdminTodayKpiLive } from '@/hooks/use-admin-today-kpi-live'
 import { addUtcDays, lastNWeekdaysAscending } from '@/lib/ghana-school-calendar'
 import { logError } from '@/lib/logger'
@@ -100,7 +99,7 @@ export function AdminDailyLogClient() {
     setDetailError(null)
     setDetail(null)
     try {
-      const r = await fetchAdminDailyLogDayDetail(supabase, ymd, INCOME_ENTRY_CATEGORY_LABELS)
+      const r = await fetchAdminDailyLogDayDetail(supabase, ymd)
       if (r.error || !r.data) {
         setDetailError(r.error ?? 'Could not load day')
         logError('admin-daily-log.detail', new Error(r.error ?? 'empty'), { ymd })

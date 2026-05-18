@@ -8,6 +8,7 @@ import { useCallback, useState } from 'react'
 
 import { Modal } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
+import { INCOME_ENTRIES_SELECT } from '@/lib/constants'
 import { logError } from '@/lib/logger'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { getTodayGhana } from '@/lib/utils'
@@ -98,13 +99,11 @@ export function AccountantIncomeModal({
       name: trimmed,
       amount,
       date_collected: dateCollected,
-      destination,
       class_id: destination === 'class' ? classId : null,
       notes: notes.trim() || null,
-      category,
       recorded_by: user.id,
       fund_scope: destination === 'school_general' ? 'school' : 'class',
-      entry_type: 'one_time',
+      entry_type: category,
       term_id: (termRow as { id: string } | null)?.id ?? null,
       description: null as string | null,
     }
@@ -112,7 +111,7 @@ export function AccountantIncomeModal({
     const { data: inserted, error: insertErr } = await supabase
       .from('income_entries')
       .insert(payload)
-      .select('*')
+      .select(INCOME_ENTRIES_SELECT)
       .single()
 
     if (insertErr || !inserted) {

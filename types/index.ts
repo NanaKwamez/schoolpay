@@ -252,7 +252,8 @@ export interface IncomeEntry {
   destination: IncomeEntryDestination
   class_id: string | null
   notes: string | null
-  category: IncomeEntryCategory
+  /** Legacy column — prefer `entry_type` when present in DB. */
+  category?: IncomeEntryCategory
   recorded_by: string
   created_at: string
   fund_scope?: 'school' | 'class'

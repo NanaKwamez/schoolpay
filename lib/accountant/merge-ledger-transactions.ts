@@ -2,7 +2,8 @@
  * merge-ledger-transactions — combines feeding, fee payments, and manual income for accountant ledger UI.
  */
 
-import type { IncomeEntry, IncomeEntryCategory } from '@/types'
+import { incomeEntryTypeLabel } from '@/lib/constants'
+import type { IncomeEntry } from '@/types'
 
 export type LedgerTxnKind = 'feeding' | 'payment' | 'income'
 
@@ -15,18 +16,6 @@ export type MergedLedgerRow = {
   sourceLabel: string
   amount: number
   recordedByLabel: string
-}
-
-function incomeCategoryLabel(c: IncomeEntryCategory): string {
-  const map: Record<IncomeEntryCategory, string> = {
-    offering: 'Offering',
-    admission_fee: 'Admission fee',
-    mock_fee: 'Mock fee',
-    pta_levy: 'PTA levy',
-    donation: 'Donation',
-    other: 'Other',
-  }
-  return map[c]
 }
 
 export type LedgerFeedingRow = {
@@ -175,7 +164,7 @@ export function mergeLedgerTransactions(params: {
       id: `i-${row.id}`,
       kind: 'income',
       date: row.date_collected.slice(0, 10),
-      typeLabel: `Income · ${incomeCategoryLabel(row.category)}`,
+      typeLabel: `Income · ${incomeEntryTypeLabel(row.entry_type ?? row.category)}`,
       sourceLabel: row.name,
       amount: Number(row.amount) || 0,
       recordedByLabel: byId(row.recorded_by),

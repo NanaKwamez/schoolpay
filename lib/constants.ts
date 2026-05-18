@@ -101,7 +101,7 @@ export const FEEDING_STATUS_COLORS = {
   covered_weekly: 'bg-green-300',
 } as const
 
-/** Display labels for `income_entries.category` (pills + toasts). */
+/** Display labels for income `entry_type` values (legacy category keys). */
 export const INCOME_ENTRY_CATEGORY_LABELS: Record<IncomeEntryCategory, string> = {
   offering: 'Offering',
   admission_fee: 'Admission Fee',
@@ -109,4 +109,17 @@ export const INCOME_ENTRY_CATEGORY_LABELS: Record<IncomeEntryCategory, string> =
   pta_levy: 'PTA Levy',
   donation: 'Donation',
   other: 'Other',
+}
+
+/** Safe `income_entries` projection — omit category, income_name, source. */
+export const INCOME_ENTRIES_SELECT =
+  'id, name, description, amount, entry_type, fund_scope, date_collected, notes, created_at, recorded_by'
+
+export function incomeEntryTypeLabel(entryType: string | null | undefined): string {
+  if (!entryType) return 'Income'
+  if (entryType in INCOME_ENTRY_CATEGORY_LABELS) {
+    return INCOME_ENTRY_CATEGORY_LABELS[entryType as IncomeEntryCategory]
+  }
+  if (entryType === 'one_time') return 'One-time'
+  return entryType.replace(/_/g, ' ')
 }

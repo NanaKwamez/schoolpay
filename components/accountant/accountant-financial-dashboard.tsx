@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Plus } from 'lucide-react'
 
 import { AccountantIncomeModal } from '@/components/accountant/accountant-income-modal'
-import { FUND_SUMMARY_VIEW_SELECT_COLUMNS } from '@/lib/constants'
+import { FUND_SUMMARY_VIEW_SELECT_COLUMNS, INCOME_ENTRIES_SELECT } from '@/lib/constants'
 import {
   mergeLedgerTransactions,
   normalizeLedgerFeedingRows,
@@ -142,7 +142,7 @@ export function AccountantFinancialDashboard({
           .limit(60),
         supabase
           .from('income_entries')
-          .select('*')
+          .select(INCOME_ENTRIES_SELECT)
           .order('date_collected', { ascending: false })
           .limit(40),
       ])

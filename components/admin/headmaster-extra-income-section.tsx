@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 
 import { useToast } from '@/components/ui/Toast'
-import { INCOME_ENTRY_CATEGORY_LABELS } from '@/lib/constants'
+import { INCOME_ENTRIES_SELECT, INCOME_ENTRY_CATEGORY_LABELS, incomeEntryTypeLabel } from '@/lib/constants'
 import { logError } from '@/lib/logger'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { cn, formatGHS, getTodayGhana } from '@/lib/utils'
@@ -37,7 +37,7 @@ type LastSubmitFingerprint = {
 
 type RecentIncomeRow = Pick<
   IncomeEntry,
-  'id' | 'date_collected' | 'category' | 'amount' | 'notes' | 'name' | 'recorded_by' | 'description'
+  'id' | 'date_collected' | 'amount' | 'notes' | 'name' | 'recorded_by' | 'description' | 'entry_type'
 >
 
 interface HeadmasterExtraIncomeSectionProps {
@@ -68,9 +68,7 @@ export function HeadmasterExtraIncomeSection({
   const loadRecent = useCallback(async () => {
     const { data, error } = await supabase
       .from('income_entries')
-      .select(
-        'id, date_collected, category, amount, notes, name, recorded_by, description'
-      )
+      .select(INCOME_ENTRIES_SELECT)
       .order('created_at', { ascending: false })
       .limit(10)
     if (error) {
@@ -155,13 +153,11 @@ export function HeadmasterExtraIncomeSection({
         name: incomeName,
         amount,
         date_collected: dateCollected,
-        destination: fundScope === 'school' ? 'school_general' : 'class',
         class_id: null as string | null,
         notes: notes.trim() || null,
-        category,
         recorded_by: user.id,
         fund_scope: fundScope,
-        entry_type: 'one_time',
+        entry_type: category,
         term_id: currentTermId,
         description: description.trim() || null,
       }
@@ -434,7 +430,7 @@ export function HeadmasterExtraIncomeSection({
                       >
                         <td className="p-2 whitespace-nowrap">{row.date_collected}</td>
                         <td className="p-2">
-                          {INCOME_ENTRY_CATEGORY_LABELS[row.category]}
+                          {incomeEntryTypeLabel(row.entry_type)}
                         </td>
                         <td className="p-2 text-right font-medium">
                           {formatGHS(Number(row.amount))}

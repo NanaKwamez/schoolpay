@@ -2,11 +2,28 @@
  * fetch-admin-daily-log — Supabase batch loads for proprietress Daily Log screen.
  */
 
-import { feedingPaidAmountFromLogOrTier, getFeedingFeeForClass } from '@/lib/constants'
+import {
+  feedingPaidAmountFromLogOrTier,
+  getFeedingFeeForClass,
+  INCOME_ENTRIES_SELECT,
+  incomeEntryTypeLabel,
+} from '@/lib/constants'
 import { isFeedingRevenueStatus } from '@/lib/feeding-daily-log-revenue'
 import { logError } from '@/lib/logger'
-import type { DailyFinancialLogRow, IncomeEntryCategory } from '@/types'
+import { getTodayGhana } from '@/lib/utils'
+import type { DailyFinancialLogRow } from '@/types'
 import type { SupabaseClient } from '@supabase/supabase-js'
+
+interface FeedingTodayByClassRow {
+  class_id: string
+  class_name: string
+  total_students: unknown
+  paid_count: unknown
+  credit_count: unknown
+  absent_count: unknown
+  covered_weekly_count?: unknown
+  feeding_collected_today?: unknown
+}
 
 export type DayPillState = 'today' | 'full' | 'partial' | 'none'
 
@@ -196,8 +213,7 @@ export function buildPerClassDayMap(
 
 export async function fetchAdminDailyLogDayDetail(
   supabase: SupabaseClient,
-  dateYmd: string,
-  categoryLabels: Record<IncomeEntryCategory, string>
+  dateYmd: string
 ): Promise<{ data: AdminDailyLogDayDetail | null; error: string | null }> {
   const [
     classesRes,
@@ -223,7 +239,7 @@ export async function fetchAdminDailyLogDayDetail(
     supabase.from('daily_financial_log').select('*').eq('log_date', dateYmd).maybeSingle(),
     supabase
       .from('income_entries')
-      .select('id, name, amount, notes, category, recorded_by')
+      .select(INCOME_ENTRIES_SELECT)
       .eq('date_collected', dateYmd),
   ])
 
@@ -253,7 +269,7 @@ export async function fetchAdminDailyLogDayDetail(
   }
   if (incomeRes.error) {
     logError('admin-daily-log.income_entries', incomeRes.error, { dateYmd })
-    return { data: null, error: incomeRes.error.message }
+    // Non-fatal: day detail still loads from feeding tables.
   }
 
   const classes = (classesRes.data ?? []) as ClassRow[]
@@ -362,13 +378,13 @@ export async function fetchAdminDailyLogDayDetail(
       name: string
       amount: unknown
       notes: string | null
-      category: IncomeEntryCategory
+      entry_type: string | null
       recorded_by: string
     }
     return {
       id: row.id,
       incomeName: row.name,
-      categoryLabel: categoryLabels[row.category] ?? row.category,
+      categoryLabel: incomeEntryTypeLabel(row.entry_type),
       amount: parseNum(row.amount),
       recordedByName: nameById.get(row.recorded_by) ?? row.recorded_by,
       notes: row.notes,
@@ -464,7 +480,87 @@ function feedingOutstandingForClass(row: AdminDailyLogClassRow): number {
   return Math.max(0, expected - row.collected)
 }
 
-/** KPI strip aligned with dashboard “today” (feeding focus). */
+/** Today's KPI strip from `feeding_today_by_class` (same source as admin dashboard). */
+export async function fetchAdminTodayStripFromFeedingView(
+  supabase: SupabaseClient
+): Promise<{ data: AdminDailyLogTodayStrip; error: string | null }> {
+  const todayYmd = getTodayGhana()
+  const [feedingRes, subsRes] = await Promise.all([
+    supabase.from('feeding_today_by_class').select('*'),
+    supabase
+      .from('class_daily_submissions')
+      .select('class_id, submitted_at')
+      .eq('date', todayYmd),
+  ])
+
+  if (feedingRes.error) {
+    logError('admin-today-strip.feeding_today_by_class', feedingRes.error, { todayYmd })
+    return {
+      data: {
+        feedingCollected: 0,
+        classesSubmitted: 0,
+        classesWithStudents: 0,
+        studentsPresent: 0,
+        outstanding: 0,
+      },
+      error: feedingRes.error.message,
+    }
+  }
+
+  if (subsRes.error) {
+    logError('admin-today-strip.class_daily_submissions', subsRes.error, { todayYmd })
+  }
+
+  const rows = (feedingRes.data ?? []) as FeedingTodayByClassRow[]
+  const subsByClass = new Map(
+    (subsRes.data ?? []).map((s: { class_id: string; submitted_at: string }) => [
+      s.class_id,
+      s.submitted_at,
+    ])
+  )
+
+  let feedingCollected = 0
+  let studentsPresent = 0
+  let outstanding = 0
+  let classesWithStudents = 0
+  let classesSubmitted = 0
+
+  for (const c of rows) {
+    const totalStudents = parseNum(c.total_students)
+    if (totalStudents <= 0) continue
+
+    classesWithStudents += 1
+    const collected = parseNum(c.feeding_collected_today)
+    const paid = parseNum(c.paid_count)
+    const credit = parseNum(c.credit_count)
+    const coveredWeekly = parseNum(c.covered_weekly_count)
+    const absent = parseNum(c.absent_count)
+
+    feedingCollected += collected
+    studentsPresent += paid + credit + coveredWeekly
+
+    if (subsByClass.get(c.class_id) != null) {
+      classesSubmitted += 1
+    }
+
+    const fee = getFeedingFeeForClass(c.class_name)
+    const expected = Math.max(0, totalStudents - absent) * fee
+    outstanding += Math.max(0, expected - collected)
+  }
+
+  return {
+    data: {
+      feedingCollected,
+      classesSubmitted,
+      classesWithStudents,
+      studentsPresent,
+      outstanding,
+    },
+    error: null,
+  }
+}
+
+/** KPI strip from a loaded day detail (historical dates). */
 export function todayStripFromDayDetail(detail: AdminDailyLogDayDetail): AdminDailyLogTodayStrip {
   let outstanding = 0
   for (const row of detail.classes) {
