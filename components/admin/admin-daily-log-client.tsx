@@ -76,34 +76,45 @@ export function AdminDailyLogClient() {
     setPillError(null)
     const from = pillDates[0] ?? todayYmd
     const to = pillDates[pillDates.length - 1] ?? todayYmd
-    const res = await fetchAdminDailyLogPillsBulk(supabase, from, to)
-    if (res.error || !res.data) {
-      setPillError(res.error ?? 'Could not load calendar')
-      logError('admin-daily-log.pills', new Error(res.error ?? 'no data'), { from, to })
+    try {
+      const res = await fetchAdminDailyLogPillsBulk(supabase, from, to)
+      if (res.error || !res.data) {
+        setPillError(res.error ?? 'Could not load calendar')
+        logError('admin-daily-log.pills', new Error(res.error ?? 'no data'), { from, to })
+        return
+      }
+      setPillMap(
+        buildPillStatesForDates(pillDates, todayYmd, res.data.classes, res.data.students, res.data.logs, res.data.subs)
+      )
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Could not load calendar'
+      setPillError(message)
+      logError('admin-daily-log.pills.throw', err, { from, to })
+    } finally {
       setLoadingPills(false)
-      return
     }
-    setPillMap(
-      buildPillStatesForDates(pillDates, todayYmd, res.data.classes, res.data.students, res.data.logs, res.data.subs)
-    )
-    setLoadingPills(false)
   }, [pillDates, supabase, todayYmd])
 
-  const loadDetail = useCallback(
-    async (ymd: string) => {
-      setLoadingDetail(true)
-      setDetailError(null)
+  const loadDetail = useCallback(async (ymd: string) => {
+    setLoadingDetail(true)
+    setDetailError(null)
+    setDetail(null)
+    try {
       const r = await fetchAdminDailyLogDayDetail(supabase, ymd, INCOME_ENTRY_CATEGORY_LABELS)
-      setLoadingDetail(false)
       if (r.error || !r.data) {
         setDetailError(r.error ?? 'Could not load day')
         logError('admin-daily-log.detail', new Error(r.error ?? 'empty'), { ymd })
         return
       }
       setDetail(r.data)
-    },
-    [supabase]
-  )
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Could not load day'
+      setDetailError(message)
+      logError('admin-daily-log.detail.throw', err, { ymd })
+    } finally {
+      setLoadingDetail(false)
+    }
+  }, [supabase])
 
   useEffect(() => {
     void loadPills()
@@ -154,12 +165,12 @@ export function AdminDailyLogClient() {
   }, [pillDates, loadingPills])
 
   const headerLabel = useMemo(() => {
-    if (!detail) return '—'
-    const [y, m, d] = detail.dateYmd.split('-').map(Number)
+    const ymd = detail?.dateYmd ?? selectedYmd
+    const [y, m, d] = ymd.split('-').map(Number)
     const dt = new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1, 12, 0, 0))
     const dayName = dt.toLocaleDateString('en-GB', { weekday: 'long', timeZone: 'UTC' })
-    return `${dayName}, ${formatDate(detail.dateYmd)}`
-  }, [detail])
+    return `${dayName}, ${formatDate(ymd)}`
+  }, [detail?.dateYmd, selectedYmd])
 
   const handleExport = useCallback(() => {
     if (!detail) return
@@ -241,10 +252,42 @@ export function AdminDailyLogClient() {
           </button>
         </div>
 
-        {loadingDetail || !detail ? (
+        {loadingDetail ? (
           <div className="flex items-center gap-2 text-gray-600 dark:text-white/70 py-8 justify-center">
             <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
             Loading day…
+          </div>
+        ) : detailError ? (
+          <div className="p-6 text-center">
+            <p className="text-red-600 dark:text-red-400 font-semibold mb-2">Could not load data</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{detailError}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500">
+              If this mentions a missing relation or permission, the daily_financial_log view may need to
+              exist in Supabase or RLS may need updating. Feeding rows still load from feeding_daily_log.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setDetailError(null)
+                void loadDetail(selectedYmd)
+              }}
+              className="mt-3 text-sm text-mga-gold underline font-semibold"
+            >
+              Try again
+            </button>
+          </div>
+        ) : !detail ? (
+          <div className="p-6 text-center">
+            <p className="text-gray-600 dark:text-gray-400">No data for this day.</p>
+          </div>
+        ) : detail.dailyRow?.feeding_mark_count === 0 &&
+          detail.incomeRows.length === 0 &&
+          detail.classes.every(c => c.paid + c.credit + c.absent === 0) ? (
+          <div className="p-6 text-center">
+            <p className="text-gray-600 dark:text-gray-400">No feeding data recorded for this day</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+              Teachers need to submit feeding marks for this date
+            </p>
           </div>
         ) : (
           <>

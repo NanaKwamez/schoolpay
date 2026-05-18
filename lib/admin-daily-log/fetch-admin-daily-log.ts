@@ -249,7 +249,7 @@ export async function fetchAdminDailyLogDayDetail(
   }
   if (dailyRes.error) {
     logError('admin-daily-log.daily_financial_log', dailyRes.error, { dateYmd })
-    return { data: null, error: dailyRes.error.message }
+    // Non-fatal: missing view/table or RLS — synthesize totals from feeding_daily_log below.
   }
   if (incomeRes.error) {
     logError('admin-daily-log.income_entries', incomeRes.error, { dateYmd })
