@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import type { PostgrestError } from '@supabase/supabase-js'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { useAdminTodayKpiLive } from '@/hooks/use-admin-today-kpi-live'
 import { useAuth } from '@/hooks/useAuth'
 import { ClassCard } from './ClassCard'
 import { FundSummaryCard } from './FundSummaryCard'
@@ -29,6 +30,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { useSync } from '@/hooks/useSync'
 import { useOnlineStatus } from '@/hooks/useOnline'
 import { EnrollmentRequestsPanel } from './EnrollmentRequestsPanel'
+import { AdminDailyKpiStrip } from '@/components/admin/admin-daily-kpi-strip'
 import { Modal } from '@/components/ui/Modal'
 import {
   ADMIN_DASHBOARD_FETCH_TIMEOUT_MS,
@@ -37,6 +39,7 @@ import {
   feedingPaidAmountFromLogOrTier,
   getFeedingFeeForClass,
 } from '@/lib/constants'
+import { isFeedingRevenueStatus } from '@/lib/feeding-daily-log-revenue'
 import { logError } from '@/lib/logger'
 import { fundTypeFromFeeTypesEmbed } from '@/lib/postgrest-fee-type-embed'
 import { cn, formatDate, formatGHS, getTodayGhana } from '@/lib/utils'
@@ -233,11 +236,6 @@ function finalizeSchoolAttendanceToday(
   return row
 }
 
-/** Daily cash feeding: only these rows carry revenue in {@link feeding_daily_log}. */
-function isFeedingRevenueStatus(status: string): boolean {
-  return status === 'paid' || status === 'covered_weekly'
-}
-
 /**
  * Term KPIs aligned with fund_summary rows for current term (assignments vs receipts).
  * Only feeding + general — matches {@link term_cumulative_summary} scope (two fund types).
@@ -281,6 +279,7 @@ interface AdminDashboardShellProps {
 export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboardShellProps) {
   const router = useRouter()
   const { signOut, isSigningOut } = useAuth()
+  const { strip: todayKpiStrip, loading: todayKpiLoading } = useAdminTodayKpiLive()
   const isProprietress = resolvedRole === 'proprietress'
   const role = resolvedRole
   const { pendingCount, isSyncing } = useSync()
@@ -932,6 +931,20 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
               ))}
             </div>
           )}
+        </section>
+
+        <section aria-label="Today financial summary">
+          <p className="text-xs font-bold text-[#0A1628] dark:text-gray-100 uppercase tracking-wide mb-3">
+            Today summary
+          </p>
+          <AdminDailyKpiStrip
+            loading={todayKpiLoading}
+            feedingCollected={todayKpiStrip.feedingCollected}
+            classesSubmitted={todayKpiStrip.classesSubmitted}
+            classesWithStudents={todayKpiStrip.classesWithStudents}
+            studentsPresent={todayKpiStrip.studentsPresent}
+            outstanding={todayKpiStrip.outstanding}
+          />
         </section>
 
         {/* ── Alert Banner ─────────────────────────────────────────────────── */}

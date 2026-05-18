@@ -62,6 +62,12 @@ export function lastNWeekdaysDescending(
   return out
 }
 
+/** Oldest → newest (e.g. horizontal day picker). */
+export function lastNWeekdaysAscending(fromYmd: string, minYmd: string, n: number): string[] {
+  const desc = lastNWeekdaysDescending(fromYmd, minYmd, n)
+  return desc.slice().reverse()
+}
+
 export function isYmdInInclusiveRange(ymd: string, start: string, end: string): boolean {
   return ymd >= start && ymd <= end
 }

@@ -12,6 +12,7 @@ import {
   Loader2,
   LogOut,
   Receipt,
+  ScrollText,
   Settings,
   Users,
 } from 'lucide-react'
@@ -27,6 +28,12 @@ const adminPortalNavItems = [
   { href: '/admin/teachers', icon: GraduationCap, label: 'Teachers' },
   { href: '/admin/fees', icon: Receipt, label: 'Fees' },
 ] as const
+
+const dailyLogNavItem = {
+  href: '/admin/daily-log',
+  icon: ScrollText,
+  label: 'Daily Log',
+} as const
 
 const bottomItems = [
   { href: '/admin/settings', icon: Settings, label: 'Settings' },
@@ -55,7 +62,11 @@ export function AdminSideNav() {
             icon: LayoutDashboard,
             label: 'Dashboard',
           }
-    return [dashboard, ...adminPortalNavItems]
+    const withDailyLog =
+      role === 'proprietress' || role === 'accountant'
+        ? [dashboard, dailyLogNavItem, ...adminPortalNavItems]
+        : [dashboard, ...adminPortalNavItems]
+    return withDailyLog
   }, [role])
 
   return (
