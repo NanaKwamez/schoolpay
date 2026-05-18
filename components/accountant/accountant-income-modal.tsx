@@ -249,9 +249,9 @@ export function AccountantIncomeModal({
               onChange={e => setClassId(e.target.value)}
             >
               <option value="">Select class</option>
-              {classes.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
+              {(classes ?? []).map(c => (
+                <option key={c?.id ?? 'class'} value={c?.id ?? ''}>
+                  {c?.name ?? 'Class'}
                 </option>
               ))}
             </select>

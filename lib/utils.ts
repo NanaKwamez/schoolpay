@@ -9,6 +9,14 @@ export function formatGHS(amount: number): string {
   return `GHS ${amount.toFixed(2)}`
 }
 
+/** `localeCompare` with null/undefined coerced to empty string (safe for `.sort`). */
+export function localeCompareSafe(
+  a: string | null | undefined,
+  b: string | null | undefined
+): number {
+  return (a ?? '').localeCompare(b ?? '')
+}
+
 export function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-GB', {
     day: '2-digit', month: 'short', year: 'numeric'

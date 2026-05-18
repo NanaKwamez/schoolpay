@@ -3,6 +3,7 @@
  */
 
 import { incomeEntryTypeLabel } from '@/lib/constants'
+import { localeCompareSafe } from '@/lib/utils'
 import type { IncomeEntry } from '@/types'
 
 export type LedgerTxnKind = 'feeding' | 'payment' | 'income'
@@ -135,7 +136,7 @@ export function mergeLedgerTransactions(params: {
     out.push({
       id: `f-${row.id}`,
       kind: 'feeding',
-      date: row.date.slice(0, 10),
+      date: (row.date ?? '').slice(0, 10),
       typeLabel: `Feeding (${row.status})`,
       sourceLabel: st ? `${st.full_name} · ${className}` : className,
       amount: Number(row.amount) || 0,
@@ -151,7 +152,7 @@ export function mergeLedgerTransactions(params: {
     out.push({
       id: `p-${row.id}`,
       kind: 'payment',
-      date: row.date_paid.slice(0, 10),
+      date: (row.date_paid ?? '').slice(0, 10),
       typeLabel: feeName ? `Fee: ${feeName}` : 'Fee payment',
       sourceLabel: st ? `${st.full_name} · ${className}` : className,
       amount: Number(row.amount_paid) || 0,
@@ -160,20 +161,22 @@ export function mergeLedgerTransactions(params: {
   }
 
   for (const row of incomeRows) {
+    const collected = row.date_collected ?? ''
     out.push({
       id: `i-${row.id}`,
       kind: 'income',
-      date: row.date_collected.slice(0, 10),
+      date: collected.slice(0, 10),
       typeLabel: `Income · ${incomeEntryTypeLabel(row.entry_type ?? row.category)}`,
-      sourceLabel: row.name,
+      sourceLabel: row.name ?? '—',
       amount: Number(row.amount) || 0,
-      recordedByLabel: byId(row.recorded_by),
+      recordedByLabel: byId(row.recorded_by ?? ''),
     })
   }
 
   out.sort((a, b) => {
-    if (a.date !== b.date) return a.date < b.date ? 1 : -1
-    return a.id < b.id ? 1 : -1
+    const byDate = localeCompareSafe(b?.date, a?.date)
+    if (byDate !== 0) return byDate
+    return localeCompareSafe(b?.id, a?.id)
   })
 
   return out.slice(0, 30)

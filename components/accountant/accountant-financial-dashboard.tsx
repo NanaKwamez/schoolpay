@@ -17,7 +17,7 @@ import {
 } from '@/lib/accountant/merge-ledger-transactions'
 import { logError } from '@/lib/logger'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { formatGHS } from '@/lib/utils'
+import { formatGHS, localeCompareSafe } from '@/lib/utils'
 import type { Class, DailyFinancialLogRow, FundSummary, FundType, IncomeEntry, Term, TermCumulativeSummaryRow } from '@/types'
 
 function num(v: unknown): number {
@@ -102,7 +102,9 @@ export function AccountantFinancialDashboard({
       setTerm(termRow)
       setTermCumulative(cumulativeRes.data as TermCumulativeSummaryRow | null)
 
-      const fundRows = parseFundSummaryRows(fundsRes.data)
+      const fundRows = parseFundSummaryRows(fundsRes.data).sort((a, b) =>
+        localeCompareSafe(a?.fund_name, b?.fund_name)
+      )
       setFunds(fundRows)
       const expSum = fundRows.reduce((s, f) => s + f.payment_income, 0)
       const colSum = fundRows.reduce((s, f) => s + f.total_income, 0)
@@ -111,10 +113,13 @@ export function AccountantFinancialDashboard({
 
       const logRows = (dailyRes.data ?? []) as DailyFinancialLogRow[]
       setDailyLog(
-        [...logRows].sort((a, b) => a.log_date.localeCompare(b.log_date))
+        [...logRows].sort((a, b) => localeCompareSafe(a?.log_date, b?.log_date))
       )
 
-      setClasses((classesRes.data ?? []) as Pick<Class, 'id' | 'name'>[])
+      const classRows = (classesRes.data ?? []) as Pick<Class, 'id' | 'name'>[]
+      setClasses(
+        [...classRows].sort((a, b) => localeCompareSafe(a?.name, b?.name))
+      )
 
       const termId = (termIdRes.data as { id: string } | null)?.id
       if (!termId) {
@@ -173,8 +178,12 @@ export function AccountantFinancialDashboard({
       }
       setPieSlices(
         Object.entries(byFee)
-          .map(([name, value]) => ({ name, value }))
-          .sort((a, b) => b.value - a.value)
+          .map(([name, value]) => ({ name: name ?? 'Fee', value: num(value) }))
+          .sort((a, b) => {
+            const byVal = (b?.value ?? 0) - (a?.value ?? 0)
+            if (byVal !== 0) return byVal
+            return localeCompareSafe(a?.name, b?.name)
+          })
       )
 
       const markedIds = new Set<string>()
@@ -325,17 +334,18 @@ export function AccountantFinancialDashboard({
           </p>
           <p className="text-xs text-gray-500 mt-4 mb-2">Last 7 days — feeding collection</p>
           <div className="flex items-end gap-1 h-28">
-            {last7.map(d => {
-              const h = Math.round((num(d.feeding_collected) / barMax) * 100)
+            {(last7 ?? []).map(d => {
+              const logDate = d?.log_date ?? ''
+              const h = Math.round((num(d?.feeding_collected) / barMax) * 100)
               return (
-                <div key={d.log_date} className="flex-1 flex flex-col items-center gap-1">
+                <div key={logDate || 'day'} className="flex-1 flex flex-col items-center gap-1">
                   <div
                     className="w-full rounded-t bg-mga-green-mid min-h-[4px]"
                     style={{ height: `${Math.max(8, h)}%` }}
-                    title={`${d.log_date}: ${formatGHS(num(d.feeding_collected))}`}
+                    title={`${logDate}: ${formatGHS(num(d?.feeding_collected))}`}
                   />
                   <span className="text-[9px] text-gray-400 truncate w-full text-center">
-                    {d.log_date.slice(5)}
+                    {logDate.length >= 5 ? logDate.slice(5) : logDate}
                   </span>
                 </div>
               )
@@ -366,13 +376,13 @@ export function AccountantFinancialDashboard({
               style={
                 pieSlices.length > 0
                   ? {
-                      background: `conic-gradient(${pieSlices
+                      background: `conic-gradient(${(pieSlices ?? [])
                         .map((s, i) => {
                           const start =
-                            (pieSlices.slice(0, i).reduce((a, x) => a + x.value, 0) /
+                            (pieSlices.slice(0, i).reduce((a, x) => a + (x?.value ?? 0), 0) /
                               pieTotal) *
                             360
-                          const span = (s.value / pieTotal) * 360
+                          const span = ((s?.value ?? 0) / pieTotal) * 360
                           return `${pieColors[i % pieColors.length]} ${start}deg ${start + span}deg`
                         })
                         .join(', ')})`,
@@ -384,16 +394,16 @@ export function AccountantFinancialDashboard({
               {pieSlices.length === 0 && (
                 <li className="text-gray-400">No general-fund payments in sample.</li>
               )}
-              {pieSlices.map((s, i) => (
-                <li key={s.name} className="flex justify-between gap-2">
+              {(pieSlices ?? []).map((s, i) => (
+                <li key={s?.name ?? `slice-${i}`} className="flex justify-between gap-2">
                   <span className="flex items-center gap-1 truncate">
                     <span
                       className="w-2 h-2 rounded-full shrink-0"
                       style={{ background: pieColors[i % pieColors.length] }}
                     />
-                    {s.name}
+                    {s?.name ?? 'Fee'}
                   </span>
-                  <span className="font-semibold shrink-0">{formatGHS(s.value)}</span>
+                  <span className="font-semibold shrink-0">{formatGHS(s?.value ?? 0)}</span>
                 </li>
               ))}
             </ul>
@@ -418,18 +428,18 @@ export function AccountantFinancialDashboard({
               </tr>
             </thead>
             <tbody>
-              {pageRows.map(row => (
+              {(pageRows ?? []).map(row => (
                 <tr
-                  key={row.id}
+                  key={row?.id ?? 'row'}
                   className="border-t border-gray-100 dark:border-gray-700"
                 >
-                  <td className="p-3 whitespace-nowrap">{row.date}</td>
-                  <td className="p-3">{row.typeLabel}</td>
-                  <td className="p-3 max-w-[200px] truncate">{row.sourceLabel}</td>
+                  <td className="p-3 whitespace-nowrap">{row?.date ?? '—'}</td>
+                  <td className="p-3">{row?.typeLabel ?? '—'}</td>
+                  <td className="p-3 max-w-[200px] truncate">{row?.sourceLabel ?? '—'}</td>
                   <td className="p-3 text-right font-medium">
-                    {formatGHS(row.amount)}
+                    {formatGHS(row?.amount ?? 0)}
                   </td>
-                  <td className="p-3 truncate">{row.recordedByLabel}</td>
+                  <td className="p-3 truncate">{row?.recordedByLabel ?? '—'}</td>
                 </tr>
               ))}
             </tbody>
