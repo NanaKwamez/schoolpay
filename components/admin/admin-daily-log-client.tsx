@@ -8,11 +8,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Download, Loader2 } from 'lucide-react'
 
 import { AdminDailyKpiStrip } from '@/components/admin/admin-daily-kpi-strip'
-import { buildAdminDailyLogExportHtml } from '@/lib/admin-daily-log/build-admin-daily-log-export-html'
+import { exportAdminDailyLogPdf } from '@/lib/admin-daily-log/build-admin-daily-log-export-pdf'
 import {
   buildPillStatesForDates,
+  feedingCollectedForDayDetail,
   fetchAdminDailyLogDayDetail,
   fetchAdminDailyLogPillsBulk,
+  todayStripFromDayDetail,
   type AdminDailyLogDayDetail,
   type DayPillState,
 } from '@/lib/admin-daily-log/fetch-admin-daily-log'
@@ -173,13 +175,22 @@ export function AdminDailyLogClient() {
 
   const handleExport = useCallback(() => {
     if (!detail) return
-    const html = buildAdminDailyLogExportHtml(detail, headerLabel)
-    const w = window.open('', '_blank')
-    if (w) {
-      w.document.write(html)
-      w.document.close()
+    exportAdminDailyLogPdf(detail)
+  }, [detail])
+
+  const liveStrip = useMemo(() => {
+    if (detail != null && detail.dateYmd === todayYmd) {
+      return todayStripFromDayDetail(detail)
     }
-  }, [detail, headerLabel])
+    return todayStrip
+  }, [detail, todayYmd, todayStrip])
+
+  const liveKpiLoading = useMemo(() => {
+    if (detail != null && detail.dateYmd === todayYmd) {
+      return loadingDetail
+    }
+    return todayKpiLoading
+  }, [detail, todayYmd, loadingDetail, todayKpiLoading])
 
   return (
     <div className="space-y-8">
@@ -188,12 +199,12 @@ export function AdminDailyLogClient() {
           Today (live)
         </p>
         <AdminDailyKpiStrip
-          loading={todayKpiLoading}
-          feedingCollected={todayStrip.feedingCollected}
-          classesSubmitted={todayStrip.classesSubmitted}
-          classesWithStudents={todayStrip.classesWithStudents}
-          studentsPresent={todayStrip.studentsPresent}
-          outstanding={todayStrip.outstanding}
+          loading={liveKpiLoading}
+          feedingCollected={liveStrip.feedingCollected}
+          classesSubmitted={liveStrip.classesSubmitted}
+          classesWithStudents={liveStrip.classesWithStudents}
+          studentsPresent={liveStrip.studentsPresent}
+          outstanding={liveStrip.outstanding}
         />
       </section>
 
@@ -292,7 +303,11 @@ export function AdminDailyLogClient() {
           <>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
               {[
-                { k: 'fed', label: 'Total feeding collected', v: formatGHS(detail.dailyRow?.feeding_collected ?? 0) },
+                {
+                  k: 'fed',
+                  label: 'Total feeding collected',
+                  v: formatGHS(feedingCollectedForDayDetail(detail)),
+                },
                 { k: 'sub', label: 'Classes submitted', v: `${detail.classesSubmitted}` },
                 { k: 'ns', label: 'Classes not submitted', v: `${detail.classesNotSubmitted}` },
                 { k: 'pr', label: 'Present / absent', v: `${Math.round(detail.totalPresent)} / ${Math.round(detail.totalAbsent)}` },

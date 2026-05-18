@@ -1,17 +1,19 @@
 'use client'
 
 /**
- * useAdminTodayKpiLive — today's feeding KPIs from feeding_today_by_class + polling + realtime.
+ * useAdminTodayKpiLive — today's KPIs via the same day-detail pipeline as the selected-day panel.
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
-  fetchAdminTodayStripFromFeedingView,
+  fetchAdminDailyLogDayDetail,
+  todayStripFromDayDetail,
   type AdminDailyLogTodayStrip,
 } from '@/lib/admin-daily-log/fetch-admin-daily-log'
 import { logError } from '@/lib/logger'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { getTodayGhana } from '@/lib/utils'
 
 const EMPTY_STRIP: AdminDailyLogTodayStrip = {
   feedingCollected: 0,
@@ -33,11 +35,14 @@ export function useAdminTodayKpiLive(): {
   const refresh = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetchAdminTodayStripFromFeedingView(supabase)
-      if (res.error) {
-        logError('admin-today-kpi-live', new Error(res.error), {})
+      const todayYmd = getTodayGhana()
+      const res = await fetchAdminDailyLogDayDetail(supabase, todayYmd)
+      if (res.error || !res.data) {
+        logError('admin-today-kpi-live', new Error(res.error ?? 'empty'), { todayYmd })
+        setStrip(EMPTY_STRIP)
+        return
       }
-      setStrip(res.data)
+      setStrip(todayStripFromDayDetail(res.data))
     } catch (err: unknown) {
       logError('admin-today-kpi-live.throw', err, {})
       setStrip(EMPTY_STRIP)
@@ -64,6 +69,9 @@ export function useAdminTodayKpiLive(): {
         void refresh()
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'class_daily_submissions' }, () => {
+        void refresh()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'income_entries' }, () => {
         void refresh()
       })
       .subscribe(status => {

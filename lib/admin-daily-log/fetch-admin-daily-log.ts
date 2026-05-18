@@ -337,22 +337,30 @@ export async function fetchAdminDailyLogDayDetail(
       feeding_mark_count: parseNum(dr.feeding_mark_count),
     }
   }
-  if (dailyRow == null) {
-    let fbCollected = 0
-    let fbMarks = 0
-    for (const row of logs) {
-      if (!activeStudentIds.has(row.student_id)) continue
-      fbMarks += 1
-      if (isFeedingRevenueStatus(row.status)) {
-        const cid = studentClassMap.get(row.student_id)
-        fbCollected += feedingPaidAmountFromLogOrTier(row.amount, classIdToName.get(cid ?? '') ?? '')
-      }
-    }
-    dailyRow = {
-      log_date: dateYmd,
-      feeding_collected: fbCollected,
-      feeding_mark_count: fbMarks,
-    }
+
+  let feedingMarkCount = 0
+  for (const row of logs) {
+    if (!activeStudentIds.has(row.student_id)) continue
+    feedingMarkCount += 1
+  }
+
+  const collectedFromClasses = sumFeedingCollectedFromClassRows(classRows)
+  const collectedFromLogs = sumFeedingCollectedFromLogs(
+    logs,
+    activeStudentIds,
+    studentClassMap,
+    classIdToName
+  )
+  const feedingCollected = Math.max(
+    collectedFromClasses,
+    collectedFromLogs,
+    dailyRow?.feeding_collected ?? 0
+  )
+
+  dailyRow = {
+    log_date: dateYmd,
+    feeding_collected: feedingCollected,
+    feeding_mark_count: dailyRow?.feeding_mark_count ?? feedingMarkCount,
   }
 
   const incomeRaw = incomeRes.data ?? []
@@ -480,7 +488,61 @@ function feedingOutstandingForClass(row: AdminDailyLogClassRow): number {
   return Math.max(0, expected - row.collected)
 }
 
-/** Today's KPI strip from `feeding_today_by_class` (same source as admin dashboard). */
+function sumFeedingCollectedFromClassRows(classes: AdminDailyLogClassRow[]): number {
+  return classes.reduce((sum, row) => sum + row.collected, 0)
+}
+
+function sumFeedingCollectedFromLogs(
+  logs: LogRow[],
+  activeStudentIds: Set<string>,
+  studentClassMap: Map<string, string>,
+  classIdToName: Map<string, string>
+): number {
+  let total = 0
+  for (const row of logs) {
+    if (!isFeedingRevenueStatus(row.status)) continue
+    if (!activeStudentIds.has(row.student_id)) continue
+    const classId = studentClassMap.get(row.student_id)
+    if (classId == null) continue
+    total += feedingPaidAmountFromLogOrTier(row.amount, classIdToName.get(classId) ?? '')
+  }
+  return total
+}
+
+/** Canonical feeding total for a day — class log sums beat a stale `daily_financial_log` row. */
+export function feedingCollectedForDayDetail(detail: AdminDailyLogDayDetail): number {
+  const fromClasses = sumFeedingCollectedFromClassRows(detail.classes)
+  if (fromClasses > 0) return fromClasses
+  return detail.dailyRow?.feeding_collected ?? 0
+}
+
+function collectedFromFeedingTodayRow(row: FeedingTodayByClassRow): number {
+  const r = row as FeedingTodayByClassRow & { collected_today?: unknown }
+  return parseNum(r.feeding_collected_today ?? r.collected_today)
+}
+
+function expectedFromFeedingTodayRow(row: FeedingTodayByClassRow): number {
+  const r = row as FeedingTodayByClassRow & { expected_today?: unknown }
+  if (r.expected_today !== undefined && r.expected_today !== null) {
+    return parseNum(r.expected_today)
+  }
+  const totalStudents = parseNum(row.total_students)
+  const absent = parseNum(row.absent_count)
+  return Math.max(0, totalStudents - absent) * getFeedingFeeForClass(row.class_name)
+}
+
+const EMPTY_TODAY_STRIP: AdminDailyLogTodayStrip = {
+  feedingCollected: 0,
+  classesSubmitted: 0,
+  classesWithStudents: 0,
+  studentsPresent: 0,
+  outstanding: 0,
+}
+
+/**
+ * Today's KPI strip from `feeding_today_by_class` + today's submissions.
+ * Prefer {@link todayStripFromDayDetail} after {@link fetchAdminDailyLogDayDetail} for parity with the daily log day panel.
+ */
 export async function fetchAdminTodayStripFromFeedingView(
   supabase: SupabaseClient
 ): Promise<{ data: AdminDailyLogTodayStrip; error: string | null }> {
@@ -496,13 +558,7 @@ export async function fetchAdminTodayStripFromFeedingView(
   if (feedingRes.error) {
     logError('admin-today-strip.feeding_today_by_class', feedingRes.error, { todayYmd })
     return {
-      data: {
-        feedingCollected: 0,
-        classesSubmitted: 0,
-        classesWithStudents: 0,
-        studentsPresent: 0,
-        outstanding: 0,
-      },
+      data: EMPTY_TODAY_STRIP,
       error: feedingRes.error.message,
     }
   }
@@ -521,7 +577,7 @@ export async function fetchAdminTodayStripFromFeedingView(
 
   let feedingCollected = 0
   let studentsPresent = 0
-  let outstanding = 0
+  let totalExpected = 0
   let classesWithStudents = 0
   let classesSubmitted = 0
 
@@ -530,23 +586,21 @@ export async function fetchAdminTodayStripFromFeedingView(
     if (totalStudents <= 0) continue
 
     classesWithStudents += 1
-    const collected = parseNum(c.feeding_collected_today)
+    const collected = collectedFromFeedingTodayRow(c)
     const paid = parseNum(c.paid_count)
     const credit = parseNum(c.credit_count)
     const coveredWeekly = parseNum(c.covered_weekly_count)
-    const absent = parseNum(c.absent_count)
 
     feedingCollected += collected
     studentsPresent += paid + credit + coveredWeekly
+    totalExpected += expectedFromFeedingTodayRow(c)
 
     if (subsByClass.get(c.class_id) != null) {
       classesSubmitted += 1
     }
-
-    const fee = getFeedingFeeForClass(c.class_name)
-    const expected = Math.max(0, totalStudents - absent) * fee
-    outstanding += Math.max(0, expected - collected)
   }
+
+  const outstanding = Math.max(0, totalExpected - feedingCollected)
 
   return {
     data: {
@@ -560,14 +614,14 @@ export async function fetchAdminTodayStripFromFeedingView(
   }
 }
 
-/** KPI strip from a loaded day detail (historical dates). */
+/** KPI strip from a loaded day detail — same feeding/outstanding math as the day panel. */
 export function todayStripFromDayDetail(detail: AdminDailyLogDayDetail): AdminDailyLogTodayStrip {
   let outstanding = 0
   for (const row of detail.classes) {
     outstanding += feedingOutstandingForClass(row)
   }
   return {
-    feedingCollected: detail.dailyRow?.feeding_collected ?? 0,
+    feedingCollected: feedingCollectedForDayDetail(detail),
     classesSubmitted: detail.classesSubmitted,
     classesWithStudents: detail.classesWithStudents,
     studentsPresent: detail.totalPresent,

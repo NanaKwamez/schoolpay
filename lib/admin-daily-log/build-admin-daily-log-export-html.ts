@@ -5,7 +5,10 @@
 import { SCHOOL_NAME } from '@/lib/constants'
 import { formatDate, formatGHS } from '@/lib/utils'
 
-import type { AdminDailyLogDayDetail } from '@/lib/admin-daily-log/fetch-admin-daily-log'
+import {
+  feedingCollectedForDayDetail,
+  type AdminDailyLogDayDetail,
+} from '@/lib/admin-daily-log/fetch-admin-daily-log'
 
 function escapeHtml(s: string): string {
   return s
@@ -46,7 +49,7 @@ export function buildAdminDailyLogExportHtml(
     )
     .join('')
 
-  const collected = detail.dailyRow?.feeding_collected ?? 0
+  const collected = feedingCollectedForDayDetail(detail)
   const notSubmitted = detail.classesNotSubmitted
 
   return `<!DOCTYPE html>
