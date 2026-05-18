@@ -62,7 +62,7 @@ export function AdminSideNav() {
 
     if (r === 'proprietress' || r === 'headmaster' || r === 'accountant') {
       items.push({
-        href: '/accountant',
+        href: '/admin/accountant',
         icon: BarChart3,
         label: 'Financial Overview',
       })

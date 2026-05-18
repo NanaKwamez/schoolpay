@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { AdminSideNav } from './AdminSideNav'
-import { AdminTopBar } from './AdminTopBar'
+
+import { AdminTopBar } from '@/components/admin/AdminTopBar'
 import { cn } from '@/lib/utils'
 
 interface AdminShellProps {
@@ -13,10 +13,9 @@ interface AdminShellProps {
 }
 
 /**
- * AdminShell — page-level layout wrapper for all admin portal screens.
+ * AdminShell — sticky AdminTopBar + scrollable main (sidebar: app/admin/layout).
  *
- * Composes AdminSideNav (fixed, hidden on mobile) + AdminTopBar (sticky) +
- * scrollable main content canvas. Drop the FAB via `overlay` prop.
+ * Drop overlay content via `overlay` for FABs.
  *
  * Usage:
  * ```tsx
@@ -36,24 +35,12 @@ export function AdminShell({
   overlay,
 }: AdminShellProps) {
   return (
-    <div className="min-h-screen bg-[var(--color-ds-background)] flex">
-      <AdminSideNav />
+    <div className="flex flex-col flex-1 min-h-screen w-full min-w-0 bg-[var(--color-ds-background)]">
+      <AdminTopBar title={title} />
 
-      {/* Main content shifted right by sidebar width on md+ */}
-      <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
-        <AdminTopBar title={title} />
+      <main className={cn('flex-1 p-5 md:p-8 pb-24', contentClassName)}>{children}</main>
 
-        <main
-          className={cn(
-            'flex-1 p-5 md:p-8 pb-24',
-            contentClassName
-          )}
-        >
-          {children}
-        </main>
-
-        {overlay}
-      </div>
+      {overlay}
     </div>
   )
 }

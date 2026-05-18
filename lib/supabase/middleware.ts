@@ -117,8 +117,13 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     }
   }
 
+  if (user && (pathname === '/accountant' || pathname.startsWith('/accountant/'))) {
+    const suffix = pathname === '/accountant' ? '' : pathname.slice('/accountant'.length)
+    return makeRedirect(request, `/admin/accountant${suffix}`, supabaseResponse)
+  }
+
   // Financial overview — proprietress, headmaster, accountant
-  if (user && pathname.startsWith('/accountant')) {
+  if (user && pathname.startsWith('/admin/accountant')) {
     const role = await fetchUserRole(supabase, user.id)
     if (
       role !== 'proprietress' &&

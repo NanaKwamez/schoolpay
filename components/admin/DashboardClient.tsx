@@ -1040,7 +1040,7 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
 
             <button
               type="button"
-              onClick={() => router.push('/accountant')}
+              onClick={() => router.push('/admin/accountant')}
               className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 text-left hover:border-mga-gold/40 transition-all active:scale-95"
             >
               <BarChart3 size={20} className="text-mga-gold mb-2" aria-hidden />

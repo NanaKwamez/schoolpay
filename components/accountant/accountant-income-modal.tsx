@@ -95,7 +95,7 @@ export function AccountantIncomeModal({
       .maybeSingle()
 
     const payload = {
-      income_name: trimmed,
+      name: trimmed,
       amount,
       date_collected: dateCollected,
       destination,
@@ -129,7 +129,7 @@ export function AccountantIncomeModal({
       action: 'income_entry_created',
       table_name: 'income_entries',
       record_id: row.id,
-      details: { income_name: row.income_name, amount: row.amount },
+      details: { name: row.name, amount: row.amount },
     })
 
     if (auditErr) {

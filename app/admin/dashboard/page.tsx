@@ -31,7 +31,7 @@ export default async function AdminDashboardPage() {
 
   const role = profile.role as UserRole
   if (role === 'accountant') {
-    redirect('/accountant')
+    redirect('/admin/accountant')
   }
   if (role !== 'proprietress' && role !== 'headmaster') redirect('/login')
 

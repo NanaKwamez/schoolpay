@@ -223,7 +223,7 @@ export async function fetchAdminDailyLogDayDetail(
     supabase.from('daily_financial_log').select('*').eq('log_date', dateYmd).maybeSingle(),
     supabase
       .from('income_entries')
-      .select('id, income_name, amount, notes, category, recorded_by')
+      .select('id, name, amount, notes, category, recorded_by')
       .eq('date_collected', dateYmd),
   ])
 
@@ -359,7 +359,7 @@ export async function fetchAdminDailyLogDayDetail(
   const incomeRows: AdminDailyLogIncomeRow[] = incomeRaw.map(r => {
     const row = r as {
       id: string
-      income_name: string
+      name: string
       amount: unknown
       notes: string | null
       category: IncomeEntryCategory
@@ -367,7 +367,7 @@ export async function fetchAdminDailyLogDayDetail(
     }
     return {
       id: row.id,
-      incomeName: row.income_name,
+      incomeName: row.name,
       categoryLabel: categoryLabels[row.category] ?? row.category,
       amount: parseNum(row.amount),
       recordedByName: nameById.get(row.recorded_by) ?? row.recorded_by,

@@ -245,7 +245,8 @@ export type IncomeEntryDestination = 'school_general' | 'class'
 /** `income_entries` table — accountant-inserted supplementary income. */
 export interface IncomeEntry {
   id: string
-  income_name: string
+  /** Display label for the income line (DB column `name`). */
+  name: string
   amount: number
   date_collected: string
   destination: IncomeEntryDestination

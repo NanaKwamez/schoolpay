@@ -176,7 +176,7 @@ export function mergeLedgerTransactions(params: {
       kind: 'income',
       date: row.date_collected.slice(0, 10),
       typeLabel: `Income · ${incomeCategoryLabel(row.category)}`,
-      sourceLabel: row.income_name,
+      sourceLabel: row.name,
       amount: Number(row.amount) || 0,
       recordedByLabel: byId(row.recorded_by),
     })

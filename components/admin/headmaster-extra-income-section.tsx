@@ -37,14 +37,7 @@ type LastSubmitFingerprint = {
 
 type RecentIncomeRow = Pick<
   IncomeEntry,
-  | 'id'
-  | 'date_collected'
-  | 'category'
-  | 'amount'
-  | 'notes'
-  | 'income_name'
-  | 'recorded_by'
-  | 'description'
+  'id' | 'date_collected' | 'category' | 'amount' | 'notes' | 'name' | 'recorded_by' | 'description'
 >
 
 interface HeadmasterExtraIncomeSectionProps {
@@ -76,7 +69,7 @@ export function HeadmasterExtraIncomeSection({
     const { data, error } = await supabase
       .from('income_entries')
       .select(
-        'id, date_collected, category, amount, notes, income_name, recorded_by, description'
+        'id, date_collected, category, amount, notes, name, recorded_by, description'
       )
       .order('created_at', { ascending: false })
       .limit(10)
@@ -159,7 +152,7 @@ export function HeadmasterExtraIncomeSection({
         `${INCOME_ENTRY_CATEGORY_LABELS[category]} — ${dateCollected}`
 
       const payload = {
-        income_name: incomeName,
+        name: incomeName,
         amount,
         date_collected: dateCollected,
         destination: fundScope === 'school' ? 'school_general' : 'class',
@@ -447,7 +440,7 @@ export function HeadmasterExtraIncomeSection({
                           {formatGHS(Number(row.amount))}
                         </td>
                         <td className="p-2 max-w-[140px] truncate text-gray-600 dark:text-gray-400">
-                          {row.notes ?? row.description ?? row.income_name ?? '—'}
+                          {row.notes ?? row.description ?? row.name ?? '—'}
                         </td>
                         <td className="p-2 truncate">
                           {recentNames.get(row.recorded_by) ?? '—'}
