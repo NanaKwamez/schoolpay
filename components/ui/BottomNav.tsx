@@ -2,7 +2,10 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Utensils, CreditCard, BarChart2, Wallet } from 'lucide-react'
+import { useMemo } from 'react'
+import { Home, Utensils, CreditCard, BarChart2, Wallet, LineChart } from 'lucide-react'
+
+import { useTeacherIncomeNavVisible } from '@/hooks/use-teacher-income-nav-visible'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -11,17 +14,33 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>
 }
 
-/** Teacher bottom navigation — 5 items */
-const teacherNavItems: NavItem[] = [
-  { href: '/teacher/home',         label: 'Home',           icon: Home },
-  { href: '/teacher/feeding',      label: 'Mark Feeding',   icon: Utensils },
-  { href: '/teacher/collections',  label: 'Collections',   icon: Wallet },
-  { href: '/teacher/payment',      label: 'Record Payment', icon: CreditCard },
-  { href: '/teacher/summary',      label: 'Class Summary',  icon: BarChart2 },
+const teacherNavHomeFeeding: NavItem[] = [
+  { href: '/teacher/home', label: 'Home', icon: Home },
+  { href: '/teacher/feeding', label: 'Mark Feeding', icon: Utensils },
+]
+
+const teacherNavIncome: NavItem = {
+  href: '/teacher/feeding-summary',
+  label: 'Income',
+  icon: LineChart,
+}
+
+const teacherNavRest: NavItem[] = [
+  { href: '/teacher/collections', label: 'Collections', icon: Wallet },
+  { href: '/teacher/payment', label: 'Record Payment', icon: CreditCard },
+  { href: '/teacher/summary', label: 'Class Summary', icon: BarChart2 },
 ]
 
 export function BottomNav() {
   const pathname = usePathname()
+  const showIncome = useTeacherIncomeNavVisible()
+
+  const teacherNavItems = useMemo((): NavItem[] => {
+    if (showIncome) {
+      return [...teacherNavHomeFeeding, teacherNavIncome, ...teacherNavRest]
+    }
+    return [...teacherNavHomeFeeding, ...teacherNavRest]
+  }, [showIncome])
 
   return (
     <nav
@@ -30,7 +49,7 @@ export function BottomNav() {
     >
       <div className="flex items-stretch h-16">
         {teacherNavItems.map(({ href, label, icon: Icon }) => {
-          const active = pathname.startsWith(href)
+          const active = pathname === href
 
           return (
             <Link
