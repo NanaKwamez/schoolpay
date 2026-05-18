@@ -17,7 +17,6 @@ import {
 } from 'lucide-react'
 import type { PostgrestError } from '@supabase/supabase-js'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { useAdminTodayKpiLive } from '@/hooks/use-admin-today-kpi-live'
 import { useAuth } from '@/hooks/useAuth'
 import { ClassCard } from './ClassCard'
 import { FundSummaryCard } from './FundSummaryCard'
@@ -30,7 +29,6 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { useSync } from '@/hooks/useSync'
 import { useOnlineStatus } from '@/hooks/useOnline'
 import { EnrollmentRequestsPanel } from './EnrollmentRequestsPanel'
-import { AdminDailyKpiStrip } from '@/components/admin/admin-daily-kpi-strip'
 import { Modal } from '@/components/ui/Modal'
 import {
   ADMIN_DASHBOARD_FETCH_TIMEOUT_MS,
@@ -72,6 +70,8 @@ interface FeedingTodayByClassRow {
   paid_count: unknown
   credit_count: unknown
   absent_count: unknown
+  covered_weekly_count?: unknown
+  feeding_collected_today?: unknown
 }
 
 interface FundSummaryViewRow {
@@ -188,7 +188,7 @@ function deriveSchoolAttendanceFromClasses(classStats: ClassWithStats[]): School
   let collected = 0
   let expected = 0
   for (const c of classStats) {
-    present += c.paid_count + c.credit_count
+    present += c.paid_count + c.credit_count + c.covered_weekly_count
     absent += c.absent_count
     marked += c.marked_count
     enrollment += c.total_students
@@ -279,7 +279,6 @@ interface AdminDashboardShellProps {
 export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboardShellProps) {
   const router = useRouter()
   const { signOut, isSigningOut } = useAuth()
-  const { strip: todayKpiStrip, loading: todayKpiLoading } = useAdminTodayKpiLive()
   const isProprietress = resolvedRole === 'proprietress'
   const role = resolvedRole
   const { pendingCount, isSyncing } = useSync()
@@ -489,7 +488,14 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
 
               const paid = feedRow ? parseNumeric(feedRow.paid_count) : 0
               const credit = feedRow ? parseNumeric(feedRow.credit_count) : 0
+              const coveredWeekly = feedRow ? parseNumeric(feedRow.covered_weekly_count ?? 0) : 0
               const absent = feedRow ? parseNumeric(feedRow.absent_count) : 0
+
+              const rawCollected = feedRow?.feeding_collected_today
+              const collectedToday =
+                rawCollected !== undefined && rawCollected !== null
+                  ? parseNumeric(rawCollected)
+                  : (feedingCollectedByClass.get(cls.id) ?? 0)
 
               return {
                 id: cls.id,
@@ -498,11 +504,12 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
                 sort_order: cls.sort_order,
                 teacher_name: (teacher as { full_name?: string } | undefined)?.full_name ?? 'No teacher assigned',
                 total_students: feedRow ? parseNumeric(feedRow.total_students) : classStudents.length,
-                marked_count: paid + credit + absent,
+                marked_count: paid + credit + coveredWeekly + absent,
                 paid_count: paid,
                 credit_count: credit,
+                covered_weekly_count: coveredWeekly,
                 absent_count: absent,
-                collected_today: feedingCollectedByClass.get(cls.id) ?? 0,
+                collected_today: collectedToday,
                 submitted_at: sub?.submitted_at ?? null,
               }
             }
@@ -664,7 +671,7 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
 
   // ── Derived state ─────────────────────────────────────────────────────────
 
-  const unsubmittedClasses = classStats.filter(c => !c.submitted_at)
+  const unsubmittedClasses = classStats.filter(c => c.total_students > 0 && !c.submitted_at)
   const isPast10am = currentTime.getHours() >= 10
   const showAlert = isPast10am && unsubmittedClasses.length > 0 && !alertDismissed
 
@@ -674,6 +681,37 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
     if (h < 17) return 'Good afternoon'
     return 'Good evening'
   })()
+
+  const ghanaCalendarToday = useMemo(
+    () => currentTime.toLocaleDateString('en-CA', { timeZone: 'Africa/Accra' }),
+    [currentTime]
+  )
+
+  const todayHeading = useMemo(() => {
+    const ymd = ghanaCalendarToday
+    const parts = ymd.split('-').map(Number)
+    const y = parts[0] ?? 1970
+    const mo = parts[1] ?? 1
+    const d = parts[2] ?? 1
+    const dt = new Date(Date.UTC(y, mo - 1, d, 12, 0, 0))
+    const dayName = dt.toLocaleDateString('en-GB', { weekday: 'long', timeZone: 'UTC' })
+    return `Today — ${dayName}, ${formatDate(ymd)}`
+  }, [ghanaCalendarToday])
+
+  const todayFeedingSnapshot = useMemo(() => {
+    const withStudents = classStats.filter(c => c.total_students > 0)
+    let collected = 0
+    let present = 0
+    let absent = 0
+    for (const c of withStudents) {
+      collected += c.collected_today
+      present += c.paid_count + c.credit_count + c.covered_weekly_count
+      absent += c.absent_count
+    }
+    const classesSubmitted = withStudents.filter(c => c.submitted_at).length
+    const classesTotal = withStudents.length
+    return { collected, present, absent, classesSubmitted, classesTotal }
+  }, [classStats])
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -779,6 +817,52 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
           </div>
         ) : (
           <>
+        <section aria-label="Today feeding snapshot">
+          <p className="text-xs font-bold text-[#0A1628] dark:text-gray-100 uppercase tracking-wide mb-3">
+            {todayHeading}
+          </p>
+          {loading ? (
+            <div className="grid grid-cols-2 tablet:grid-cols-4 gap-3">
+              {[0, 1, 2, 3].map(i => (
+                <Skeleton key={i} className="h-[5.5rem] rounded-2xl" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 tablet:grid-cols-4 gap-3">
+              {[
+                {
+                  label: 'Collected today',
+                  value: formatGHS(todayFeedingSnapshot.collected),
+                },
+                {
+                  label: 'Students present',
+                  value: String(Math.round(todayFeedingSnapshot.present)),
+                },
+                {
+                  label: 'Students absent',
+                  value: String(Math.round(todayFeedingSnapshot.absent)),
+                },
+                {
+                  label: 'Classes submitted',
+                  value: `${todayFeedingSnapshot.classesSubmitted} / ${todayFeedingSnapshot.classesTotal}`,
+                },
+              ].map(card => (
+                <div
+                  key={card.label}
+                  className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900/80 text-center"
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    {card.label}
+                  </p>
+                  <p className="mt-1 text-lg font-extrabold tabular-nums text-[#0A1628] dark:text-gray-100">
+                    {card.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
         {/* ── Cumulative term summary (DB view term_cumulative_summary) ─ */}
         <section>
           <p className="text-xs font-bold text-[#0A1628] dark:text-gray-100 uppercase tracking-wide mb-3">Term overview</p>
@@ -931,20 +1015,6 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
               ))}
             </div>
           )}
-        </section>
-
-        <section aria-label="Today financial summary">
-          <p className="text-xs font-bold text-[#0A1628] dark:text-gray-100 uppercase tracking-wide mb-3">
-            Today summary
-          </p>
-          <AdminDailyKpiStrip
-            loading={todayKpiLoading}
-            feedingCollected={todayKpiStrip.feedingCollected}
-            classesSubmitted={todayKpiStrip.classesSubmitted}
-            classesWithStudents={todayKpiStrip.classesWithStudents}
-            studentsPresent={todayKpiStrip.studentsPresent}
-            outstanding={todayKpiStrip.outstanding}
-          />
         </section>
 
         {/* ── Alert Banner ─────────────────────────────────────────────────── */}

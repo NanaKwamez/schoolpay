@@ -291,6 +291,7 @@ export interface ClassWithStats extends Class {
   marked_count: number
   paid_count: number
   credit_count: number
+  covered_weekly_count: number
   absent_count: number
   collected_today: number
   submitted_at: string | null
