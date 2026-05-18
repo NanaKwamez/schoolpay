@@ -227,6 +227,10 @@ export interface IncomeEntry {
   category: IncomeEntryCategory
   recorded_by: string
   created_at: string
+  fund_scope?: 'school' | 'class'
+  entry_type?: string
+  term_id?: string | null
+  description?: string | null
 }
 
 export interface AuditLog {

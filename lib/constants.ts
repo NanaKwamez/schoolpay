@@ -1,4 +1,4 @@
-import type { FeedingStatus, FundType } from '@/types'
+import type { FeedingStatus, FundType, IncomeEntryCategory } from '@/types'
 
 export const SCHOOL_NAME = process.env.NEXT_PUBLIC_SCHOOL_NAME ?? 'Morning Glory Academy'
 
@@ -100,3 +100,13 @@ export const FEEDING_STATUS_COLORS = {
   did_not_eat: 'bg-blue-400',
   covered_weekly: 'bg-green-300',
 } as const
+
+/** Display labels for `income_entries.category` (pills + toasts). */
+export const INCOME_ENTRY_CATEGORY_LABELS: Record<IncomeEntryCategory, string> = {
+  offering: 'Offering',
+  admission_fee: 'Admission Fee',
+  mock_fee: 'Mock Fee',
+  pta_levy: 'PTA Levy',
+  donation: 'Donation',
+  other: 'Other',
+}

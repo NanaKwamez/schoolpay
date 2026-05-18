@@ -20,6 +20,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { ClassCard } from './ClassCard'
 import { FundSummaryCard } from './FundSummaryCard'
+import { HeadmasterExtraIncomeSection } from './headmaster-extra-income-section'
 import { AiInsightsGrid } from './AiInsightBanner'
 import { GeminiChat } from './GeminiChat'
 import { SyncIndicator } from '@/components/ui/SyncIndicator'
@@ -286,6 +287,7 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
   const { isOnline } = useOnlineStatus()
 
   const [termSummary, setTermSummary] = useState<TermCumulativeSummaryRow>(EMPTY_TERM_CUMULATIVE_SUMMARY)
+  const [currentTermId, setCurrentTermId] = useState<string | null>(null)
   const [classStats, setClassStats] = useState<ClassWithStats[]>([])
   const [fundSummaries, setFundSummaries] = useState<FundSummary[]>([])
   const [insights, setInsights] = useState<AiInsightCache[]>([])
@@ -370,6 +372,9 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
           throwIfSupabaseError(feedingViewRes, 'feeding_today_by_class')
           throwIfSupabaseError(fundSummaryViewRes, 'fund_summary')
           throwIfSupabaseError(termRes, 'terms')
+          setCurrentTermId(
+            (termRes.data as { id: string } | null | undefined)?.id ?? null
+          )
           throwIfSupabaseError(classRes, 'classes')
           throwIfSupabaseError(teacherRes, 'teachers')
           throwIfSupabaseError(studentRes, 'students')
@@ -1027,6 +1032,13 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
               ))}
             </div>
           </section>
+        )}
+
+        {!isProprietress && (
+          <HeadmasterExtraIncomeSection
+            currentTermId={currentTermId}
+            onRefreshDashboard={fetchDashboardData}
+          />
         )}
           </>
         )}

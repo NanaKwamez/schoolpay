@@ -88,6 +88,12 @@ export function AccountantIncomeModal({
       return
     }
 
+    const { data: termRow } = await supabase
+      .from('terms')
+      .select('id')
+      .eq('is_current', true)
+      .maybeSingle()
+
     const payload = {
       income_name: trimmed,
       amount,
@@ -97,6 +103,10 @@ export function AccountantIncomeModal({
       notes: notes.trim() || null,
       category,
       recorded_by: user.id,
+      fund_scope: destination === 'school_general' ? 'school' : 'class',
+      entry_type: 'one_time',
+      term_id: (termRow as { id: string } | null)?.id ?? null,
+      description: null as string | null,
     }
 
     const { data: inserted, error: insertErr } = await supabase
