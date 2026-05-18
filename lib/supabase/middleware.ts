@@ -105,10 +105,22 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     }
   }
 
-  // Role-based access: admins redirected away from /teacher
+  // Role-based access: admins (incl. accountant) redirected away from /teacher
   if (user && pathname.startsWith('/teacher')) {
     const role = await fetchUserRole(supabase, user.id)
-    if (role === 'proprietress' || role === 'headmaster') {
+    if (
+      role === 'proprietress' ||
+      role === 'headmaster' ||
+      role === 'accountant'
+    ) {
+      return makeRedirect(request, '/admin/dashboard', supabaseResponse)
+    }
+  }
+
+  // Accountant financial hub — only accountants
+  if (user && pathname.startsWith('/accountant')) {
+    const role = await fetchUserRole(supabase, user.id)
+    if (role !== 'accountant') {
       return makeRedirect(request, '/admin/dashboard', supabaseResponse)
     }
   }

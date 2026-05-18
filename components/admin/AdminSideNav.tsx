@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useMemo } from 'react'
 import {
   AlertCircle,
   BarChart2,
@@ -18,15 +19,14 @@ import {
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 
-const navItems = [
-  { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/admin/payments',  icon: CreditCard,      label: 'Payments'  },
-  { href: '/admin/debt',      icon: AlertCircle,     label: 'Debts'     },
-  { href: '/admin/reports',   icon: BarChart2,       label: 'Reports'   },
-  { href: '/admin/students',  icon: Users,           label: 'Students'  },
-  { href: '/admin/teachers',  icon: GraduationCap,   label: 'Teachers'  },
-  { href: '/admin/fees',      icon: Receipt,         label: 'Fees'      },
-]
+const adminPortalNavItems = [
+  { href: '/admin/payments', icon: CreditCard, label: 'Payments' },
+  { href: '/admin/debt', icon: AlertCircle, label: 'Debts' },
+  { href: '/admin/reports', icon: BarChart2, label: 'Reports' },
+  { href: '/admin/students', icon: Users, label: 'Students' },
+  { href: '/admin/teachers', icon: GraduationCap, label: 'Teachers' },
+  { href: '/admin/fees', icon: Receipt, label: 'Fees' },
+] as const
 
 const bottomItems = [
   { href: '/admin/settings', icon: Settings, label: 'Settings' },
@@ -40,7 +40,23 @@ const bottomItems = [
  */
 export function AdminSideNav() {
   const pathname = usePathname()
-  const { signOut, isSigningOut } = useAuth()
+  const { signOut, isSigningOut, role } = useAuth()
+
+  const navItems = useMemo(() => {
+    const dashboard =
+      role === 'accountant'
+        ? {
+            href: '/accountant',
+            icon: LayoutDashboard,
+            label: 'Financial Overview',
+          }
+        : {
+            href: '/admin/dashboard',
+            icon: LayoutDashboard,
+            label: 'Dashboard',
+          }
+    return [dashboard, ...adminPortalNavItems]
+  }, [role])
 
   return (
     <nav

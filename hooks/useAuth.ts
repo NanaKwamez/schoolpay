@@ -14,6 +14,7 @@ interface AuthState {
   role: UserRole | null
   isProprietress: boolean
   isHeadmaster: boolean
+  isAccountant: boolean
   isTeacher: boolean
   isAdmin: boolean
   loading: boolean
@@ -55,6 +56,7 @@ export function useAuth(): UseAuthReturn {
     role: null,
     isProprietress: false,
     isHeadmaster: false,
+    isAccountant: false,
     isTeacher: false,
     isAdmin: false,
     loading: true,
@@ -69,8 +71,12 @@ export function useAuth(): UseAuthReturn {
         role,
         isProprietress: role === 'proprietress',
         isHeadmaster: role === 'headmaster',
+        isAccountant: role === 'accountant',
         isTeacher: role === 'teacher',
-        isAdmin: role === 'proprietress' || role === 'headmaster',
+        isAdmin:
+          role === 'proprietress' ||
+          role === 'headmaster' ||
+          role === 'accountant',
         loading: false,
       }
     },

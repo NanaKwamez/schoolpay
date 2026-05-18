@@ -33,7 +33,9 @@ export default async function ClassDrilldownPage({ params }: PageProps) {
   const role = profileData?.role as UserRole | undefined
 
   if (role === 'proprietress') return <ProprietressClassView classId={classId} />
-  if (role === 'headmaster') return <HeadmasterClassView classId={classId} />
+  if (role === 'headmaster' || role === 'accountant') {
+    return <HeadmasterClassView classId={classId} />
+  }
 
   redirect('/login')
 }

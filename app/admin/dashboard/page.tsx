@@ -30,6 +30,9 @@ export default async function AdminDashboardPage() {
   if (profileError || !profile) redirect('/login')
 
   const role = profile.role as UserRole
+  if (role === 'accountant') {
+    redirect('/accountant')
+  }
   if (role !== 'proprietress' && role !== 'headmaster') redirect('/login')
 
   const greetingName = profile.full_name ?? 'Admin'

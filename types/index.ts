@@ -1,4 +1,4 @@
-export type UserRole = 'proprietress' | 'headmaster' | 'teacher'
+export type UserRole = 'proprietress' | 'headmaster' | 'teacher' | 'accountant'
 export type EnrollmentRequestType = 'enroll' | 'withdraw'
 export type EnrollmentRequestStatus = 'pending' | 'approved' | 'rejected'
 export type ClassLevel = 'nursery' | 'kg' | 'primary' | 'jhs'
@@ -203,6 +203,47 @@ export interface FundSummary {
   total_income: number
   total_expenses: number
   net_balance: number
+}
+
+export type IncomeEntryCategory =
+  | 'offering'
+  | 'admission_fee'
+  | 'mock_fee'
+  | 'pta_levy'
+  | 'donation'
+  | 'other'
+
+export type IncomeEntryDestination = 'school_general' | 'class'
+
+/** `income_entries` table — accountant-inserted supplementary income. */
+export interface IncomeEntry {
+  id: string
+  income_name: string
+  amount: number
+  date_collected: string
+  destination: IncomeEntryDestination
+  class_id: string | null
+  notes: string | null
+  category: IncomeEntryCategory
+  recorded_by: string
+  created_at: string
+}
+
+export interface AuditLog {
+  id: string
+  user_id: string
+  action: string
+  table_name: string
+  record_id: string | null
+  details: Record<string, unknown> | null
+  created_at: string
+}
+
+/** Rolling days from `daily_financial_log` view (Ghana calendar dates). */
+export interface DailyFinancialLogRow {
+  log_date: string
+  feeding_collected: number
+  feeding_mark_count: number
 }
 
 export interface ClassDailySubmission {
