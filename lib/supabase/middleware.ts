@@ -117,10 +117,14 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     }
   }
 
-  // Accountant financial hub — only accountants
+  // Financial overview — proprietress, headmaster, accountant
   if (user && pathname.startsWith('/accountant')) {
     const role = await fetchUserRole(supabase, user.id)
-    if (role !== 'accountant') {
+    if (
+      role !== 'proprietress' &&
+      role !== 'headmaster' &&
+      role !== 'accountant'
+    ) {
       return makeRedirect(request, '/admin/dashboard', supabaseResponse)
     }
   }

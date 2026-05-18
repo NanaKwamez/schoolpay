@@ -6,19 +6,22 @@ import { useMemo } from 'react'
 import {
   AlertCircle,
   BarChart2,
+  BarChart3,
+  CalendarDays,
   CreditCard,
   GraduationCap,
   LayoutDashboard,
   Loader2,
   LogOut,
   Receipt,
-  ScrollText,
   Settings,
   Users,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
+import type { UserRole } from '@/types'
 
 const adminPortalNavItems = [
   { href: '/admin/payments', icon: CreditCard, label: 'Payments' },
@@ -28,12 +31,6 @@ const adminPortalNavItems = [
   { href: '/admin/teachers', icon: GraduationCap, label: 'Teachers' },
   { href: '/admin/fees', icon: Receipt, label: 'Fees' },
 ] as const
-
-const dailyLogNavItem = {
-  href: '/admin/daily-log',
-  icon: ScrollText,
-  label: 'Daily Log',
-} as const
 
 const bottomItems = [
   { href: '/admin/settings', icon: Settings, label: 'Settings' },
@@ -50,23 +47,29 @@ export function AdminSideNav() {
   const { signOut, isSigningOut, role } = useAuth()
 
   const navItems = useMemo(() => {
-    const dashboard =
-      role === 'accountant'
-        ? {
-            href: '/accountant',
-            icon: LayoutDashboard,
-            label: 'Financial Overview',
-          }
-        : {
-            href: '/admin/dashboard',
-            icon: LayoutDashboard,
-            label: 'Dashboard',
-          }
-    const withDailyLog =
-      role === 'proprietress' || role === 'accountant'
-        ? [dashboard, dailyLogNavItem, ...adminPortalNavItems]
-        : [dashboard, ...adminPortalNavItems]
-    return withDailyLog
+    const r = role as UserRole | null
+    const items: { href: string; icon: LucideIcon; label: string }[] = [
+      { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    ]
+
+    if (r === 'proprietress' || r === 'accountant') {
+      items.push({
+        href: '/admin/daily-log',
+        icon: CalendarDays,
+        label: 'Daily Log',
+      })
+    }
+
+    if (r === 'proprietress' || r === 'headmaster' || r === 'accountant') {
+      items.push({
+        href: '/accountant',
+        icon: BarChart3,
+        label: 'Financial Overview',
+      })
+    }
+
+    items.push(...adminPortalNavItems)
+    return items
   }, [role])
 
   return (

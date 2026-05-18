@@ -32,7 +32,10 @@ export default async function AdminDailyLogPage() {
   }
 
   return (
-    <AdminShell title="Daily Log" contentClassName="bg-[#0A1628]">
+    <AdminShell
+      title="Daily Log"
+      contentClassName="bg-mga-cream bg-dot-pattern dark:bg-[#0A1628]"
+    >
       <AdminDailyLogClient />
     </AdminShell>
   )

@@ -43,7 +43,7 @@ export function TeacherFeedingSummaryView({ model, loadError }: TeacherFeedingSu
   return (
     <div
       className={cn(
-        'min-h-screen bg-mga-cream pb-24 md:pb-8',
+        'min-h-screen bg-mga-cream bg-dot-pattern pb-24 md:pb-8',
         'dark:bg-[#0A1628]'
       )}
     >

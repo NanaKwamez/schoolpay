@@ -25,12 +25,14 @@ import { cn, formatDate, formatGHS, getTodayGhana } from '@/lib/utils'
 
 function pillClasses(state: DayPillState, selected: boolean): string {
   const base = 'shrink-0 rounded-full px-3 py-2 text-xs font-bold transition-colors'
-  const ring = selected ? ' ring-2 ring-white ring-offset-2 ring-offset-[#0A1628]' : ''
+  const ring = selected
+    ? ' ring-2 ring-mga-gold ring-offset-2 ring-offset-mga-cream dark:ring-white dark:ring-offset-[#0A1628]'
+    : ''
   const tones: Record<DayPillState, string> = {
     today: 'bg-mga-gold text-[#0A1628]',
     full: 'bg-emerald-600 text-white',
     partial: 'bg-orange-500 text-white',
-    none: 'bg-white/20 text-white/80',
+    none: 'bg-gray-200 text-gray-700 dark:bg-white/20 dark:text-white/80',
   }
   return cn(base, tones[state], ring)
 }
@@ -172,7 +174,9 @@ export function AdminDailyLogClient() {
   return (
     <div className="space-y-8">
       <section aria-label="Today summary">
-        <p className="text-xs font-bold uppercase tracking-wide text-white/60 mb-3">Today (live)</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">
+          Today (live)
+        </p>
         <AdminDailyKpiStrip
           loading={todayKpiLoading}
           feedingCollected={todayStrip.feedingCollected}
@@ -180,14 +184,15 @@ export function AdminDailyLogClient() {
           classesWithStudents={todayStrip.classesWithStudents}
           studentsPresent={todayStrip.studentsPresent}
           outstanding={todayStrip.outstanding}
-          dark
         />
       </section>
 
       <section aria-label="Day picker">
-        <p className="text-xs font-bold uppercase tracking-wide text-white/60 mb-3">Last 30 school days</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">
+          Last 30 school days
+        </p>
         {loadingPills ? (
-          <div className="flex items-center gap-2 text-white/70 text-sm">
+          <div className="flex items-center gap-2 text-gray-600 dark:text-white/70 text-sm">
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
             Loading calendar…
           </div>
@@ -214,14 +219,17 @@ export function AdminDailyLogClient() {
 
       {pillError || detailError ? (
         <div className="space-y-1" role="alert">
-          {pillError ? <p className="text-sm text-red-300">{pillError}</p> : null}
-          {detailError ? <p className="text-sm text-red-300">{detailError}</p> : null}
+          {pillError ? <p className="text-sm text-red-600 dark:text-red-300">{pillError}</p> : null}
+          {detailError ? <p className="text-sm text-red-600 dark:text-red-300">{detailError}</p> : null}
         </div>
       ) : null}
 
-      <section aria-label="Selected day" className="rounded-2xl border border-white/10 bg-white/5 p-5">
+      <section
+        aria-label="Selected day"
+        className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5"
+      >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <h2 className="text-lg font-bold text-white">{headerLabel}</h2>
+          <h2 className="text-lg font-bold text-[#0A1628] dark:text-white">{headerLabel}</h2>
           <button
             type="button"
             onClick={handleExport}
@@ -234,7 +242,7 @@ export function AdminDailyLogClient() {
         </div>
 
         {loadingDetail || !detail ? (
-          <div className="flex items-center gap-2 text-white/70 py-8 justify-center">
+          <div className="flex items-center gap-2 text-gray-600 dark:text-white/70 py-8 justify-center">
             <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
             Loading day…
           </div>
@@ -247,18 +255,25 @@ export function AdminDailyLogClient() {
                 { k: 'ns', label: 'Classes not submitted', v: `${detail.classesNotSubmitted}` },
                 { k: 'pr', label: 'Present / absent', v: `${Math.round(detail.totalPresent)} / ${Math.round(detail.totalAbsent)}` },
               ].map(x => (
-                <div key={x.k} className="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-white/55">{x.label}</p>
+                <div
+                  key={x.k}
+                  className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-center dark:border-white/10 dark:bg-white/5"
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-white/55">
+                    {x.label}
+                  </p>
                   <p className="mt-1 text-base font-extrabold text-mga-gold tabular-nums">{x.v}</p>
                 </div>
               ))}
             </div>
 
-            <h3 className="text-xs font-bold uppercase tracking-wide text-white/60 mb-2">Class breakdown</h3>
-            <div className="overflow-x-auto rounded-xl border border-white/10">
-              <table className="min-w-full text-sm text-white">
+            <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-white/60 mb-2">
+              Class breakdown
+            </h3>
+            <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
+              <table className="min-w-full text-sm text-[#0A1628] dark:text-white">
                 <thead>
-                  <tr className="bg-black/30 text-left text-xs uppercase text-white/70">
+                  <tr className="bg-gray-100 text-left text-xs uppercase text-gray-600 dark:bg-black/30 dark:text-white/70">
                     <th className="px-3 py-2">Class</th>
                     <th className="px-3 py-2">Teacher</th>
                     <th className="px-3 py-2 text-right">Paid</th>
@@ -277,13 +292,13 @@ export function AdminDailyLogClient() {
                       <tr
                         key={c.classId}
                         className={cn(
-                          'border-t border-white/10',
-                          notSubmitted && 'bg-red-950/40',
-                          !notSubmitted && partial && 'bg-orange-950/35'
+                          'border-t border-gray-100 dark:border-white/10',
+                          notSubmitted && 'bg-red-50 dark:bg-red-950/40',
+                          !notSubmitted && partial && 'bg-orange-50 dark:bg-orange-950/35'
                         )}
                       >
                         <td className="px-3 py-2 font-semibold">{c.className}</td>
-                        <td className="px-3 py-2 text-white/80">{c.teacherName}</td>
+                        <td className="px-3 py-2 text-gray-600 dark:text-white/80">{c.teacherName}</td>
                         <td className="px-3 py-2 text-right tabular-nums">{c.paid}</td>
                         <td className="px-3 py-2 text-right tabular-nums">{c.credit}</td>
                         <td className="px-3 py-2 text-right tabular-nums">{c.absent}</td>
@@ -298,16 +313,16 @@ export function AdminDailyLogClient() {
               </table>
             </div>
 
-            <h3 className="text-xs font-bold uppercase tracking-wide text-white/60 mt-6 mb-2">
+            <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-white/60 mt-6 mb-2">
               Income entries
             </h3>
             {detail.incomeRows.length === 0 ? (
-              <p className="text-sm text-white/60">No extra income recorded this day.</p>
+              <p className="text-sm text-gray-600 dark:text-white/60">No extra income recorded this day.</p>
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-white/10">
-                <table className="min-w-full text-sm text-white">
+              <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
+                <table className="min-w-full text-sm text-[#0A1628] dark:text-white">
                   <thead>
-                    <tr className="bg-black/30 text-left text-xs uppercase text-white/70">
+                    <tr className="bg-gray-100 text-left text-xs uppercase text-gray-600 dark:bg-black/30 dark:text-white/70">
                       <th className="px-3 py-2">Type</th>
                       <th className="px-3 py-2 text-right">Amount</th>
                       <th className="px-3 py-2">Recorded by</th>
@@ -316,16 +331,19 @@ export function AdminDailyLogClient() {
                   </thead>
                   <tbody>
                     {detail.incomeRows.map(i => (
-                      <tr key={i.id} className="border-t border-white/10">
+                      <tr key={i.id} className="border-t border-gray-100 dark:border-white/10">
                         <td className="px-3 py-2">
                           <span className="font-semibold">{i.categoryLabel}</span>
-                          <span className="text-white/60 font-normal"> — {i.incomeName}</span>
+                          <span className="text-gray-500 dark:text-white/60 font-normal">
+                            {' '}
+                            — {i.incomeName}
+                          </span>
                         </td>
                         <td className="px-3 py-2 text-right font-bold text-mga-gold tabular-nums">
                           {formatGHS(i.amount)}
                         </td>
-                        <td className="px-3 py-2 text-white/85">{i.recordedByName}</td>
-                        <td className="px-3 py-2 text-white/70">{i.notes ?? '—'}</td>
+                        <td className="px-3 py-2 text-gray-800 dark:text-white/85">{i.recordedByName}</td>
+                        <td className="px-3 py-2 text-gray-600 dark:text-white/70">{i.notes ?? '—'}</td>
                       </tr>
                     ))}
                   </tbody>

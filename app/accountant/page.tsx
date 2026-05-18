@@ -6,10 +6,17 @@ import { AccountantFinancialDashboard } from '@/components/accountant/accountant
 import { DashboardSkeleton } from '@/components/ui/Skeleton'
 import { SCHOOL_NAME } from '@/lib/constants'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import type { UserRole } from '@/types'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const metadata = { title: `Financial Overview — ${SCHOOL_NAME}` }
+
+const FINANCIAL_OVERVIEW_ROLES: UserRole[] = [
+  'proprietress',
+  'headmaster',
+  'accountant',
+]
 
 export default async function AccountantPage() {
   const supabase = await createSupabaseServerClient()
@@ -24,12 +31,15 @@ export default async function AccountantPage() {
     .eq('id', user.id)
     .single()
 
-  if (error || !profile || profile.role !== 'accountant') {
+  if (error || !profile || !FINANCIAL_OVERVIEW_ROLES.includes(profile.role as UserRole)) {
     redirect('/admin/dashboard')
   }
 
   return (
-    <AdminShell title="Financial Overview">
+    <AdminShell
+      title="Financial Overview"
+      contentClassName="bg-mga-cream bg-dot-pattern dark:bg-[#0A1628]"
+    >
       <Suspense fallback={<DashboardSkeleton />}>
         <AccountantFinancialDashboard greetingName={profile.full_name ?? 'Accountant'} />
       </Suspense>

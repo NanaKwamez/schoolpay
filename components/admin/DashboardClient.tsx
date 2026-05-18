@@ -5,14 +5,18 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
   AlertTriangle,
+  BarChart3,
+  CalendarDays,
   Clock,
   DollarSign,
   HelpCircle,
   Loader2,
   LogOut,
   Percent,
+  Receipt,
   UserCheck,
   UserX,
+  Users,
   X,
 } from 'lucide-react'
 import type { PostgrestError } from '@supabase/supabase-js'
@@ -1015,6 +1019,55 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
               ))}
             </div>
           )}
+        </section>
+
+        <section className="px-4 mb-4">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            {role === 'proprietress' ? (
+              <button
+                type="button"
+                onClick={() => router.push('/admin/daily-log')}
+                className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 text-left hover:border-mga-gold/40 transition-all active:scale-95"
+              >
+                <CalendarDays size={20} className="text-mga-gold mb-2" aria-hidden />
+                <p className="text-sm font-semibold">Daily Log</p>
+                <p className="text-xs text-gray-400 mt-0.5">Day by day records</p>
+              </button>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={() => router.push('/accountant')}
+              className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 text-left hover:border-mga-gold/40 transition-all active:scale-95"
+            >
+              <BarChart3 size={20} className="text-mga-gold mb-2" aria-hidden />
+              <p className="text-sm font-semibold">Financials</p>
+              <p className="text-xs text-gray-400 mt-0.5">Full financial overview</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push('/admin/expenses')}
+              className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 text-left hover:border-mga-gold/40 transition-all active:scale-95"
+            >
+              <Receipt size={20} className="text-mga-gold mb-2" aria-hidden />
+              <p className="text-sm font-semibold">Expenses</p>
+              <p className="text-xs text-gray-400 mt-0.5">Record & approve expenses</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push('/admin/students')}
+              className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 text-left hover:border-mga-gold/40 transition-all active:scale-95"
+            >
+              <Users size={20} className="text-mga-gold mb-2" aria-hidden />
+              <p className="text-sm font-semibold">Students</p>
+              <p className="text-xs text-gray-400 mt-0.5">Manage student records</p>
+            </button>
+          </div>
         </section>
 
         {/* ── Alert Banner ─────────────────────────────────────────────────── */}
