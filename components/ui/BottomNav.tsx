@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Utensils, CreditCard, BarChart2 } from 'lucide-react'
+import { Home, Utensils, CreditCard, BarChart2, Wallet } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -11,12 +11,13 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>
 }
 
-/** Teacher bottom navigation — 4 items */
+/** Teacher bottom navigation — 5 items */
 const teacherNavItems: NavItem[] = [
-  { href: '/teacher/home',    label: 'Home',           icon: Home },
-  { href: '/teacher/feeding', label: 'Mark Feeding',   icon: Utensils },
-  { href: '/teacher/payment', label: 'Record Payment', icon: CreditCard },
-  { href: '/teacher/summary', label: 'Class Summary',  icon: BarChart2 },
+  { href: '/teacher/home',         label: 'Home',           icon: Home },
+  { href: '/teacher/feeding',      label: 'Mark Feeding',   icon: Utensils },
+  { href: '/teacher/collections',  label: 'Collections',   icon: Wallet },
+  { href: '/teacher/payment',      label: 'Record Payment', icon: CreditCard },
+  { href: '/teacher/summary',      label: 'Class Summary',  icon: BarChart2 },
 ]
 
 export function BottomNav() {

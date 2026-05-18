@@ -37,6 +37,33 @@ export interface Class {
   sort_order: number
 }
 
+export type ClassFeeCollectionFundScope = 'class' | 'school'
+export type ClassFeePaymentStatus = 'paid' | 'unpaid'
+
+/** Teacher-managed class fee drive (`class_fee_collections`). */
+export interface ClassFeeCollection {
+  id: string
+  class_id: string
+  term_id: string
+  name: string
+  amount_per_student: number
+  description: string | null
+  fund_scope: ClassFeeCollectionFundScope
+  is_one_time: boolean
+  created_by: string
+  created_at: string
+}
+
+/** Per-student row for a collection (`class_fee_payments`). */
+export interface ClassFeePayment {
+  id: string
+  collection_id: string
+  student_id: string
+  status: ClassFeePaymentStatus
+  amount_paid: number
+  updated_at: string
+}
+
 export interface UserProfile {
   id: string
   full_name: string
