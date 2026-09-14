@@ -32,8 +32,10 @@ function StudentFeedingRowBase({
   )
 
   return (
-    <div className="px-4 tablet:px-6 border-b border-mga-green-pale/40 dark:border-gray-600 last:border-0 bg-white dark:bg-gray-800 min-h-[64px] flex items-center gap-3">
-      <StudentAvatar photoUrl={student.photo_url} name={student.full_name} size={40} />
+    <div className="px-4 tablet:px-6 border-b border-mga-green-pale/40 dark:border-gray-600 last:border-0 bg-white dark:bg-gray-800 min-h-[64px] flex items-start gap-3 py-2">
+      <div className="shrink-0 pt-2">
+        <StudentAvatar photoUrl={student.photo_url} name={student.full_name} size={40} />
+      </div>
 
       {/* Name + debt */}
       <div className="flex-1 min-w-0 py-3">
@@ -51,11 +53,11 @@ function StudentFeedingRowBase({
 
       {/* Weekly advance badge OR circular status buttons */}
       {isCoveredWeekly ? (
-        <span className="px-3 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 text-xs font-bold border border-yellow-400 dark:border-yellow-600">
+        <span className="mt-2 shrink-0 px-3 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 text-xs font-bold border border-yellow-400 dark:border-yellow-600">
           Weekly
         </span>
       ) : (
-        <div className="flex gap-2 shrink-0">
+        <div className="flex gap-2 shrink-0 pt-2">
           {/* PAID */}
           <button
             onClick={() => handleMark('paid')}

@@ -14,6 +14,7 @@ import {
   STUDENT_FULL_NAME_MAX_LENGTH,
   STUDENT_FULL_NAME_MIN_LENGTH,
   STUDENT_NAME_LONG_PRESS_MS,
+  WRAP_LONG_TEXT_CLASS,
 } from '@/lib/constants'
 import { updateStudentFullName } from '@/lib/services/update-student-name-service'
 import { cn } from '@/lib/utils'
@@ -98,9 +99,9 @@ export function StudentNameWithEdit({
 
   return (
     <>
-      <span className="flex min-w-0 max-w-full items-center gap-1">
+      <span className="flex min-w-0 max-w-full items-start gap-1">
         <span
-          className={cn('min-w-0 truncate', nameClassName)}
+          className={cn('min-w-0 flex-1', WRAP_LONG_TEXT_CLASS, nameClassName)}
           onPointerDown={handlePointerDown}
           onPointerUp={clearPressTimer}
           onPointerCancel={clearPressTimer}
@@ -117,7 +118,7 @@ export function StudentNameWithEdit({
           }}
           aria-label={`Edit name for ${fullName}`}
           className={cn(
-            'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md',
+            'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md mt-0.5',
             'text-gray-400 hover:bg-gray-100 hover:text-gray-600',
             'dark:hover:bg-gray-700 dark:hover:text-gray-200',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mga-green-light'
@@ -171,7 +172,7 @@ export function StudentNameWithEdit({
               type="button"
               onClick={() => setDraft('')}
               aria-label="Clear name"
-              className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center text-gray-400"
+              className="absolute right-2 top-1/2 flex h-9 w-9 shrink-0 -translate-y-1/2 items-center justify-center text-gray-400"
             >
               <X className="h-4 w-4" />
             </button>

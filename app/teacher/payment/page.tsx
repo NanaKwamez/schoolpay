@@ -18,7 +18,7 @@ import { useTeacherClassName } from '@/hooks/use-teacher-class-name'
 import { useTeacherShellReady } from '@/hooks/use-teacher-shell-ready'
 import { db } from '@/lib/dexie/schema'
 import { formatGHS, getWeekStart } from '@/lib/utils'
-import { WEEKLY_FEEDING_AMOUNT } from '@/lib/constants'
+import { WEEKLY_FEEDING_AMOUNT, WRAP_LONG_TEXT_CLASS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui/Toast'
 import {
@@ -250,13 +250,13 @@ function TeacherPaymentContent() {
           <p className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">Step 1 — Student</p>
 
           {selectedStudent ? (
-            <div className="flex items-center gap-3 bg-mga-green-pale rounded-xl px-4 py-3 border border-mga-gold/25">
+            <div className="flex items-start gap-3 bg-mga-green-pale rounded-xl px-4 py-3 border border-mga-gold/25">
               <div className="flex-1 min-w-0">
                 <div className="min-w-0">
                   <StudentNameWithEdit
                     studentId={selectedStudent.id}
                     fullName={selectedStudent.full_name}
-                    nameClassName="font-bold text-gray-900 text-sm break-words whitespace-normal text-left"
+                    nameClassName="font-bold text-gray-900 text-sm"
                     onSaved={fullName => {
                       setSelectedStudent(prev =>
                         prev && prev.id === selectedStudent.id
@@ -292,13 +292,13 @@ function TeacherPaymentContent() {
                 {filteredStudents.map(student => (
                   <div
                     key={student.id}
-                    className="flex items-center gap-2 px-2 min-h-[52px] hover:bg-mga-green-pale/50"
+                    className="flex items-start gap-2 px-2 min-h-[52px] py-2 hover:bg-mga-green-pale/50"
                   >
                     <div className="flex-1 min-w-0 py-2">
                       <StudentNameWithEdit
                         studentId={student.id}
                         fullName={student.full_name}
-                        nameClassName="font-medium text-gray-900 text-sm break-words whitespace-normal text-left"
+                        nameClassName="font-medium text-gray-900 text-sm"
                       />
                     </div>
                     <button
@@ -334,15 +334,17 @@ function TeacherPaymentContent() {
                       setPaymentType('full')
                     }}
                     className={cn(
-                      'w-full min-h-[56px] rounded-xl border-2 px-4 flex items-center justify-between transition',
+                      'w-full min-h-[56px] rounded-xl border-2 px-4 py-2 flex items-start justify-between gap-3 transition',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mga-green-light',
                       isSelected
                         ? 'bg-mga-green-mid border-mga-green-mid text-white'
                         : 'bg-white border-gray-200 text-gray-900 hover:border-mga-gold/30'
                     )}
                   >
-                    <span className="font-semibold text-sm">{fee.name}</span>
-                    <span className={cn('text-sm font-bold', isSelected ? 'text-white/90' : 'text-mga-green-mid')}>
+                    <span className={cn('font-semibold text-sm min-w-0 flex-1', WRAP_LONG_TEXT_CLASS)}>
+                      {fee.name}
+                    </span>
+                    <span className={cn('text-sm font-bold shrink-0', isSelected ? 'text-white/90' : 'text-mga-green-mid')}>
                       {formatGHS(fee.amount)}
                     </span>
                   </button>

@@ -190,12 +190,12 @@ export function TeacherMarkFeeCollectionModal({
             return (
               <div
                 key={s.id}
-                className="flex items-center justify-between gap-2 rounded-xl border border-gray-100 dark:border-gray-700 px-3 py-2"
+                className="flex items-start justify-between gap-2 rounded-xl border border-gray-100 dark:border-gray-700 px-3 py-2"
               >
                 <StudentNameWithEdit
                   studentId={s.id}
                   fullName={s.full_name}
-                  nameClassName="truncate font-medium text-gray-800 dark:text-gray-100"
+                  nameClassName="font-medium text-gray-800 dark:text-gray-100"
                 />
                 <div className="flex items-center gap-2 shrink-0">
                   <button

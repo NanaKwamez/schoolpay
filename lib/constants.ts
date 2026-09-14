@@ -29,6 +29,8 @@ export const STUDENT_FULL_NAME_MIN_LENGTH = 2
 export const STUDENT_FULL_NAME_MAX_LENGTH = 60
 /** Hold duration (ms) on a student name before the edit modal opens. */
 export const STUDENT_NAME_LONG_PRESS_MS = 500
+/** Wrap long student/fee labels on narrow screens instead of truncating. */
+export const WRAP_LONG_TEXT_CLASS = 'break-words whitespace-normal text-left'
 
 /** Stored `feeding_daily_log.amount` values from the old flat 10/11/12 tier schedule. */
 const LEGACY_FLAT_FEEDING_AMOUNTS = new Set([10, 11, 12])
