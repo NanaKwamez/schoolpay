@@ -24,6 +24,12 @@ export const MAX_SYNC_ATTEMPTS = 5
 export const STUDENTS_TABLE_SUPPORTS_UPDATED_AT_FILTER = false
 export const WEEKLY_FEEDING_AMOUNT = 25.00 // GHS
 
+/** Student `full_name` length bounds for spelling-correction edits. */
+export const STUDENT_FULL_NAME_MIN_LENGTH = 2
+export const STUDENT_FULL_NAME_MAX_LENGTH = 60
+/** Hold duration (ms) on a student name before the edit modal opens. */
+export const STUDENT_NAME_LONG_PRESS_MS = 500
+
 /** Stored `feeding_daily_log.amount` values from the old flat 10/11/12 tier schedule. */
 const LEGACY_FLAT_FEEDING_AMOUNTS = new Set([10, 11, 12])
 

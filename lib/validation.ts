@@ -1,3 +1,8 @@
+import {
+  STUDENT_FULL_NAME_MAX_LENGTH,
+  STUDENT_FULL_NAME_MIN_LENGTH,
+} from '@/lib/constants'
+
 /** Validate Ghana phone numbers: starts with 0, exactly 10 digits */
 export function isValidGhanaPhone(phone: string): boolean {
   return /^0[0-9]{9}$/.test(phone.trim())
@@ -43,6 +48,33 @@ export function isValidPin(pin: string): boolean {
 /** Validate a required text field */
 export function isRequired(value: string): boolean {
   return value.trim().length > 0
+}
+
+export type StudentFullNameValidation =
+  | { ok: true; value: string }
+  | { ok: false; error: string }
+
+/** Collapse whitespace and trim a student display name. */
+export function normalizeStudentFullName(raw: string): string {
+  return raw.trim().replace(/\s+/g, ' ')
+}
+
+/** Guard student name spelling edits before persist. */
+export function validateStudentFullName(raw: string): StudentFullNameValidation {
+  const value = normalizeStudentFullName(raw)
+  if (value.length < STUDENT_FULL_NAME_MIN_LENGTH) {
+    return {
+      ok: false,
+      error: `Name must be at least ${STUDENT_FULL_NAME_MIN_LENGTH} characters`,
+    }
+  }
+  if (value.length > STUDENT_FULL_NAME_MAX_LENGTH) {
+    return {
+      ok: false,
+      error: `Name cannot exceed ${STUDENT_FULL_NAME_MAX_LENGTH} characters`,
+    }
+  }
+  return { ok: true, value }
 }
 
 /** Input border class — red if error, default if not */

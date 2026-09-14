@@ -2,8 +2,9 @@
 
 import { memo, useCallback } from 'react'
 import { Check, X, Utensils } from 'lucide-react'
-import { cn, formatGHS } from '@/lib/utils'
+import { StudentNameWithEdit } from '@/components/students/student-name-with-edit'
 import { StudentAvatar } from '@/components/ui/StudentAvatar'
+import { cn, formatGHS } from '@/lib/utils'
 import type { Student, FeedingStatus } from '@/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -36,9 +37,11 @@ function StudentFeedingRowBase({
 
       {/* Name + debt */}
       <div className="flex-1 min-w-0 py-3">
-        <p className="text-sm font-medium text-gray-900 dark:text-white leading-tight">
-          {student.full_name}
-        </p>
+        <StudentNameWithEdit
+          studentId={student.id}
+          fullName={student.full_name}
+          nameClassName="text-sm font-medium text-gray-900 dark:text-white leading-tight"
+        />
         {creditBalance > 0 && (
           <p className="text-xs font-semibold text-red-600 mt-0.5">
             OWES {formatGHS(creditBalance)}

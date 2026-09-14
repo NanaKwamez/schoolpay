@@ -11,9 +11,18 @@ interface ModalProps {
   children: ReactNode
   footer?: ReactNode
   className?: string
+  overlayClassName?: string
 }
 
-export function Modal({ isOpen, onClose, title, children, footer, className }: ModalProps) {
+export function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  footer,
+  className,
+  overlayClassName,
+}: ModalProps) {
   // Lock body scroll while open
   useEffect(() => {
     if (isOpen) {
@@ -41,7 +50,10 @@ export function Modal({ isOpen, onClose, title, children, footer, className }: M
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+      className={cn(
+        'fixed inset-0 z-50 flex items-end sm:items-center justify-center',
+        overlayClassName
+      )}
     >
       {/* Backdrop */}
       <div

@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Search, X, ChevronRight } from 'lucide-react'
+import { StudentNameWithEdit } from '@/components/students/student-name-with-edit'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { TopBar } from '@/components/ui/TopBar'
 import { BottomNav } from '@/components/ui/BottomNav'
@@ -251,7 +252,20 @@ function TeacherPaymentContent() {
           {selectedStudent ? (
             <div className="flex items-center gap-3 bg-mga-green-pale rounded-xl px-4 py-3 border border-mga-gold/25">
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-gray-900 text-sm">{selectedStudent.full_name}</p>
+                <div className="min-w-0">
+                  <StudentNameWithEdit
+                    studentId={selectedStudent.id}
+                    fullName={selectedStudent.full_name}
+                    nameClassName="font-bold text-gray-900 text-sm"
+                    onSaved={fullName => {
+                      setSelectedStudent(prev =>
+                        prev && prev.id === selectedStudent.id
+                          ? { ...prev, full_name: fullName }
+                          : prev
+                      )
+                    }}
+                  />
+                </div>
                 <p className="text-xs text-mga-green-mid">{teacherClassDisplayName || 'Loading...'}</p>
               </div>
               <button
@@ -276,14 +290,26 @@ function TeacherPaymentContent() {
               </div>
               <div className="max-h-52 overflow-y-auto divide-y divide-mga-green-pale/40">
                 {filteredStudents.map(student => (
-                  <button
+                  <div
                     key={student.id}
-                    onClick={() => { setSelectedStudent(student); setSearch('') }}
-                    className="w-full flex items-center justify-between px-2 py-3 min-h-[52px] hover:bg-mga-green-pale/50 active:bg-mga-cream-dark transition text-left"
+                    className="flex items-center gap-2 px-2 min-h-[52px] hover:bg-mga-green-pale/50"
                   >
-                    <span className="font-medium text-gray-900 text-sm">{student.full_name}</span>
-                    <ChevronRight className="h-4 w-4 text-gray-400" />
-                  </button>
+                    <div className="flex-1 min-w-0">
+                      <StudentNameWithEdit
+                        studentId={student.id}
+                        fullName={student.full_name}
+                        nameClassName="font-medium text-gray-900 text-sm"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedStudent(student); setSearch('') }}
+                      aria-label={`Select ${student.full_name}`}
+                      className="shrink-0 flex items-center justify-center min-h-[48px] min-w-[48px] text-gray-400"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
                 ))}
                 {filteredStudents.length === 0 && (
                   <p className="text-gray-400 text-sm py-4 text-center">No students found</p>

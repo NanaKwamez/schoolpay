@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CheckCircle2, XCircle } from 'lucide-react'
 
+import { StudentNameWithEdit } from '@/components/students/student-name-with-edit'
 import { Modal } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
 import type { ClassFeeCollectionWithPayments } from '@/hooks/use-teacher-fee-collections'
@@ -191,9 +192,11 @@ export function TeacherMarkFeeCollectionModal({
                 key={s.id}
                 className="flex items-center justify-between gap-2 rounded-xl border border-gray-100 dark:border-gray-700 px-3 py-2"
               >
-                <span className="truncate font-medium text-gray-800 dark:text-gray-100">
-                  {s.full_name}
-                </span>
+                <StudentNameWithEdit
+                  studentId={s.id}
+                  fullName={s.full_name}
+                  nameClassName="truncate font-medium text-gray-800 dark:text-gray-100"
+                />
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     type="button"

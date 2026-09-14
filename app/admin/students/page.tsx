@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Camera, Plus, Search, Users } from 'lucide-react'
+import { StudentNameWithEdit } from '@/components/students/student-name-with-edit'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { TopBar } from '@/components/ui/TopBar'
 import { Button } from '@/components/ui/Button'
@@ -292,10 +293,20 @@ export default function AdminStudentsPage() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className={cn('font-semibold text-sm', student.is_active ? 'text-gray-900' : 'text-gray-400 line-through')}>
-                        {student.full_name}
-                      </p>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <StudentNameWithEdit
+                        studentId={student.id}
+                        fullName={student.full_name}
+                        nameClassName={cn(
+                          'font-semibold text-sm',
+                          student.is_active ? 'text-gray-900' : 'text-gray-400 line-through'
+                        )}
+                        onSaved={fullName => {
+                          setStudents(prev =>
+                            prev.map(s => (s.id === student.id ? { ...s, full_name: fullName } : s))
+                          )
+                        }}
+                      />
                       {!student.is_active && <Badge variant="gray">Inactive</Badge>}
                     </div>
                     <p className="text-xs text-gray-500 mt-0.5">{student.class_name}{student.parent_phone ? ` · ${student.parent_phone}` : ''}</p>

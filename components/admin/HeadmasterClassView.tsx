@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Download, RotateCcw } from 'lucide-react'
+import { StudentNameWithEdit } from '@/components/students/student-name-with-edit'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { TopBar } from '@/components/ui/TopBar'
@@ -236,7 +237,16 @@ export function HeadmasterClassView({ classId }: Props) {
                 return (
                   <div key={student.id} className="flex items-center gap-3 px-4 py-3">
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm truncate">{student.full_name}</p>
+                      <StudentNameWithEdit
+                        studentId={student.id}
+                        fullName={student.full_name}
+                        nameClassName="font-semibold text-gray-900 text-sm"
+                        onSaved={fullName => {
+                          setStudents(prev =>
+                            prev.map(s => (s.id === student.id ? { ...s, full_name: fullName } : s))
+                          )
+                        }}
+                      />
                       <div className="flex items-center gap-2 mt-0.5">
                         {statusInfo ? (
                           <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
