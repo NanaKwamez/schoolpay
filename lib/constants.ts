@@ -24,22 +24,28 @@ export const MAX_SYNC_ATTEMPTS = 5
 export const STUDENTS_TABLE_SUPPORTS_UPDATED_AT_FILTER = false
 export const WEEKLY_FEEDING_AMOUNT = 25.00 // GHS
 
-/** Daily feeding fee (GHS) by class display name from `classes.name`. */
+/** Stored `feeding_daily_log.amount` values from the old flat 10/11/12 tier schedule. */
+const LEGACY_FLAT_FEEDING_AMOUNTS = new Set([10, 11, 12])
+
+/**
+ * Daily feeding fee (GHS) by class display name from `classes.name`.
+ * Keep in sync with `supabase/migrations/*feeding_fees_per_class.sql` view CASE expressions.
+ */
 export function getFeedingFeeForClass(className: string): number {
   const fees: Record<string, number> = {
     'Nursery 1': 11,
     'Nursery 2': 12,
-    'KG 1':      13,
-    'KG 2':      11,
-    'Basic 1':   12,
-    'Basic 2':   12,
-    'Basic 3':   12,
-    'Basic 4':   12,
-    'Basic 5':   12,
-    'Basic 6':   13,
-    'Basic 7':   13,
-    'Basic 8':   13,
-    'Basic 9':   13,
+    'KG 1': 13,
+    'KG 2': 11,
+    'Basic 1': 12,
+    'Basic 2': 12,
+    'Basic 3': 12,
+    'Basic 4': 12,
+    'Basic 5': 12,
+    'Basic 6': 13,
+    'Basic 7': 13,
+    'Basic 8': 13,
+    'Basic 9': 13,
   }
   return fees[className] ?? 12
 }
@@ -52,11 +58,8 @@ export function getFeedingLogStoredAmount(status: FeedingStatus, className: stri
   return 0
 }
 
-/** Paid feeding GHS: use `feeding_daily_log.amount` when present; else tier via `className`. */
-export function feedingPaidAmountFromLogOrTier(storedAmount: unknown, className: string): number {
-  if (storedAmount == null) {
-    return getFeedingLogStoredAmount('paid', className)
-  }
+function parseFeedingLogStoredAmount(storedAmount: unknown): number | null {
+  if (storedAmount == null) return null
   if (typeof storedAmount === 'number' && Number.isFinite(storedAmount)) {
     return storedAmount
   }
@@ -64,7 +67,16 @@ export function feedingPaidAmountFromLogOrTier(storedAmount: unknown, className:
     const n = Number(storedAmount)
     if (Number.isFinite(n)) return n
   }
-  return getFeedingLogStoredAmount('paid', className)
+  return null
+}
+
+/** Paid feeding GHS: tier via `className`; remap legacy flat 10/11/12 to current class fee. */
+export function feedingPaidAmountFromLogOrTier(storedAmount: unknown, className: string): number {
+  const tier = getFeedingLogStoredAmount('paid', className)
+  const parsed = parseFeedingLogStoredAmount(storedAmount)
+  if (parsed == null) return tier
+  if (LEGACY_FLAT_FEEDING_AMOUNTS.has(parsed)) return tier
+  return parsed
 }
 
 export const EXPENSE_CATEGORIES_GENERAL = [

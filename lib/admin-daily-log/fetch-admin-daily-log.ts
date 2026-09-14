@@ -8,6 +8,7 @@ import {
   INCOME_ENTRIES_SELECT,
   incomeEntryTypeLabel,
 } from '@/lib/constants'
+import { aggregateFeedingCollectedByClass } from '@/lib/feeding-collected-by-class'
 import { isFeedingRevenueStatus } from '@/lib/feeding-daily-log-revenue'
 import { logError } from '@/lib/logger'
 import { getTodayGhana } from '@/lib/utils'
@@ -282,16 +283,12 @@ export async function fetchAdminDailyLogDayDetail(
   const studentClassMap = new Map(students.map(s => [s.id, s.class_id]))
   const classIdToName = new Map(classes.map(c => [c.id, c.name]))
 
-  const feedingCollectedByClass = new Map<string, number>()
-  for (const row of logs) {
-    if (!isFeedingRevenueStatus(row.status)) continue
-    if (!activeStudentIds.has(row.student_id)) continue
-    const classId = studentClassMap.get(row.student_id)
-    if (classId == null) continue
-    const tierName = classIdToName.get(classId) ?? ''
-    const amt = feedingPaidAmountFromLogOrTier(row.amount, tierName)
-    feedingCollectedByClass.set(classId, (feedingCollectedByClass.get(classId) ?? 0) + amt)
-  }
+  const feedingCollectedByClass = aggregateFeedingCollectedByClass({
+    logs,
+    activeStudentIds,
+    studentClassMap,
+    classIdToName,
+  })
 
   const perClass = buildPerClassDayMap(classes, students, logs, subs)
 

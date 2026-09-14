@@ -3,6 +3,7 @@
  */
 
 import { feedingPaidAmountFromLogOrTier, getFeedingFeeForClass } from '@/lib/constants'
+import { isFeedingRevenueStatus } from '@/lib/feeding-daily-log-revenue'
 import {
   isYmdInInclusiveRange,
   lastNWeekdaysDescending,
@@ -97,8 +98,8 @@ function aggregateDay(
     const d = String(row.date).slice(0, 10)
     if (d !== ymd) continue
     const st = row.status as FeedingStatus
-    if (st === 'paid') {
-      paid += 1
+    if (isFeedingRevenueStatus(st)) {
+      if (st === 'paid') paid += 1
       collected += feedingPaidAmountFromLogOrTier(row.amount, className)
     } else if (st === 'credit') {
       credit += 1
@@ -153,7 +154,7 @@ export function buildTeacherFeedingSummaryViewModel(
   for (const row of logsInTerm) {
     const d = String(row.date).slice(0, 10)
     daysWithMarks.add(d)
-    if (row.status === 'paid') {
+    if (isFeedingRevenueStatus(row.status)) {
       totalCollected += feedingPaidAmountFromLogOrTier(row.amount, className)
     }
   }

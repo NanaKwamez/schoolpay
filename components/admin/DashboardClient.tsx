@@ -41,6 +41,7 @@ import {
   feedingPaidAmountFromLogOrTier,
   getFeedingFeeForClass,
 } from '@/lib/constants'
+import { aggregateFeedingCollectedByClass } from '@/lib/feeding-collected-by-class'
 import { isFeedingRevenueStatus } from '@/lib/feeding-daily-log-revenue'
 import { logError } from '@/lib/logger'
 import { fundTypeFromFeeTypesEmbed } from '@/lib/postgrest-fee-type-embed'
@@ -401,17 +402,16 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
             classes.map((c: { id: string; name: string }) => [c.id, c.name])
           )
 
-          const feedingCollectedByClass = new Map<string, number>()
-          for (const row of feedingTodayLogsRes.data ?? []) {
-            const rec = row as { student_id: string; status: string; amount: unknown }
-            if (!isFeedingRevenueStatus(rec.status)) continue
-            if (!activeStudentIds.has(rec.student_id)) continue
-            const classId = studentClassMap.get(rec.student_id)
-            if (classId == null) continue
-            const tierName = classIdToName.get(classId) ?? ''
-            const amt = feedingPaidAmountFromLogOrTier(rec.amount, tierName)
-            feedingCollectedByClass.set(classId, (feedingCollectedByClass.get(classId) ?? 0) + amt)
-          }
+          const feedingCollectedByClass = aggregateFeedingCollectedByClass({
+            logs: (feedingTodayLogsRes.data ?? []) as {
+              student_id: string
+              status: string
+              amount: unknown
+            }[],
+            activeStudentIds,
+            studentClassMap,
+            classIdToName,
+          })
 
           const feedingFundId =
             (fundsMetaRes.data ?? []).find((f: { fund_type: FundType }) => f.fund_type === 'feeding')?.id ?? null
@@ -495,11 +495,8 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
               const coveredWeekly = feedRow ? parseNumeric(feedRow.covered_weekly_count ?? 0) : 0
               const absent = feedRow ? parseNumeric(feedRow.absent_count) : 0
 
-              const rawCollected = feedRow?.feeding_collected_today
-              const collectedToday =
-                rawCollected !== undefined && rawCollected !== null
-                  ? parseNumeric(rawCollected)
-                  : (feedingCollectedByClass.get(cls.id) ?? 0)
+              // Per-class total from today's logs + getFeedingFeeForClass (not feeding_today_by_class tier CASE).
+              const collectedToday = feedingCollectedByClass.get(cls.id) ?? 0
 
               return {
                 id: cls.id,

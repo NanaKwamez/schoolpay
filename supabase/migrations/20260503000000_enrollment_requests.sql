@@ -93,6 +93,7 @@ SET search_path = public
 AS $$
 DECLARE
   req enrollment_requests%ROWTYPE;
+  v_new_student_id UUID;
 BEGIN
   -- Fetch and lock the pending request
   SELECT * INTO req
@@ -113,9 +114,22 @@ BEGIN
 
   -- Apply the change
   IF req.type = 'enroll' THEN
-    INSERT INTO students (full_name, class_id, parent_phone, is_active)
-    VALUES (req.student_name, req.student_class_id, req.parent_phone, true);
+  -- Insert student
+  INSERT INTO students (full_name, class_id, parent_phone, is_active)
+  VALUES (req.student_name, req.student_class_id, req.parent_phone, true)
+  RETURNING id INTO v_new_student_id;
 
+  -- Auto-assign current term fees for their class
+  INSERT INTO student_fee_assignments (student_id, fee_type_id, term_id, amount_due)
+  SELECT 
+    v_new_student_id,
+    ft.id,
+    t.id,
+    ft.amount
+  FROM fee_types ft
+  CROSS JOIN terms t
+  WHERE t.is_current = true
+    AND ft.is_active = true;
   ELSIF req.type = 'withdraw' THEN
     UPDATE students
        SET is_active = false
