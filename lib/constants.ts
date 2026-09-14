@@ -26,12 +26,22 @@ export const WEEKLY_FEEDING_AMOUNT = 25.00 // GHS
 
 /** Daily feeding fee (GHS) by class display name from `classes.name`. */
 export function getFeedingFeeForClass(className: string): number {
-  const nurseryKG = ['Nursery 1', 'Nursery 2', 'KG 1', 'KG 2']
-  const basic1to5 = ['Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5']
-
-  if (nurseryKG.includes(className)) return 10.0
-  if (basic1to5.includes(className)) return 11.0
-  return 12.0 // Basic 6–9 default
+  const fees: Record<string, number> = {
+    'Nursery 1': 11,
+    'Nursery 2': 12,
+    'KG 1':      13,
+    'KG 2':      11,
+    'Basic 1':   12,
+    'Basic 2':   12,
+    'Basic 3':   12,
+    'Basic 4':   12,
+    'Basic 5':   12,
+    'Basic 6':   13,
+    'Basic 7':   13,
+    'Basic 8':   13,
+    'Basic 9':   13,
+  }
+  return fees[className] ?? 12
 }
 
 /** `feeding_daily_log.amount` / local log: tier fee for paid or weekly cover; else 0. */
