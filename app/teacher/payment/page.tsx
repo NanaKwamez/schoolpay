@@ -256,7 +256,7 @@ function TeacherPaymentContent() {
                   <StudentNameWithEdit
                     studentId={selectedStudent.id}
                     fullName={selectedStudent.full_name}
-                    nameClassName="font-bold text-gray-900 text-sm"
+                    nameClassName="font-bold text-gray-900 text-sm break-words whitespace-normal text-left"
                     onSaved={fullName => {
                       setSelectedStudent(prev =>
                         prev && prev.id === selectedStudent.id
@@ -270,7 +270,7 @@ function TeacherPaymentContent() {
               </div>
               <button
                 onClick={() => { setSelectedStudent(null); setSelectedFeeType(null) }}
-                className="min-h-[48px] min-w-[48px] flex items-center justify-center text-gray-400 hover:text-gray-600"
+                className="min-h-[40px] min-w-[40px] shrink-0 flex items-center justify-center text-gray-400 hover:text-gray-600"
                 aria-label="Clear student selection"
               >
                 <X className="h-5 w-5" />
@@ -294,18 +294,18 @@ function TeacherPaymentContent() {
                     key={student.id}
                     className="flex items-center gap-2 px-2 min-h-[52px] hover:bg-mga-green-pale/50"
                   >
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 py-2">
                       <StudentNameWithEdit
                         studentId={student.id}
                         fullName={student.full_name}
-                        nameClassName="font-medium text-gray-900 text-sm"
+                        nameClassName="font-medium text-gray-900 text-sm break-words whitespace-normal text-left"
                       />
                     </div>
                     <button
                       type="button"
                       onClick={() => { setSelectedStudent(student); setSearch('') }}
                       aria-label={`Select ${student.full_name}`}
-                      className="shrink-0 flex items-center justify-center min-h-[48px] min-w-[48px] text-gray-400"
+                      className="shrink-0 flex items-center justify-center min-h-[40px] min-w-[40px] text-gray-400"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </button>
