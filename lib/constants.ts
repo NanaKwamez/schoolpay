@@ -43,7 +43,7 @@ export function getFeedingFeeForClass(className: string): number {
   const fees: Record<string, number> = {
     'Nursery 1': 11,
     'Nursery 2': 12,
-    'KG 1': 13,
+    'KG 1': 11,
     'KG 2': 11,
     'Basic 1': 12,
     'Basic 2': 12,
