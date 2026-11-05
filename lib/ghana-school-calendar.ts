@@ -36,6 +36,16 @@ export function mondayOfIsoWeekContaining(ymd: string): string {
   return addUtcDays(ymd, -mon0)
 }
 
+/** Friday YYYY-MM-DD of the ISO week containing ymd. */
+export function fridayOfIsoWeekContaining(ymd: string): string {
+  return addUtcDays(mondayOfIsoWeekContaining(ymd), 4)
+}
+
+/** Sunday YYYY-MM-DD of the ISO week containing ymd. */
+export function sundayOfIsoWeekContaining(ymd: string): string {
+  return addUtcDays(mondayOfIsoWeekContaining(ymd), 6)
+}
+
 export function mondayToFridayYmds(weekMondayYmd: string): string[] {
   return [0, 1, 2, 3, 4].map(i => addUtcDays(weekMondayYmd, i))
 }

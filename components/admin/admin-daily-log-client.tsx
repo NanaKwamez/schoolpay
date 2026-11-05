@@ -8,6 +8,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Download, Loader2 } from 'lucide-react'
 
 import { AdminDailyKpiStrip } from '@/components/admin/admin-daily-kpi-strip'
+import { AdminWeeklySummarySection } from '@/components/admin/admin-weekly-summary-section'
+import { useAdminTodayKpiLive } from '@/hooks/use-admin-today-kpi-live'
 import { exportAdminDailyLogPdf } from '@/lib/admin-daily-log/build-admin-daily-log-export-pdf'
 import {
   buildPillStatesForDates,
@@ -18,11 +20,11 @@ import {
   type AdminDailyLogDayDetail,
   type DayPillState,
 } from '@/lib/admin-daily-log/fetch-admin-daily-log'
-import { useAdminTodayKpiLive } from '@/hooks/use-admin-today-kpi-live'
-import { addUtcDays, lastNWeekdaysAscending } from '@/lib/ghana-school-calendar'
+import { addUtcDays, lastNWeekdaysAscending, mondayOfIsoWeekContaining } from '@/lib/ghana-school-calendar'
 import { logError } from '@/lib/logger'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { cn, formatDate, formatGHS, getTodayGhana } from '@/lib/utils'
+import type { AdminWeeklyPdfLine } from '@/lib/admin-weekly-log/weekly-summary-types'
 
 function pillClasses(state: DayPillState, selected: boolean): string {
   const base = 'shrink-0 rounded-full px-3 py-2 text-xs font-bold transition-colors'
@@ -65,6 +67,7 @@ export function AdminDailyLogClient() {
   const [loadingDetail, setLoadingDetail] = useState(true)
   const [pillError, setPillError] = useState<string | null>(null)
   const [detailError, setDetailError] = useState<string | null>(null)
+  const [weekPdfLine, setWeekPdfLine] = useState<AdminWeeklyPdfLine | null>(null)
 
   const todayPillRef = useRef<HTMLButtonElement>(null)
 
@@ -175,8 +178,21 @@ export function AdminDailyLogClient() {
 
   const handleExport = useCallback(() => {
     if (!detail) return
-    exportAdminDailyLogPdf(detail)
-  }, [detail])
+    exportAdminDailyLogPdf(detail, weekPdfLine)
+  }, [detail, weekPdfLine])
+
+  const handleShiftWeek = useCallback(
+    (deltaDays: number) => {
+      setSelectedYmd(current => {
+        const next = addUtcDays(current, deltaDays)
+        const nextMonday = mondayOfIsoWeekContaining(next)
+        const thisMonday = mondayOfIsoWeekContaining(todayYmd)
+        if (nextMonday > thisMonday) return current
+        return next
+      })
+    },
+    [todayYmd]
+  )
 
   const liveStrip = useMemo(() => {
     if (detail != null && detail.dateYmd === todayYmd) {
@@ -244,6 +260,13 @@ export function AdminDailyLogClient() {
           {detailError ? <p className="text-sm text-red-600 dark:text-red-300">{detailError}</p> : null}
         </div>
       ) : null}
+
+      <AdminWeeklySummarySection
+        selectedYmd={selectedYmd}
+        todayYmd={todayYmd}
+        onShiftWeek={handleShiftWeek}
+        onSnapshotChange={setWeekPdfLine}
+      />
 
       <section
         aria-label="Selected day"

@@ -6,6 +6,7 @@ import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
 import { feedingCollectedForDayDetail, type AdminDailyLogDayDetail } from '@/lib/admin-daily-log/fetch-admin-daily-log'
+import type { AdminWeeklyPdfLine } from '@/lib/admin-weekly-log/weekly-summary-types'
 
 const MGA_GREEN: [number, number, number] = [13, 59, 46]
 const MGA_GOLD: [number, number, number] = [201, 168, 76]
@@ -29,7 +30,10 @@ function dateLabelFromYmd(selectedDate: string): string {
 }
 
 /** Builds and downloads the daily feeding collection PDF for the selected day. */
-export function exportAdminDailyLogPdf(detail: AdminDailyLogDayDetail): void {
+export function exportAdminDailyLogPdf(
+  detail: AdminDailyLogDayDetail,
+  weekToDate?: AdminWeeklyPdfLine | null
+): void {
   const selectedDate = detail.dateYmd
   const dayData = detail.classes
   const totalFeedingCollected = feedingCollectedForDayDetail(detail)
@@ -81,6 +85,17 @@ export function exportAdminDailyLogPdf(detail: AdminDailyLogDayDetail): void {
     doc.setFont('helvetica', 'normal')
   })
 
+  const week = weekToDate ?? { feedingCollected: 0, presentTotal: 0, absentTotal: 0 }
+  doc.setFontSize(8)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(80, 80, 80)
+  doc.text(
+    `Week to date  Collected GHS ${week.feedingCollected.toFixed(2)}  ·  Present ${Math.round(week.presentTotal)}  ·  Absent ${Math.round(week.absentTotal)}`,
+    105,
+    72,
+    { align: 'center' }
+  )
+
   const classBody = dayData.map(row => [
     row.className,
     row.teacherName || 'Not assigned',
@@ -94,7 +109,7 @@ export function exportAdminDailyLogPdf(detail: AdminDailyLogDayDetail): void {
   const totalRowIndex = classBody.length
 
   autoTable(doc, {
-    startY: 75,
+    startY: 80,
     head: [['Class', 'Teacher', 'Paid', 'Credit', 'Absent', 'Collected', 'Status']],
     body: [
       ...classBody,
@@ -143,7 +158,7 @@ export function exportAdminDailyLogPdf(detail: AdminDailyLogDayDetail): void {
     },
   })
 
-  const finalY = (doc.lastAutoTable?.finalY ?? 75) + 20
+  const finalY = (doc.lastAutoTable?.finalY ?? 80) + 20
 
   doc.setDrawColor(...MGA_GREEN)
   doc.line(15, finalY + 20, 85, finalY + 20)

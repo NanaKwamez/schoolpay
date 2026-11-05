@@ -15,6 +15,14 @@ export const ADMIN_DASHBOARD_FUND_SUMMARY_ORDER: readonly FundType[] = ['feeding
 /** Columns on `fund_summary` view (`fund_id` PK, not `id`). */
 export const FUND_SUMMARY_VIEW_SELECT_COLUMNS =
   'fund_id, fund_name, fund_type, details_access, payment_income, other_income, total_income, total_expenses, net_balance'
+
+/** Columns on `weekly_totals` view. */
+export const WEEKLY_TOTALS_SELECT_COLUMNS =
+  'week_start, week_end, school_days_recorded, present_total, absent_total, feeding_collected, avg_present_per_day, avg_absent_per_day'
+
+/** Columns on `weekly_class_totals` view. */
+export const WEEKLY_CLASS_TOTALS_SELECT_COLUMNS =
+  'week_start, week_end, class_id, class_name, sort_order, present_days, absent_days, feeding_collected'
 export const MAX_SYNC_ATTEMPTS = 5
 
 /**

@@ -22,6 +22,7 @@ import {
 import type { PostgrestError } from '@supabase/supabase-js'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
+import { AdminWeeklyCompactCard } from './admin-weekly-compact-card'
 import { ClassCard } from './ClassCard'
 import { FundSummaryCard } from './FundSummaryCard'
 import { HeadmasterExtraIncomeSection } from './headmaster-extra-income-section'
@@ -863,6 +864,8 @@ export function AdminDashboardShell({ resolvedRole, greetingName }: AdminDashboa
             </div>
           )}
         </section>
+
+        <AdminWeeklyCompactCard />
 
         {/* ── Cumulative term summary (DB view term_cumulative_summary) ─ */}
         <section>
